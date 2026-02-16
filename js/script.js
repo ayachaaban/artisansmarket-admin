@@ -1,26 +1,4 @@
 // =============================================
-// FIREBASE CONFIGURATION
-// =============================================
-const firebaseConfig = {
-    apiKey: "AIzaSyDG1fBMvyAmmk7qNBH-mRKAX1OCd3ouKUk",
-    authDomain: "artisansmarket-5f2b6.firebaseapp.com",
-    projectId: "artisansmarket-5f2b6",
-    storageBucket: "artisansmarket-5f2b6.firebasestorage.app",
-    messagingSenderId: "89551898663",
-    appId: "1:89551898663:web:1891c4639d293c861e2602"
-};
-
-// Initialize Firebase
-let auth;
-try {
-    firebase.initializeApp(firebaseConfig);
-    auth = firebase.auth();
-    console.log("Firebase initialized successfully");
-} catch (error) {
-    console.error("Firebase initialization error:", error);
-}
-
-// =============================================
 // DOM ELEMENTS
 // =============================================
 const loginForm = document.getElementById('loginForm');
@@ -131,8 +109,19 @@ loginForm.addEventListener('submit', async function (e) {
         const userCredential = await auth.signInWithEmailAndPassword(email, password);
         const user = userCredential.user;
 
-        // Store user info
+        // Verify user is an admin
+        const adminDoc = await db.collection('admins').doc(user.uid).get();
+        if (!adminDoc.exists) {
+            await auth.signOut();
+            showError('Access denied. You are not an admin.');
+            signInBtn.disabled = false;
+            signInBtn.innerHTML = originalButtonText;
+            return;
+        }
+
+        // Store admin info
         localStorage.setItem('adminEmail', user.email);
+        localStorage.setItem('adminRole', adminDoc.data().role);
 
         // Show success message
         showSuccess('Login successful! Redirecting to dashboard...');

@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Firebase Seed Script</title>
+    <style>
+        body { font-family: monospace; padding: 2rem; background: #1a202c; color: #a0aec0; }
+        h1 { color: #f7fafc; }
+        .log { background: #2d3748; padding: 1rem; border-radius: 0.5rem; margin-top: 1rem; max-height: 500px; overflow-y: auto; }
+        .success { color: #48bb78; }
+        .error { color: #fc8181; }
+        .info { color: #63b3ed; }
+        button { background: #4299e1; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 0.5rem; cursor: pointer; font-size: 1rem; margin: 0.5rem; }
+        button:hover { background: #3182ce; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        button.danger { background: #e53e3e; }
+        button.danger:hover { background: #c53030; }
+    </style>
+</head>
+<body>
+    <h1>Artisans Market - Firebase Seed Script</h1>
+    <p>This will create the required collections and seed initial data.</p>
+
+    <div>
+        <button id="seedAdminBtn" onclick="seedAdmin()">1. Seed Super Admin</button>
+        <button id="seedCollectionsBtn" onclick="seedCollections()">2. Seed Sample Data</button>
+        <button id="checkBtn" onclick="checkCollections()">3. Check Collections</button>
+        <button class="danger" id="clearBtn" onclick="clearAll()">Clear All Data</button>
+    </div>
+
+    <div class="log" id="log"></div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDG1fBMvyAmmk7qNBH-mRKAX1OCd3ouKUk",
+            authDomain: "artisansmarket-5f2b6.firebaseapp.com",
+            projectId: "artisansmarket-5f2b6",
+            storageBucket: "artisansmarket-5f2b6.firebasestorage.app",
+            messagingSenderId: "89551898663",
+            appId: "1:89551898663:web:1891c4639d293c861e2602"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        function log(message, type = 'info') {
+            const el = document.getElementById('log');
+            const line = document.createElement('div');
+            line.className = type;
+            line.textContent = '[' + new Date().toLocaleTimeString() + '] ' + message;
+            el.appendChild(line);
+            el.scrollTop = el.scrollHeight;
+        }
+
+        // =============================================
+        // 1. SEED SUPER ADMIN
+        // =============================================
+        async function seedAdmin() {
+            try {
+                log('Signing in to get your UID...');
+
+                // Sign in with your admin credentials
+                const email = prompt('Enter your admin email:', 'artisansmarkett@gmail.com');
+                if (!email) return;
+                const password = prompt('Enter your admin password:');
+                if (!password) return;
+
+                const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                const uid = userCredential.user.uid;
+                log('Signed in! Your UID is: ' + uid, 'success');
+
+                // Create admin document with UID as document ID
+                await db.collection('admins').doc(uid).set({
+                    uid: uid,
+                    email: email,
+                    name: 'Admin',
+                    role: 'super-admin',
+                    status: 'active',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                log('Super admin document created in admins/' + uid, 'success');
+                log('Document ID = ' + uid + ' (matches your Auth UID)', 'success');
+                log('--- Admin seeding complete! ---', 'success');
+
+            } catch (error) {
+                log('Error: ' + error.message, 'error');
+            }
+        }
+
+        // =============================================
+        // 2. SEED SAMPLE DATA
+        // =============================================
+        async function seedCollections() {
+            try {
+                const user = auth.currentUser;
+                if (!user) {
+                    log('Please run "Seed Super Admin" first to sign in.', 'error');
+                    return;
+                }
+
+                log('Creating sample data...');
+
+                // --- Sample Customers ---
+                const customers = [
+                    { name: 'Ahmed Ben Ali', email: 'ahmed@example.com', role: 'customer', status: 'active' },
+                    { name: 'Sara Mansour', email: 'sara@example.com', role: 'customer', status: 'active' },
+                    { name: 'Youssef Khadri', email: 'youssef@example.com', role: 'customer', status: 'active' },
+                    { name: 'Fatima Zahra', email: 'fatima@example.com', role: 'customer', status: 'active' },
+                    { name: 'Omar Benali', email: 'omar@example.com', role: 'customer', status: 'active' },
+                ];
+
+                for (const c of customers) {
+                    await db.collection('users').add({
+                        ...c,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    log('Created customer: ' + c.name);
+                }
+
+                // --- Sample Artists ---
+                const artists = [
+                    { name: 'Amina Art', email: 'amina@example.com', role: 'artist', category: 'Painting', averageRating: 4.5, status: 'active' },
+                    { name: 'Karim Sculptor', email: 'karim@example.com', role: 'artist', category: 'Sculpture', averageRating: 4.2, status: 'active' },
+                    { name: 'Leila Photo', email: 'leila@example.com', role: 'artist', category: 'Photography', averageRating: 4.8, status: 'active' },
+                    { name: 'Hassan Digital', email: 'hassan@example.com', role: 'artist', category: 'Digital Art', averageRating: 3.9, status: 'active' },
+                    { name: 'Nora Crafts', email: 'nora@example.com', role: 'artist', category: 'Crafts', averageRating: 4.6, status: 'active' },
+                ];
+
+                const artistIds = [];
+                for (const a of artists) {
+                    const ref = await db.collection('users').add({
+                        ...a,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    artistIds.push({ id: ref.id, name: a.name, category: a.category });
+                    log('Created artist: ' + a.name);
+                }
+
+                // --- Sample Posts ---
+                const posts = [
+                    { description: 'Beautiful sunset painting over the Sahara', status: 'active', category: 'Painting' },
+                    { description: 'Handcrafted marble sculpture of traditional design', status: 'active', category: 'Sculpture' },
+                    { description: 'Street photography capturing daily life in the Medina', status: 'active', category: 'Photography' },
+                    { description: 'Digital illustration of Berber patterns', status: 'active', category: 'Digital Art' },
+                    { description: 'Hand-woven basket with natural dyes', status: 'active', category: 'Crafts' },
+                    { description: 'Abstract watercolor landscape', status: 'reported', category: 'Painting' },
+                    { description: 'Ceramic vase with geometric patterns', status: 'active', category: 'Crafts' },
+                ];
+
+                const postIds = [];
+                for (let i = 0; i < posts.length; i++) {
+                    const artist = artistIds[i % artistIds.length];
+                    const ref = await db.collection('posts').add({
+                        ...posts[i],
+                        artistId: artist.id,
+                        artistName: artist.name,
+                        imageUrl: '',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    postIds.push(ref.id);
+                    log('Created post: ' + posts[i].description.substring(0, 40) + '...');
+                }
+
+                // --- Sample Reports ---
+                const reports = [
+                    { reason: 'Inappropriate content', status: 'pending' },
+                    { reason: 'Copyright violation', status: 'pending' },
+                    { reason: 'Spam or misleading', status: 'reviewed' },
+                ];
+
+                for (let i = 0; i < reports.length; i++) {
+                    await db.collection('reports').add({
+                        ...reports[i],
+                        postId: postIds[i % postIds.length],
+                        reporterId: customers.length > 0 ? 'sample-reporter-' + i : '',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    log('Created report: ' + reports[i].reason);
+                }
+
+                // --- Sample Ratings ---
+                const feedbacks = [
+                    'Amazing work! Love the colors.',
+                    'Very detailed and professional.',
+                    'Beautiful craftsmanship.',
+                    'Good quality, fast delivery.',
+                    'Exceeded my expectations!',
+                ];
+
+                for (let i = 0; i < feedbacks.length; i++) {
+                    const artist = artistIds[i % artistIds.length];
+                    await db.collection('ratings').add({
+                        artistId: artist.id,
+                        customerId: 'sample-customer-' + i,
+                        stars: Math.floor(Math.random() * 2) + 4, // 4 or 5 stars
+                        feedback: feedbacks[i],
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    log('Created rating for: ' + artist.name);
+                }
+
+                log('--- All sample data created! ---', 'success');
+
+            } catch (error) {
+                log('Error: ' + error.message, 'error');
+            }
+        }
+
+        // =============================================
+        // 3. CHECK COLLECTIONS
+        // =============================================
+        async function checkCollections() {
+            try {
+                const user = auth.currentUser;
+                if (!user) {
+                    log('Please run "Seed Super Admin" first to sign in.', 'error');
+                    return;
+                }
+
+                log('Checking collections...');
+
+                const collections = ['admins', 'users', 'posts', 'reports', 'ratings', 'auditLogs'];
+                for (const name of collections) {
+                    const snap = await db.collection(name).get();
+                    log(name + ': ' + snap.size + ' documents', snap.size > 0 ? 'success' : 'error');
+                }
+
+                // Verify admin document
+                const adminDoc = await db.collection('admins').doc(user.uid).get();
+                if (adminDoc.exists) {
+                    log('Your admin doc exists with role: ' + adminDoc.data().role, 'success');
+                } else {
+                    log('WARNING: No admin document found for your UID: ' + user.uid, 'error');
+                }
+
+                log('--- Check complete! ---', 'info');
+
+            } catch (error) {
+                log('Error: ' + error.message, 'error');
+            }
+        }
+
+        // =============================================
+        // CLEAR ALL (DANGER)
+        // =============================================
+        async function clearAll() {
+            if (!confirm('This will DELETE all data from all collections. Are you sure?')) return;
+            if (!confirm('REALLY delete everything? This cannot be undone!')) return;
+
+            try {
+                const user = auth.currentUser;
+                if (!user) {
+                    log('Please sign in first.', 'error');
+                    return;
+                }
+
+                const collections = ['users', 'posts', 'reports', 'ratings', 'auditLogs'];
+                for (const name of collections) {
+                    const snap = await db.collection(name).get();
+                    const batch = db.batch();
+                    snap.docs.forEach(doc => batch.delete(doc.ref));
+                    await batch.commit();
+                    log('Cleared ' + name + ' (' + snap.size + ' docs deleted)');
+                }
+
+                log('Note: admins collection was NOT cleared for safety.', 'info');
+                log('--- Clear complete! ---', 'success');
+
+            } catch (error) {
+                log('Error: ' + error.message, 'error');
+            }
+        }
+    </script>
+</body>
+</html>
