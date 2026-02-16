@@ -443,6 +443,7 @@ body.dark-mode .theme-toggle {
 .admin-info {
     display: flex;
     align-items: center;
+    gap: 0.5rem;
     font-weight: 500;
     color: #6c757d;
     font-size: 0.95rem;
@@ -1006,6 +1007,30 @@ body.dark-mode .nav-tabs .nav-link.active {
 
 body.dark-mode .pagination-controls .text-muted {
     color: #94a3b8 !important;
+}
+
+body.dark-mode .sidebar-header {
+    border-bottom-color: #334155;
+}
+
+body.dark-mode .current-date {
+    color: #94a3b8;
+}
+
+body.dark-mode .notification-icon {
+    color: #94a3b8;
+}
+
+body.dark-mode .menu-toggle {
+    color: #94a3b8;
+}
+
+body.dark-mode .theme-toggle-dash {
+    color: #94a3b8;
+}
+
+body.dark-mode .theme-toggle-dash:hover {
+    background: #334155;
 }
 
 /* Responsive */

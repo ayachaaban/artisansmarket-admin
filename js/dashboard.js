@@ -3,6 +3,9 @@
 // =============================================
 let currentAdminRole = null;
 const PAGE_SIZE = 20;
+let reportsUnsubscribe = null;
+let postCategoryCache = { data: null, timestamp: 0 };
+const CACHE_TTL = 60000; // 1 minute cache
 
 // Pagination state for each table
 const paginationState = {
@@ -74,6 +77,46 @@ function updatePaginationUI(tableKey, page, hasMore) {
     if (pageInfo) pageInfo.textContent = 'Page ' + page;
     if (prevBtn) prevBtn.disabled = page <= 1;
     if (nextBtn) nextBtn.disabled = !hasMore;
+}
+
+// =============================================
+// UTILITY: Get Active Page
+// =============================================
+function getActivePage() {
+    const activePageEl = document.querySelector('.page-content.active');
+    if (!activePageEl) return null;
+    return activePageEl.id.replace('Page', '');
+}
+
+// =============================================
+// UTILITY: Reload visible user tables after user action
+// =============================================
+function reloadVisibleUserTables() {
+    const activePage = getActivePage();
+    if (activePage === 'users') {
+        loadCustomers('first');
+        loadAllUsers('first');
+    } else if (activePage === 'artists') {
+        loadArtists('first');
+    }
+}
+
+// =============================================
+// UTILITY: Shared post category data (avoids duplicate fetches)
+// =============================================
+async function getPostCategoryData() {
+    const now = Date.now();
+    if (postCategoryCache.data && (now - postCategoryCache.timestamp) < CACHE_TTL) {
+        return postCategoryCache.data;
+    }
+    const postsSnap = await db.collection('posts').get();
+    const categoryData = {};
+    postsSnap.forEach(doc => {
+        const category = doc.data().category || 'Unknown';
+        categoryData[category] = (categoryData[category] || 0) + 1;
+    });
+    postCategoryCache = { data: categoryData, timestamp: now };
+    return categoryData;
 }
 
 // =============================================
@@ -257,6 +300,10 @@ window.addEventListener('DOMContentLoaded', () => {
 logoutBtn.addEventListener('click', async function () {
     if (confirm('Are you sure you want to logout?')) {
         try {
+            if (reportsUnsubscribe) {
+                reportsUnsubscribe();
+                reportsUnsubscribe = null;
+            }
             await auth.signOut();
             localStorage.removeItem('adminEmail');
             localStorage.removeItem('adminRole');
@@ -279,9 +326,15 @@ function loadDashboard() {
 // REALTIME LISTENERS
 // =============================================
 function setupRealtimeListeners() {
-    db.collection('reports').where('status', '==', 'pending')
+    // Clean up previous listener if exists
+    if (reportsUnsubscribe) {
+        reportsUnsubscribe();
+    }
+    reportsUnsubscribe = db.collection('reports').where('status', '==', 'pending')
         .onSnapshot((snapshot) => {
             updateReportsBadge(snapshot.size);
+        }, (error) => {
+            console.warn('Reports listener error (will retry automatically):', error.code);
         });
 }
 
@@ -309,12 +362,14 @@ function updateReportsBadge(count) {
 // =============================================
 async function loadOverview() {
     try {
-        const usersSnap = await db.collection('users').get();
-        const artistsSnap = await db.collection('users').where('role', '==', 'artist').get();
-        const postsSnap = await db.collection('posts').get();
-        const activePostsSnap = await db.collection('posts').where('status', '==', 'active').get();
-        const pendingReportsSnap = await db.collection('reports').where('status', '==', 'pending').get();
-        const ratingsSnap = await db.collection('ratings').get();
+        const [usersSnap, artistsSnap, postsSnap, activePostsSnap, pendingReportsSnap, ratingsSnap] = await Promise.all([
+            db.collection('users').get(),
+            db.collection('users').where('role', '==', 'artist').get(),
+            db.collection('posts').get(),
+            db.collection('posts').where('status', '==', 'active').get(),
+            db.collection('reports').where('status', '==', 'pending').get(),
+            db.collection('ratings').get()
+        ]);
 
         let totalRating = 0;
         ratingsSnap.forEach(doc => {
@@ -400,13 +455,7 @@ let postsCategoryChart = null;
 
 async function loadPostsCategoryChart() {
     try {
-        const postsSnap = await db.collection('posts').get();
-
-        const categoryData = {};
-        postsSnap.forEach(doc => {
-            const category = doc.data().category || 'Unknown';
-            categoryData[category] = (categoryData[category] || 0) + 1;
-        });
+        const categoryData = await getPostCategoryData();
 
         const labels = Object.keys(categoryData);
         const data = Object.values(categoryData);
@@ -452,30 +501,33 @@ async function loadCustomers(direction) {
         const sortField = parts[0];
         const sortDir = parts[1];
 
+        const searchQuery = document.getElementById('userSearchInput') ? document.getElementById('userSearchInput').value.toLowerCase() : '';
+        const fetchLimit = searchQuery ? PAGE_SIZE * 5 : PAGE_SIZE + 1;
+
         let query = db.collection('users')
             .where('role', '==', 'customer')
             .orderBy(sortField, sortDir)
-            .limit(PAGE_SIZE + 1);
+            .limit(fetchLimit);
 
         if (direction === 'next' && state.lastDoc) {
             query = db.collection('users')
                 .where('role', '==', 'customer')
                 .orderBy(sortField, sortDir)
                 .startAfter(state.lastDoc)
-                .limit(PAGE_SIZE + 1);
+                .limit(fetchLimit);
         } else if (direction === 'prev' && state.stack.length > 1) {
             state.stack.pop();
             const prevCursor = state.stack[state.stack.length - 1];
             query = db.collection('users')
                 .where('role', '==', 'customer')
                 .orderBy(sortField, sortDir)
-                .limit(PAGE_SIZE + 1);
+                .limit(fetchLimit);
             if (prevCursor) {
                 query = db.collection('users')
                     .where('role', '==', 'customer')
                     .orderBy(sortField, sortDir)
                     .startAt(prevCursor)
-                    .limit(PAGE_SIZE + 1);
+                    .limit(fetchLimit);
             }
             state.page--;
         } else {
@@ -486,23 +538,21 @@ async function loadCustomers(direction) {
         const snapshot = await query.get();
         tbody.innerHTML = '';
 
-        const docs = snapshot.docs;
-        const hasMore = docs.length > PAGE_SIZE;
-        const displayDocs = hasMore ? docs.slice(0, PAGE_SIZE) : docs;
+        let docs = snapshot.docs;
 
         // Client-side search filter
-        const searchQuery = document.getElementById('userSearchInput') ? document.getElementById('userSearchInput').value.toLowerCase() : '';
-
-        let filteredDocs = displayDocs;
         if (searchQuery) {
-            filteredDocs = displayDocs.filter(doc => {
+            docs = docs.filter(doc => {
                 const data = doc.data();
                 return (data.name || '').toLowerCase().includes(searchQuery) ||
                     (data.email || '').toLowerCase().includes(searchQuery);
             });
         }
 
-        if (filteredDocs.length === 0) {
+        const hasMore = docs.length > PAGE_SIZE;
+        const displayDocs = hasMore ? docs.slice(0, PAGE_SIZE) : docs;
+
+        if (displayDocs.length === 0) {
             tbody.appendChild(createEmptyRow(6, 'No customers found'));
             updatePaginationUI('customers', state.page, false);
             return;
@@ -517,7 +567,7 @@ async function loadCustomers(direction) {
         state.lastDoc = displayDocs[displayDocs.length - 1];
         state.hasMore = hasMore;
 
-        filteredDocs.forEach(doc => {
+        displayDocs.forEach(doc => {
             const user = doc.data();
             const tr = document.createElement('tr');
 
@@ -574,26 +624,34 @@ async function loadAllUsers(direction) {
     tbody.appendChild(createLoadingRow(6));
 
     try {
+        const sortValue = document.getElementById('userSortSelect') ? document.getElementById('userSortSelect').value : 'createdAt-desc';
+        const parts = sortValue.split('-');
+        const sortField = parts[0];
+        const sortDir = parts[1];
+
+        const searchQuery = document.getElementById('userSearchInput') ? document.getElementById('userSearchInput').value.toLowerCase() : '';
+        const fetchLimit = searchQuery ? PAGE_SIZE * 5 : PAGE_SIZE + 1;
+
         let query = db.collection('users')
-            .orderBy('createdAt', 'desc')
-            .limit(PAGE_SIZE + 1);
+            .orderBy(sortField, sortDir)
+            .limit(fetchLimit);
 
         if (direction === 'next' && state.lastDoc) {
             query = db.collection('users')
-                .orderBy('createdAt', 'desc')
+                .orderBy(sortField, sortDir)
                 .startAfter(state.lastDoc)
-                .limit(PAGE_SIZE + 1);
+                .limit(fetchLimit);
         } else if (direction === 'prev' && state.stack.length > 1) {
             state.stack.pop();
             const prevCursor = state.stack[state.stack.length - 1];
             query = db.collection('users')
-                .orderBy('createdAt', 'desc')
-                .limit(PAGE_SIZE + 1);
+                .orderBy(sortField, sortDir)
+                .limit(fetchLimit);
             if (prevCursor) {
                 query = db.collection('users')
-                    .orderBy('createdAt', 'desc')
+                    .orderBy(sortField, sortDir)
                     .startAt(prevCursor)
-                    .limit(PAGE_SIZE + 1);
+                    .limit(fetchLimit);
             }
             state.page--;
         } else {
@@ -604,7 +662,17 @@ async function loadAllUsers(direction) {
         const snapshot = await query.get();
         tbody.innerHTML = '';
 
-        const docs = snapshot.docs;
+        let docs = snapshot.docs;
+
+        // Client-side search filter
+        if (searchQuery) {
+            docs = docs.filter(doc => {
+                const data = doc.data();
+                return (data.name || '').toLowerCase().includes(searchQuery) ||
+                    (data.email || '').toLowerCase().includes(searchQuery);
+            });
+        }
+
         const hasMore = docs.length > PAGE_SIZE;
         const displayDocs = hasMore ? docs.slice(0, PAGE_SIZE) : docs;
 
@@ -783,9 +851,7 @@ async function suspendUser(userId, userName) {
         await db.collection('users').doc(userId).update({ status: 'suspended' });
         await logAuditAction('suspend_user', userId, 'user', { name: userName });
         alert('User suspended.');
-        loadCustomers('first');
-        loadAllUsers('first');
-        loadArtists('first');
+        reloadVisibleUserTables();
     } catch (error) {
         console.error('Error suspending user:', error);
         alert('Error suspending user.');
@@ -799,9 +865,7 @@ async function activateUser(userId, userName) {
         await db.collection('users').doc(userId).update({ status: 'active' });
         await logAuditAction('activate_user', userId, 'user', { name: userName });
         alert('User activated.');
-        loadCustomers('first');
-        loadAllUsers('first');
-        loadArtists('first');
+        reloadVisibleUserTables();
     } catch (error) {
         console.error('Error activating user:', error);
         alert('Error activating user.');
@@ -818,9 +882,7 @@ async function deleteUser(userId, userName) {
         await db.collection('users').doc(userId).delete();
         await logAuditAction('delete_user', userId, 'user', { name: userName });
         alert('User deleted successfully!');
-        loadCustomers('first');
-        loadAllUsers('first');
-        loadArtists('first');
+        reloadVisibleUserTables();
         loadOverview();
     } catch (error) {
         console.error('Error deleting user:', error);
@@ -842,6 +904,7 @@ async function loadPosts(direction) {
         const categoryFilter = document.getElementById('categoryFilter') ? document.getElementById('categoryFilter').value : '';
         const statusFilter = document.getElementById('statusFilter') ? document.getElementById('statusFilter').value : '';
         const searchQuery = document.getElementById('searchArtist') ? document.getElementById('searchArtist').value.toLowerCase() : '';
+        const fetchLimit = searchQuery ? PAGE_SIZE * 5 : PAGE_SIZE + 1;
 
         let query = db.collection('posts');
 
@@ -852,25 +915,25 @@ async function loadPosts(direction) {
             query = query.where('status', '==', statusFilter);
         }
 
-        query = query.orderBy('createdAt', 'desc').limit(PAGE_SIZE + 1);
+        query = query.orderBy('createdAt', 'desc').limit(fetchLimit);
 
         if (direction === 'next' && state.lastDoc) {
             query = db.collection('posts');
             if (categoryFilter) query = query.where('category', '==', categoryFilter);
             if (statusFilter) query = query.where('status', '==', statusFilter);
-            query = query.orderBy('createdAt', 'desc').startAfter(state.lastDoc).limit(PAGE_SIZE + 1);
+            query = query.orderBy('createdAt', 'desc').startAfter(state.lastDoc).limit(fetchLimit);
         } else if (direction === 'prev' && state.stack.length > 1) {
             state.stack.pop();
             const prevCursor = state.stack[state.stack.length - 1];
             query = db.collection('posts');
             if (categoryFilter) query = query.where('category', '==', categoryFilter);
             if (statusFilter) query = query.where('status', '==', statusFilter);
-            query = query.orderBy('createdAt', 'desc').limit(PAGE_SIZE + 1);
+            query = query.orderBy('createdAt', 'desc').limit(fetchLimit);
             if (prevCursor) {
                 query = db.collection('posts');
                 if (categoryFilter) query = query.where('category', '==', categoryFilter);
                 if (statusFilter) query = query.where('status', '==', statusFilter);
-                query = query.orderBy('createdAt', 'desc').startAt(prevCursor).limit(PAGE_SIZE + 1);
+                query = query.orderBy('createdAt', 'desc').startAt(prevCursor).limit(fetchLimit);
             }
             state.page--;
         } else {
@@ -881,20 +944,20 @@ async function loadPosts(direction) {
         const snapshot = await query.get();
         tbody.innerHTML = '';
 
-        const docs = snapshot.docs;
-        const hasMore = docs.length > PAGE_SIZE;
-        const displayDocs = hasMore ? docs.slice(0, PAGE_SIZE) : docs;
+        let docs = snapshot.docs;
 
         // Client-side artist name search
-        let filteredDocs = displayDocs;
         if (searchQuery) {
-            filteredDocs = displayDocs.filter(doc => {
+            docs = docs.filter(doc => {
                 const data = doc.data();
                 return (data.artistName || '').toLowerCase().includes(searchQuery);
             });
         }
 
-        if (filteredDocs.length === 0) {
+        const hasMore = docs.length > PAGE_SIZE;
+        const displayDocs = hasMore ? docs.slice(0, PAGE_SIZE) : docs;
+
+        if (displayDocs.length === 0) {
             tbody.appendChild(createEmptyRow(7, 'No posts found'));
             updatePaginationUI('posts', state.page, false);
             return;
@@ -907,7 +970,7 @@ async function loadPosts(direction) {
         state.lastDoc = displayDocs[displayDocs.length - 1];
         state.hasMore = hasMore;
 
-        filteredDocs.forEach(doc => {
+        displayDocs.forEach(doc => {
             const post = doc.data();
             const tr = document.createElement('tr');
 
@@ -1113,6 +1176,10 @@ async function loadReports(direction) {
 // APPROVE / REJECT REPORT
 // =============================================
 async function approveReport(reportId, postId) {
+    if (!postId) {
+        alert('Cannot approve: this report has no associated post.');
+        return;
+    }
     if (!confirm('This will remove the reported post. Continue?')) return;
 
     try {
@@ -1238,13 +1305,7 @@ let categoryPieChart = null;
 
 async function loadCategoryPieChart() {
     try {
-        const postsSnap = await db.collection('posts').get();
-
-        const categoryData = {};
-        postsSnap.forEach(doc => {
-            const category = doc.data().category || 'Unknown';
-            categoryData[category] = (categoryData[category] || 0) + 1;
-        });
+        const categoryData = await getPostCategoryData();
 
         const ctx = document.getElementById('categoryPieChart');
         if (ctx) {
@@ -1277,24 +1338,34 @@ let reportsTrendChart = null;
 async function loadReportsTrendChart() {
     try {
         const now = new Date();
+        const startDate = new Date(now);
+        startDate.setDate(startDate.getDate() - 6);
+        startDate.setHours(0, 0, 0, 0);
+
+        const snapshot = await db.collection('reports')
+            .where('createdAt', '>=', firebase.firestore.Timestamp.fromDate(startDate))
+            .get();
+
+        // Bucket reports by day
+        const dayCounts = {};
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            if (data.createdAt) {
+                const date = data.createdAt.toDate();
+                const dayKey = date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
+                dayCounts[dayKey] = (dayCounts[dayKey] || 0) + 1;
+            }
+        });
+
         const last7Days = [];
         const reportCounts = [];
-
         for (let i = 6; i >= 0; i--) {
             const date = new Date(now);
             date.setDate(date.getDate() - i);
             date.setHours(0, 0, 0, 0);
-
-            const nextDate = new Date(date);
-            nextDate.setDate(nextDate.getDate() + 1);
-
-            const snapshot = await db.collection('reports')
-                .where('createdAt', '>=', firebase.firestore.Timestamp.fromDate(date))
-                .where('createdAt', '<', firebase.firestore.Timestamp.fromDate(nextDate))
-                .get();
-
+            const dayKey = date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
             last7Days.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
-            reportCounts.push(snapshot.size);
+            reportCounts.push(dayCounts[dayKey] || 0);
         }
 
         const ctx = document.getElementById('reportsTrendChart');
@@ -1434,6 +1505,9 @@ document.getElementById('addAdminForm')?.addEventListener('submit', async functi
     }
 });
 
+// NOTE: This only removes the Firestore admin document. The Firebase Auth account
+// remains (deleting auth users requires the Firebase Admin SDK / Cloud Functions).
+// Access is still blocked since the login flow checks for the admin doc.
 async function deleteAdmin(adminId, adminEmail) {
     if (!confirm('Remove admin "' + adminEmail + '"? They will lose admin access.')) return;
 
@@ -1470,12 +1544,16 @@ async function toggleAdminRole(adminId, currentRole, adminEmail) {
 // =============================================
 document.getElementById('userSearchInput')?.addEventListener('input', debounce(function () {
     resetPagination('customers');
+    resetPagination('allUsers');
     loadCustomers('first');
+    loadAllUsers('first');
 }, 300));
 
 document.getElementById('userSortSelect')?.addEventListener('change', function () {
     resetPagination('customers');
+    resetPagination('allUsers');
     loadCustomers('first');
+    loadAllUsers('first');
 });
 
 // =============================================
