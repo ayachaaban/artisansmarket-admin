@@ -110,7 +110,18 @@ loginForm.addEventListener('submit', async function (e) {
         const user = userCredential.user;
 
         // Verify user is an admin
-        const adminDoc = await db.collection('admins').doc(user.uid).get();
+        let adminDoc;
+        try {
+            adminDoc = await db.collection('admins').doc(user.uid).get();
+        } catch (firestoreError) {
+            // Firestore permission-denied means user is not an admin
+            await auth.signOut();
+            showError('Access denied. You are not an admin.');
+            signInBtn.disabled = false;
+            signInBtn.innerHTML = originalButtonText;
+            return;
+        }
+
         if (!adminDoc.exists) {
             await auth.signOut();
             showError('Access denied. You are not an admin.');

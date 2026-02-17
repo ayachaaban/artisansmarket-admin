@@ -13,7 +13,7 @@
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "role", "order": "ASCENDING" },
-        { "fieldPath": "averageRating", "order": "DESCENDING" }
+        { "fieldPath": "createdAt", "order": "ASCENDING" }
       ]
     },
     {
@@ -29,14 +29,22 @@
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "role", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "ASCENDING" }
+        { "fieldPath": "name", "order": "DESCENDING" }
       ]
     },
     {
-      "collectionGroup": "reports",
+      "collectionGroup": "users",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "role", "order": "ASCENDING" },
+        { "fieldPath": "averageRating", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "posts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "category", "order": "ASCENDING" },
         { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     },
@@ -53,15 +61,16 @@
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "category", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
         { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     },
     {
-      "collectionGroup": "auditLogs",
+      "collectionGroup": "reports",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "action", "order": "ASCENDING" },
-        { "fieldPath": "timestamp", "order": "DESCENDING" }
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     }
   ],

@@ -306,6 +306,26 @@
             <!-- Artists Page -->
             <div class="page-content" id="artistsPage">
                 <h2 class="page-title">Artists Management</h2>
+
+                <div class="filters mb-3">
+                    <input type="text" class="form-control filter-select" id="artistSearchInput" placeholder="Search by name or email...">
+                    <select class="form-select filter-select" id="artistCategoryFilter">
+                        <option value="">All Categories</option>
+                        <option value="Painting">Painting</option>
+                        <option value="Sculpture">Sculpture</option>
+                        <option value="Photography">Photography</option>
+                        <option value="Digital Art">Digital Art</option>
+                        <option value="Crafts">Crafts</option>
+                    </select>
+                    <select class="form-select filter-select" id="artistSortSelect">
+                        <option value="createdAt-desc">Newest First</option>
+                        <option value="createdAt-asc">Oldest First</option>
+                        <option value="name-asc">Name (A-Z)</option>
+                        <option value="name-desc">Name (Z-A)</option>
+                        <option value="averageRating-desc">Top Rated</option>
+                    </select>
+                </div>
+
                 <div class="table-responsive">
                     <table class="table custom-table">
                         <thead>
@@ -385,6 +405,15 @@
             <!-- Reports Page -->
             <div class="page-content" id="reportsPage">
                 <h2 class="page-title">Reports Management</h2>
+
+                <div class="filters mb-3">
+                    <select class="form-select filter-select" id="reportStatusFilter">
+                        <option value="">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="reviewed">Reviewed</option>
+                    </select>
+                </div>
+
                 <div class="table-responsive">
                     <table class="table custom-table">
                         <thead>

@@ -94,9 +94,12 @@ function getActivePage() {
 function reloadVisibleUserTables() {
     const activePage = getActivePage();
     if (activePage === 'users') {
+        resetPagination('customers');
+        resetPagination('allUsers');
         loadCustomers('first');
         loadAllUsers('first');
     } else if (activePage === 'artists') {
+        resetPagination('artists');
         loadArtists('first');
     }
 }
@@ -504,30 +507,22 @@ async function loadCustomers(direction) {
         const searchQuery = document.getElementById('userSearchInput') ? document.getElementById('userSearchInput').value.toLowerCase() : '';
         const fetchLimit = searchQuery ? PAGE_SIZE * 5 : PAGE_SIZE + 1;
 
-        let query = db.collection('users')
-            .where('role', '==', 'customer')
-            .orderBy(sortField, sortDir)
-            .limit(fetchLimit);
+        function buildCustomerQuery() {
+            return db.collection('users')
+                .where('role', '==', 'customer')
+                .orderBy(sortField, sortDir);
+        }
+
+        let query = buildCustomerQuery().limit(fetchLimit);
 
         if (direction === 'next' && state.lastDoc) {
-            query = db.collection('users')
-                .where('role', '==', 'customer')
-                .orderBy(sortField, sortDir)
-                .startAfter(state.lastDoc)
-                .limit(fetchLimit);
+            query = buildCustomerQuery().startAfter(state.lastDoc).limit(fetchLimit);
         } else if (direction === 'prev' && state.stack.length > 1) {
             state.stack.pop();
             const prevCursor = state.stack[state.stack.length - 1];
-            query = db.collection('users')
-                .where('role', '==', 'customer')
-                .orderBy(sortField, sortDir)
-                .limit(fetchLimit);
+            query = buildCustomerQuery().limit(fetchLimit);
             if (prevCursor) {
-                query = db.collection('users')
-                    .where('role', '==', 'customer')
-                    .orderBy(sortField, sortDir)
-                    .startAt(prevCursor)
-                    .limit(fetchLimit);
+                query = buildCustomerQuery().startAt(prevCursor).limit(fetchLimit);
             }
             state.page--;
         } else {
@@ -632,26 +627,21 @@ async function loadAllUsers(direction) {
         const searchQuery = document.getElementById('userSearchInput') ? document.getElementById('userSearchInput').value.toLowerCase() : '';
         const fetchLimit = searchQuery ? PAGE_SIZE * 5 : PAGE_SIZE + 1;
 
-        let query = db.collection('users')
-            .orderBy(sortField, sortDir)
-            .limit(fetchLimit);
+        function buildAllUsersQuery() {
+            return db.collection('users')
+                .orderBy(sortField, sortDir);
+        }
+
+        let query = buildAllUsersQuery().limit(fetchLimit);
 
         if (direction === 'next' && state.lastDoc) {
-            query = db.collection('users')
-                .orderBy(sortField, sortDir)
-                .startAfter(state.lastDoc)
-                .limit(fetchLimit);
+            query = buildAllUsersQuery().startAfter(state.lastDoc).limit(fetchLimit);
         } else if (direction === 'prev' && state.stack.length > 1) {
             state.stack.pop();
             const prevCursor = state.stack[state.stack.length - 1];
-            query = db.collection('users')
-                .orderBy(sortField, sortDir)
-                .limit(fetchLimit);
+            query = buildAllUsersQuery().limit(fetchLimit);
             if (prevCursor) {
-                query = db.collection('users')
-                    .orderBy(sortField, sortDir)
-                    .startAt(prevCursor)
-                    .limit(fetchLimit);
+                query = buildAllUsersQuery().startAt(prevCursor).limit(fetchLimit);
             }
             state.page--;
         } else {
@@ -736,7 +726,7 @@ async function loadAllUsers(direction) {
 }
 
 // =============================================
-// ARTISTS TABLE (with pagination)
+// ARTISTS TABLE (with pagination + filters)
 // =============================================
 async function loadArtists(direction) {
     if (!direction) direction = 'first';
@@ -746,30 +736,33 @@ async function loadArtists(direction) {
     tbody.appendChild(createLoadingRow(7));
 
     try {
-        let query = db.collection('users')
-            .where('role', '==', 'artist')
-            .orderBy('createdAt', 'desc')
-            .limit(PAGE_SIZE + 1);
+        const sortValue = document.getElementById('artistSortSelect') ? document.getElementById('artistSortSelect').value : 'createdAt-desc';
+        const parts = sortValue.split('-');
+        const sortField = parts[0];
+        const sortDir = parts[1];
+
+        const categoryFilter = document.getElementById('artistCategoryFilter') ? document.getElementById('artistCategoryFilter').value : '';
+        const searchQuery = document.getElementById('artistSearchInput') ? document.getElementById('artistSearchInput').value.toLowerCase() : '';
+        const hasFilters = categoryFilter || searchQuery;
+        const fetchLimit = hasFilters ? PAGE_SIZE * 5 : PAGE_SIZE + 1;
+
+        // Build base query (category filter is client-side to avoid extra composite indexes)
+        function buildBaseQuery() {
+            return db.collection('users')
+                .where('role', '==', 'artist')
+                .orderBy(sortField, sortDir);
+        }
+
+        let query = buildBaseQuery().limit(fetchLimit);
 
         if (direction === 'next' && state.lastDoc) {
-            query = db.collection('users')
-                .where('role', '==', 'artist')
-                .orderBy('createdAt', 'desc')
-                .startAfter(state.lastDoc)
-                .limit(PAGE_SIZE + 1);
+            query = buildBaseQuery().startAfter(state.lastDoc).limit(fetchLimit);
         } else if (direction === 'prev' && state.stack.length > 1) {
             state.stack.pop();
             const prevCursor = state.stack[state.stack.length - 1];
-            query = db.collection('users')
-                .where('role', '==', 'artist')
-                .orderBy('createdAt', 'desc')
-                .limit(PAGE_SIZE + 1);
+            query = buildBaseQuery().limit(fetchLimit);
             if (prevCursor) {
-                query = db.collection('users')
-                    .where('role', '==', 'artist')
-                    .orderBy('createdAt', 'desc')
-                    .startAt(prevCursor)
-                    .limit(PAGE_SIZE + 1);
+                query = buildBaseQuery().startAt(prevCursor).limit(fetchLimit);
             }
             state.page--;
         } else {
@@ -780,7 +773,22 @@ async function loadArtists(direction) {
         const snapshot = await query.get();
         tbody.innerHTML = '';
 
-        const docs = snapshot.docs;
+        let docs = snapshot.docs;
+
+        // Client-side category filter
+        if (categoryFilter) {
+            docs = docs.filter(doc => doc.data().category === categoryFilter);
+        }
+
+        // Client-side search filter
+        if (searchQuery) {
+            docs = docs.filter(doc => {
+                const data = doc.data();
+                return (data.name || '').toLowerCase().includes(searchQuery) ||
+                    (data.email || '').toLowerCase().includes(searchQuery);
+            });
+        }
+
         const hasMore = docs.length > PAGE_SIZE;
         const displayDocs = hasMore ? docs.slice(0, PAGE_SIZE) : docs;
 
@@ -906,34 +914,24 @@ async function loadPosts(direction) {
         const searchQuery = document.getElementById('searchArtist') ? document.getElementById('searchArtist').value.toLowerCase() : '';
         const fetchLimit = searchQuery ? PAGE_SIZE * 5 : PAGE_SIZE + 1;
 
-        let query = db.collection('posts');
-
-        if (categoryFilter) {
-            query = query.where('category', '==', categoryFilter);
+        function buildPostQuery() {
+            let q = db.collection('posts');
+            if (categoryFilter) q = q.where('category', '==', categoryFilter);
+            if (statusFilter) q = q.where('status', '==', statusFilter);
+            q = q.orderBy('createdAt', 'desc');
+            return q;
         }
-        if (statusFilter) {
-            query = query.where('status', '==', statusFilter);
-        }
 
-        query = query.orderBy('createdAt', 'desc').limit(fetchLimit);
+        let query = buildPostQuery().limit(fetchLimit);
 
         if (direction === 'next' && state.lastDoc) {
-            query = db.collection('posts');
-            if (categoryFilter) query = query.where('category', '==', categoryFilter);
-            if (statusFilter) query = query.where('status', '==', statusFilter);
-            query = query.orderBy('createdAt', 'desc').startAfter(state.lastDoc).limit(fetchLimit);
+            query = buildPostQuery().startAfter(state.lastDoc).limit(fetchLimit);
         } else if (direction === 'prev' && state.stack.length > 1) {
             state.stack.pop();
             const prevCursor = state.stack[state.stack.length - 1];
-            query = db.collection('posts');
-            if (categoryFilter) query = query.where('category', '==', categoryFilter);
-            if (statusFilter) query = query.where('status', '==', statusFilter);
-            query = query.orderBy('createdAt', 'desc').limit(fetchLimit);
+            query = buildPostQuery().limit(fetchLimit);
             if (prevCursor) {
-                query = db.collection('posts');
-                if (categoryFilter) query = query.where('category', '==', categoryFilter);
-                if (statusFilter) query = query.where('status', '==', statusFilter);
-                query = query.orderBy('createdAt', 'desc').startAt(prevCursor).limit(fetchLimit);
+                query = buildPostQuery().startAt(prevCursor).limit(fetchLimit);
             }
             state.page--;
         } else {
@@ -1027,6 +1025,28 @@ document.getElementById('searchArtist')?.addEventListener('input', debounce(func
     loadPosts('first');
 }, 300));
 
+// Artist page filters
+document.getElementById('artistSearchInput')?.addEventListener('input', debounce(function () {
+    resetPagination('artists');
+    loadArtists('first');
+}, 300));
+
+document.getElementById('artistCategoryFilter')?.addEventListener('change', function () {
+    resetPagination('artists');
+    loadArtists('first');
+});
+
+document.getElementById('artistSortSelect')?.addEventListener('change', function () {
+    resetPagination('artists');
+    loadArtists('first');
+});
+
+// Report status filter
+document.getElementById('reportStatusFilter')?.addEventListener('change', function () {
+    resetPagination('reports');
+    loadReports('first');
+});
+
 // =============================================
 // DELETE POST
 // =============================================
@@ -1047,7 +1067,7 @@ async function deletePost(postId) {
 }
 
 // =============================================
-// REPORTS TABLE (with pagination + enhanced info)
+// REPORTS TABLE (with pagination + enhanced info + status filter)
 // =============================================
 async function loadReports(direction) {
     if (!direction) direction = 'first';
@@ -1057,26 +1077,27 @@ async function loadReports(direction) {
     tbody.appendChild(createLoadingRow(6));
 
     try {
-        let query = db.collection('reports')
-            .orderBy('createdAt', 'desc')
-            .limit(PAGE_SIZE + 1);
+        const statusFilter = document.getElementById('reportStatusFilter') ? document.getElementById('reportStatusFilter').value : '';
+
+        function buildBaseQuery() {
+            let q = db.collection('reports');
+            if (statusFilter) {
+                q = q.where('status', '==', statusFilter);
+            }
+            q = q.orderBy('createdAt', 'desc');
+            return q;
+        }
+
+        let query = buildBaseQuery().limit(PAGE_SIZE + 1);
 
         if (direction === 'next' && state.lastDoc) {
-            query = db.collection('reports')
-                .orderBy('createdAt', 'desc')
-                .startAfter(state.lastDoc)
-                .limit(PAGE_SIZE + 1);
+            query = buildBaseQuery().startAfter(state.lastDoc).limit(PAGE_SIZE + 1);
         } else if (direction === 'prev' && state.stack.length > 1) {
             state.stack.pop();
             const prevCursor = state.stack[state.stack.length - 1];
-            query = db.collection('reports')
-                .orderBy('createdAt', 'desc')
-                .limit(PAGE_SIZE + 1);
+            query = buildBaseQuery().limit(PAGE_SIZE + 1);
             if (prevCursor) {
-                query = db.collection('reports')
-                    .orderBy('createdAt', 'desc')
-                    .startAt(prevCursor)
-                    .limit(PAGE_SIZE + 1);
+                query = buildBaseQuery().startAt(prevCursor).limit(PAGE_SIZE + 1);
             }
             state.page--;
         } else {
