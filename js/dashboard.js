@@ -7,6 +7,13 @@ let reportsUnsubscribe = null;
 let postCategoryCache = { data: null, timestamp: 0 };
 const CACHE_TTL = 60000; // 1 minute cache
 
+// Plan definitions
+const PLANS = {
+    free: { name: 'Free', amount: 0, postLimit: 5 },
+    basic: { name: 'Basic', amount: 9.99, postLimit: 25 },
+    premium: { name: 'Premium', amount: 24.99, postLimit: -1 }
+};
+
 // Pagination state for each table
 const paginationState = {
     customers: { lastDoc: null, page: 1, hasMore: true, stack: [] },
@@ -14,6 +21,7 @@ const paginationState = {
     artists: { lastDoc: null, page: 1, hasMore: true, stack: [] },
     posts: { lastDoc: null, page: 1, hasMore: true, stack: [] },
     reports: { lastDoc: null, page: 1, hasMore: true, stack: [] },
+    subscriptions: { lastDoc: null, page: 1, hasMore: true, stack: [] },
 };
 
 // =============================================
@@ -247,6 +255,12 @@ sidebarMenuItems.forEach(item => {
                 break;
             case 'ratings':
                 loadRatings();
+                break;
+            case 'subscriptions':
+                resetPagination('subscriptions');
+                loadSubscriptionStats();
+                populateArtistDropdown();
+                loadSubscriptions('first');
                 break;
             case 'analytics':
                 loadAnalytics();
@@ -1590,3 +1604,385 @@ document.getElementById('postsPrevBtn')?.addEventListener('click', () => loadPos
 document.getElementById('postsNextBtn')?.addEventListener('click', () => loadPosts('next'));
 document.getElementById('reportsPrevBtn')?.addEventListener('click', () => loadReports('prev'));
 document.getElementById('reportsNextBtn')?.addEventListener('click', () => loadReports('next'));
+document.getElementById('subscriptionsPrevBtn')?.addEventListener('click', () => loadSubscriptions('prev'));
+document.getElementById('subscriptionsNextBtn')?.addEventListener('click', () => loadSubscriptions('next'));
+
+// =============================================
+// SUBSCRIPTIONS - Stats
+// =============================================
+async function loadSubscriptionStats() {
+    try {
+        const snapshot = await db.collection('subscriptions').get();
+        let total = 0, active = 0, expired = 0, revenue = 0;
+
+        snapshot.forEach(doc => {
+            const sub = doc.data();
+            total++;
+            if (sub.status === 'active') {
+                active++;
+                revenue += sub.amount || 0;
+            } else if (sub.status === 'expired') {
+                expired++;
+            }
+        });
+
+        document.getElementById('totalSubscriptions').textContent = total;
+        document.getElementById('activeSubscriptions').textContent = active;
+        document.getElementById('expiredSubscriptions').textContent = expired;
+        document.getElementById('monthlyRevenue').textContent = '$' + revenue.toFixed(2);
+    } catch (error) {
+        console.error('Error loading subscription stats:', error);
+    }
+}
+
+// =============================================
+// SUBSCRIPTIONS - Populate Artist Dropdown
+// =============================================
+async function populateArtistDropdown() {
+    const select = document.getElementById('artistSelect');
+    if (!select) return;
+
+    try {
+        const snapshot = await db.collection('users')
+            .where('role', '==', 'artist')
+            .where('status', '==', 'active')
+            .orderBy('name', 'asc')
+            .get();
+
+        // Keep the default option
+        select.innerHTML = '<option value="">-- Choose Artist --</option>';
+
+        snapshot.forEach(doc => {
+            const artist = doc.data();
+            const option = document.createElement('option');
+            option.value = doc.id;
+            option.textContent = artist.name + ' (' + artist.email + ')';
+            select.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error populating artist dropdown:', error);
+    }
+}
+
+// =============================================
+// SUBSCRIPTIONS - Load Table (paginated + filtered)
+// =============================================
+async function loadSubscriptions(direction) {
+    if (!direction) direction = 'first';
+    const state = paginationState.subscriptions;
+    const tbody = document.getElementById('subscriptionsTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    tbody.appendChild(createLoadingRow(7));
+
+    try {
+        const planFilter = document.getElementById('subscriptionPlanFilter') ? document.getElementById('subscriptionPlanFilter').value : '';
+        const statusFilter = document.getElementById('subscriptionStatusFilter') ? document.getElementById('subscriptionStatusFilter').value : '';
+        const searchQuery = document.getElementById('subscriptionSearchInput') ? document.getElementById('subscriptionSearchInput').value.toLowerCase() : '';
+        const fetchLimit = searchQuery ? PAGE_SIZE * 5 : PAGE_SIZE + 1;
+
+        function buildSubQuery() {
+            let q = db.collection('subscriptions');
+            if (planFilter) q = q.where('plan', '==', planFilter);
+            if (statusFilter) q = q.where('status', '==', statusFilter);
+            q = q.orderBy('createdAt', 'desc');
+            return q;
+        }
+
+        let query = buildSubQuery().limit(fetchLimit);
+
+        if (direction === 'next' && state.lastDoc) {
+            query = buildSubQuery().startAfter(state.lastDoc).limit(fetchLimit);
+        } else if (direction === 'prev' && state.stack.length > 1) {
+            state.stack.pop();
+            const prevCursor = state.stack[state.stack.length - 1];
+            query = buildSubQuery().limit(fetchLimit);
+            if (prevCursor) {
+                query = buildSubQuery().startAt(prevCursor).limit(fetchLimit);
+            }
+            state.page--;
+        } else {
+            state.page = 1;
+            state.stack = [null];
+        }
+
+        const snapshot = await query.get();
+        tbody.innerHTML = '';
+
+        let docs = snapshot.docs;
+
+        // Client-side search filter
+        if (searchQuery) {
+            docs = docs.filter(doc => {
+                const data = doc.data();
+                return (data.artistName || '').toLowerCase().includes(searchQuery) ||
+                    (data.artistEmail || '').toLowerCase().includes(searchQuery);
+            });
+        }
+
+        const hasMore = docs.length > PAGE_SIZE;
+        const displayDocs = hasMore ? docs.slice(0, PAGE_SIZE) : docs;
+
+        if (displayDocs.length === 0) {
+            tbody.appendChild(createEmptyRow(7, 'No subscriptions found'));
+            updatePaginationUI('subscriptions', state.page, false);
+            return;
+        }
+
+        if (direction === 'first' || direction === 'next') {
+            if (direction === 'next') state.page++;
+            if (displayDocs.length > 0) state.stack.push(displayDocs[0]);
+        }
+        state.lastDoc = displayDocs[displayDocs.length - 1];
+        state.hasMore = hasMore;
+
+        displayDocs.forEach(doc => {
+            const sub = doc.data();
+            const tr = document.createElement('tr');
+
+            tr.appendChild(createEl('td', {}, sub.artistName || 'N/A'));
+            tr.appendChild(createEl('td', {}, sub.artistEmail || 'N/A'));
+
+            const tdPlan = document.createElement('td');
+            tdPlan.appendChild(createEl('span', { className: 'plan-badge plan-' + (sub.plan || 'free') }, PLANS[sub.plan] ? PLANS[sub.plan].name : sub.plan));
+            tr.appendChild(tdPlan);
+
+            tr.appendChild(createEl('td', {}, '$' + (sub.amount || 0).toFixed(2)));
+
+            const tdStatus = document.createElement('td');
+            tdStatus.appendChild(createEl('span', { className: 'status-badge status-' + (sub.status || 'active') }, sub.status || 'active'));
+            tr.appendChild(tdStatus);
+
+            const expiryText = sub.expiryDate ? sub.expiryDate.toDate().toLocaleDateString() : 'N/A';
+            tr.appendChild(createEl('td', {}, expiryText));
+
+            const tdActions = document.createElement('td');
+            if (sub.status === 'active') {
+                const changeBtn = createEl('button', { className: 'btn-action btn-view' }, 'Change');
+                changeBtn.addEventListener('click', () => changePlanPrompt(doc.id, sub));
+                tdActions.appendChild(changeBtn);
+
+                const cancelBtn = createEl('button', { className: 'btn-action btn-delete' }, 'Cancel');
+                cancelBtn.addEventListener('click', () => cancelSubscription(doc.id, sub.artistName));
+                tdActions.appendChild(cancelBtn);
+            } else {
+                const renewBtn = createEl('button', { className: 'btn-action btn-approve' }, 'Renew');
+                renewBtn.addEventListener('click', () => renewSubscription(doc.id, sub));
+                tdActions.appendChild(renewBtn);
+            }
+            tr.appendChild(tdActions);
+
+            tbody.appendChild(tr);
+        });
+
+        updatePaginationUI('subscriptions', state.page, hasMore);
+    } catch (error) {
+        console.error('Error loading subscriptions:', error);
+        tbody.innerHTML = '';
+        tbody.appendChild(createErrorRow(7, 'Error loading subscriptions'));
+    }
+}
+
+// =============================================
+// SUBSCRIPTIONS - Assign Plan
+// =============================================
+async function assignPlan(artistId, planKey) {
+    const plan = PLANS[planKey];
+    if (!plan) {
+        alert('Invalid plan selected.');
+        return;
+    }
+
+    try {
+        // Fetch artist info
+        const artistDoc = await db.collection('users').doc(artistId).get();
+        if (!artistDoc.exists) {
+            alert('Artist not found.');
+            return;
+        }
+        const artist = artistDoc.data();
+
+        const now = new Date();
+        const expiryDate = planKey === 'free' ? null : new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+        await db.collection('subscriptions').doc(artistId).set({
+            artistId: artistId,
+            artistName: artist.name || 'Unknown',
+            artistEmail: artist.email || '',
+            plan: planKey,
+            amount: plan.amount,
+            status: 'active',
+            postLimit: plan.postLimit,
+            startDate: firebase.firestore.Timestamp.fromDate(now),
+            expiryDate: expiryDate ? firebase.firestore.Timestamp.fromDate(expiryDate) : null,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            assignedBy: auth.currentUser.email
+        });
+
+        await logAuditAction('assign_plan', artistId, 'subscription', {
+            artistName: artist.name, plan: planKey, amount: plan.amount
+        });
+
+        alert('Plan "' + plan.name + '" assigned to ' + artist.name + '!');
+        resetPagination('subscriptions');
+        loadSubscriptions('first');
+        loadSubscriptionStats();
+    } catch (error) {
+        console.error('Error assigning plan:', error);
+        alert('Error assigning plan: ' + error.message);
+    }
+}
+
+// =============================================
+// SUBSCRIPTIONS - Change Plan
+// =============================================
+function changePlanPrompt(subId, currentSub) {
+    const planOptions = Object.keys(PLANS)
+        .filter(k => k !== currentSub.plan)
+        .map(k => PLANS[k].name + ' ($' + PLANS[k].amount + '/mo)')
+        .join(', ');
+
+    const newPlan = prompt(
+        'Current plan: ' + (PLANS[currentSub.plan] ? PLANS[currentSub.plan].name : currentSub.plan) +
+        '\nAvailable plans: ' + planOptions +
+        '\n\nEnter new plan (free, basic, or premium):'
+    );
+
+    if (!newPlan) return;
+    const planKey = newPlan.trim().toLowerCase();
+
+    if (!PLANS[planKey]) {
+        alert('Invalid plan. Please enter: free, basic, or premium');
+        return;
+    }
+
+    if (planKey === currentSub.plan) {
+        alert('Artist is already on this plan.');
+        return;
+    }
+
+    changePlan(subId, planKey, currentSub);
+}
+
+async function changePlan(subId, newPlanKey, currentSub) {
+    const plan = PLANS[newPlanKey];
+    if (!confirm('Change ' + (currentSub.artistName || 'this artist') + ' from ' +
+        (PLANS[currentSub.plan] ? PLANS[currentSub.plan].name : currentSub.plan) + ' to ' + plan.name + '?')) return;
+
+    try {
+        const now = new Date();
+        const expiryDate = newPlanKey === 'free' ? null : new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+        await db.collection('subscriptions').doc(subId).update({
+            plan: newPlanKey,
+            amount: plan.amount,
+            postLimit: plan.postLimit,
+            startDate: firebase.firestore.Timestamp.fromDate(now),
+            expiryDate: expiryDate ? firebase.firestore.Timestamp.fromDate(expiryDate) : null,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            assignedBy: auth.currentUser.email
+        });
+
+        await logAuditAction('change_plan', subId, 'subscription', {
+            artistName: currentSub.artistName, oldPlan: currentSub.plan, newPlan: newPlanKey
+        });
+
+        alert('Plan changed to ' + plan.name + '!');
+        resetPagination('subscriptions');
+        loadSubscriptions('first');
+        loadSubscriptionStats();
+    } catch (error) {
+        console.error('Error changing plan:', error);
+        alert('Error changing plan.');
+    }
+}
+
+// =============================================
+// SUBSCRIPTIONS - Cancel
+// =============================================
+async function cancelSubscription(subId, artistName) {
+    if (!confirm('Cancel subscription for "' + (artistName || 'this artist') + '"?')) return;
+
+    try {
+        await db.collection('subscriptions').doc(subId).update({
+            status: 'cancelled',
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        await logAuditAction('cancel_subscription', subId, 'subscription', { artistName: artistName });
+
+        alert('Subscription cancelled.');
+        resetPagination('subscriptions');
+        loadSubscriptions('first');
+        loadSubscriptionStats();
+    } catch (error) {
+        console.error('Error cancelling subscription:', error);
+        alert('Error cancelling subscription.');
+    }
+}
+
+// =============================================
+// SUBSCRIPTIONS - Renew
+// =============================================
+async function renewSubscription(subId, currentSub) {
+    if (!confirm('Renew subscription for "' + (currentSub.artistName || 'this artist') + '" for 30 days?')) return;
+
+    try {
+        const now = new Date();
+        const planKey = currentSub.plan || 'free';
+        const expiryDate = planKey === 'free' ? null : new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+        await db.collection('subscriptions').doc(subId).update({
+            status: 'active',
+            startDate: firebase.firestore.Timestamp.fromDate(now),
+            expiryDate: expiryDate ? firebase.firestore.Timestamp.fromDate(expiryDate) : null,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            assignedBy: auth.currentUser.email
+        });
+
+        await logAuditAction('renew_subscription', subId, 'subscription', {
+            artistName: currentSub.artistName, plan: planKey
+        });
+
+        alert('Subscription renewed!');
+        resetPagination('subscriptions');
+        loadSubscriptions('first');
+        loadSubscriptionStats();
+    } catch (error) {
+        console.error('Error renewing subscription:', error);
+        alert('Error renewing subscription.');
+    }
+}
+
+// =============================================
+// SUBSCRIPTIONS - Form & Filter Event Listeners
+// =============================================
+document.getElementById('assignPlanForm')?.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const artistId = document.getElementById('artistSelect').value;
+    const planKey = document.getElementById('planSelect').value;
+
+    if (!artistId) {
+        alert('Please select an artist.');
+        return;
+    }
+
+    await assignPlan(artistId, planKey);
+    this.reset();
+});
+
+document.getElementById('subscriptionSearchInput')?.addEventListener('input', debounce(function () {
+    resetPagination('subscriptions');
+    loadSubscriptions('first');
+}, 300));
+
+document.getElementById('subscriptionPlanFilter')?.addEventListener('change', function () {
+    resetPagination('subscriptions');
+    loadSubscriptions('first');
+});
+
+document.getElementById('subscriptionStatusFilter')?.addEventListener('change', function () {
+    resetPagination('subscriptions');
+    loadSubscriptions('first');
+});

@@ -54,6 +54,13 @@ service cloud.firestore {
                               (isAuthenticated() && resource.data.customerId == request.auth.uid);
     }
 
+    // Subscriptions collection - admins can manage, artists can read their own
+    match /subscriptions/{subscriptionId} {
+      allow read: if isAdmin() || (isAuthenticated() && request.auth.uid == subscriptionId);
+      allow create, update: if isAdmin();
+      allow delete: if isSuperAdmin();
+    }
+
     // Audit logs - only admins can read, only admins can create, no update/delete (immutable)
     match /auditLogs/{logId} {
       allow read: if isAdmin();
