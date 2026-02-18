@@ -74,6 +74,71 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 // =============================================
+// FORGOT PASSWORD ELEMENTS & LOGIC
+// =============================================
+const forgotPasswordToggle = document.getElementById('forgotPasswordToggle');
+const forgotPasswordSection = document.getElementById('forgotPasswordSection');
+const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+const resetEmailInput = document.getElementById('resetEmail');
+const sendResetBtn = document.getElementById('sendResetBtn');
+const cancelResetBtn = document.getElementById('cancelResetBtn');
+
+forgotPasswordToggle.addEventListener('click', function (e) {
+    e.preventDefault();
+    if (emailInput.value.trim()) {
+        resetEmailInput.value = emailInput.value.trim();
+    }
+    forgotPasswordSection.style.display = 'block';
+    forgotPasswordLink.style.display = 'none';
+    errorMessage.style.display = 'none';
+});
+
+cancelResetBtn.addEventListener('click', function () {
+    forgotPasswordSection.style.display = 'none';
+    forgotPasswordLink.style.display = 'block';
+    errorMessage.style.display = 'none';
+});
+
+sendResetBtn.addEventListener('click', async function () {
+    const email = resetEmailInput.value.trim();
+    if (!email) {
+        showError('Please enter your email address.');
+        return;
+    }
+
+    sendResetBtn.disabled = true;
+    const originalText = sendResetBtn.innerHTML;
+    sendResetBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sending...';
+
+    try {
+        await auth.sendPasswordResetEmail(email);
+        showSuccess('Password reset email sent! Check your inbox.');
+        setTimeout(() => {
+            forgotPasswordSection.style.display = 'none';
+            forgotPasswordLink.style.display = 'block';
+        }, 3000);
+    } catch (error) {
+        console.error('Password reset error:', error);
+        switch (error.code) {
+            case 'auth/invalid-email':
+                showError('Invalid email address format.');
+                break;
+            case 'auth/user-not-found':
+                showSuccess('If an account exists with this email, a reset link has been sent.');
+                break;
+            case 'auth/too-many-requests':
+                showError('Too many requests. Please try again later.');
+                break;
+            default:
+                showError('Error sending reset email. Please try again.');
+        }
+    } finally {
+        sendResetBtn.disabled = false;
+        sendResetBtn.innerHTML = originalText;
+    }
+});
+
+// =============================================
 // FIREBASE AUTHENTICATION - LOGIN
 // =============================================
 loginForm.addEventListener('submit', async function (e) {
@@ -81,14 +146,41 @@ loginForm.addEventListener('submit', async function (e) {
 
     // Hide previous error messages
     errorMessage.style.display = 'none';
+    emailInput.classList.remove('is-invalid');
+    passwordInput.classList.remove('is-invalid');
 
     // Get form values
     const email = emailInput.value.trim();
     const password = passwordInput.value;
 
-    // Validate inputs
-    if (!email || !password) {
-        showError('Please enter both email and password.');
+    // Validate email
+    if (!email) {
+        emailInput.classList.add('is-invalid');
+        showError('Please enter your email address.');
+        emailInput.focus();
+        return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        emailInput.classList.add('is-invalid');
+        showError('Please enter a valid email address.');
+        emailInput.focus();
+        return;
+    }
+
+    // Validate password
+    if (!password) {
+        passwordInput.classList.add('is-invalid');
+        showError('Please enter your password.');
+        passwordInput.focus();
+        return;
+    }
+
+    if (password.length < 6) {
+        passwordInput.classList.add('is-invalid');
+        showError('Password must be at least 6 characters.');
+        passwordInput.focus();
         return;
     }
 
@@ -172,7 +264,8 @@ function handleAuthError(error) {
             message = 'Incorrect password. Please try again.';
             break;
         case 'auth/invalid-credential':
-            message = 'Invalid email or password.';
+        case 'auth/invalid-login-credentials':
+            message = 'Incorrect email or password. Please try again.';
             break;
         case 'auth/too-many-requests':
             message = 'Too many failed login attempts. Please try again later.';
@@ -184,7 +277,7 @@ function handleAuthError(error) {
             message = 'Email/password sign-in is not enabled. Please contact support.';
             break;
         default:
-            message = error.message || 'An unexpected error occurred.';
+            message = 'An unexpected error occurred. Please try again.';
     }
 
     showError(message);
@@ -207,8 +300,11 @@ function showSuccess(message) {
 // =============================================
 emailInput.addEventListener('input', function () {
     errorMessage.style.display = 'none';
+    this.classList.remove('is-invalid');
 });
 
 passwordInput.addEventListener('input', function () {
     errorMessage.style.display = 'none';
+    this.classList.remove('is-invalid');
 });
+

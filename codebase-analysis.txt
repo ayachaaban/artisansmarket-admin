@@ -1,0 +1,275 @@
+Artisans Market Admin Panel - Codebase Analysis
+===============================================
+Last Updated: February 2026
+
+===============================================
+1. PROJECT OVERVIEW
+===============================================
+This project is an admin dashboard for "Artisans Market" built using HTML, CSS, JavaScript, Bootstrap 5, Chart.js, and Firebase (Firestore + Auth). It provides admin users with the ability to manage users, artists, posts, reports, ratings, subscriptions, and analytics.
+
+===============================================
+2. TECHNOLOGIES USED
+===============================================
+- HTML5 & CSS3 (custom styles in css/styles.css)
+- Bootstrap 5.3.0 (CDN - responsive UI framework)
+- Chart.js (CDN - data visualization: line, bar, pie charts)
+- Vanilla JavaScript (modular, separate files for login, dashboard, Firebase config)
+- Firebase v9.22.0 compat SDK (client-side):
+  - Firebase Authentication (email/password login)
+  - Cloud Firestore (NoSQL database)
+- No custom backend server (fully serverless via Firebase)
+
+===============================================
+3. FILE STRUCTURE & PURPOSE
+===============================================
+
+USED FILES:
+-----------
+html/admin-login.html    -> Admin login page UI (email/password form, theme toggle, logo placeholder)
+html/dashboard.html      -> Main admin dashboard UI (sidebar, all page sections, KPI cards, tables, charts)
+js/firebase-config.js    -> Firebase configuration, primary + secondary app initialization
+js/script.js             -> Login page logic (auth, password toggle, theme toggle, error handling)
+js/dashboard.js          -> All dashboard logic (~1800 lines): data fetching, CRUD operations, pagination, filtering, charts, subscriptions
+css/styles.css           -> All custom styles for login + dashboard (dark mode, responsive, badges, tables)
+firestore.rules          -> Firestore security rules (RBAC: admin, super-admin, authenticated users)
+firestore.indexes.json   -> Composite indexes for efficient Firestore queries (14 indexes total)
+firebase.json            -> Firebase project configuration (hosting, Firestore settings)
+.firebaserc              -> Firebase project alias
+.gitignore               -> Git ignore rules
+seed.html                -> Standalone utility to seed test data into Firestore (admin, users, artists, posts, reports, ratings, subscriptions)
+
+UNUSED / REFERENCE FILES:
+-------------------------
+GitHub Copilot Prompt for Firebase Backend Implementation.md -> Original project plan/prompt document (reference only, not used in app)
+
+===============================================
+4. ALL IMPLEMENTED FEATURES
+===============================================
+
+A. AUTHENTICATION (admin-login.html + script.js)
+   [DONE] Email/password login form
+   [DONE] Firebase Auth integration
+   [DONE] Admin verification (checks Firestore 'admins' collection)
+   [DONE] Non-admin access denial with proper error message
+   [DONE] "Keep me logged in" (LOCAL vs SESSION persistence)
+   [DONE] Password visibility toggle
+   [DONE] Dark/light theme toggle with localStorage
+   [DONE] Comprehensive error handling (invalid email, wrong password, network error, too many attempts, etc.)
+   [DONE] Loading spinner on sign-in button
+
+B. DASHBOARD OVERVIEW (dashboard.html + dashboard.js)
+   [DONE] 6 KPI cards (Total Users, Total Artists, Total Posts, Active Posts, Pending Reports, Avg Rating)
+   [DONE] User Growth line chart (last 6 months)
+   [DONE] Posts by Category bar chart
+   [DONE] Auto-refresh date display
+
+C. USERS MANAGEMENT
+   [DONE] Customers tab (filtered by role=customer)
+   [DONE] All Users tab (all roles)
+   [DONE] Search by name or email (client-side, debounced)
+   [DONE] Sort by: Newest, Oldest, Name A-Z, Name Z-A
+   [DONE] Cursor-based pagination (Next/Previous with stack)
+   [DONE] Suspend / Activate user actions
+   [DONE] Delete user action with confirmation
+   [DONE] Role badges (customer, artist)
+   [DONE] Status badges (active, suspended)
+
+D. ARTISTS MANAGEMENT
+   [DONE] Artists table (filtered by role=artist)
+   [DONE] Search by name or email (client-side, debounced)
+   [DONE] Filter by category (Painting, Sculpture, Photography, Digital Art, Crafts)
+   [DONE] Sort by: Newest, Oldest, Name A-Z, Name Z-A, Top Rated
+   [DONE] Cursor-based pagination
+   [DONE] Average rating display
+   [DONE] Suspend / Activate / Delete actions
+
+E. POSTS MANAGEMENT
+   [DONE] Posts table with image thumbnails
+   [DONE] Filter by category (server-side Firestore query)
+   [DONE] Filter by status (active, reported, removed - server-side)
+   [DONE] Search by artist name (client-side)
+   [DONE] Cursor-based pagination
+   [DONE] Delete post action
+   [DONE] Status badges (active, reported, removed)
+
+F. REPORTS MANAGEMENT
+   [DONE] Reports table with post thumbnails and reporter names
+   [DONE] Filter by status (All, Pending, Reviewed - server-side)
+   [DONE] Batch fetch related posts and reporters (optimized)
+   [DONE] Approve report (removes associated post)
+   [DONE] Reject report (marks as reviewed)
+   [DONE] Real-time badge count for pending reports (sidebar + top bar)
+   [DONE] Cursor-based pagination
+
+G. RATINGS MONITOR
+   [DONE] Top 10 rated artists table (sorted by averageRating desc)
+   [DONE] Recent 10 feedback entries with star ratings
+   [DONE] Batch fetch artist names for feedback display
+
+H. SUBSCRIPTIONS MANAGEMENT (NEW)
+   [DONE] 4 KPI cards (Total Subscriptions, Active, Expired, Monthly Revenue)
+   [DONE] 3 Plan detail cards showing pricing:
+          - Free: $0/mo, 5 posts limit
+          - Basic: $9.99/mo, 25 posts limit
+          - Premium: $24.99/mo, unlimited posts
+   [DONE] "Assign Plan" form (artist dropdown + plan select)
+   [DONE] Artist dropdown populated from active artists
+   [DONE] Subscriptions table with plan/status badges
+   [DONE] Search by artist name (client-side, debounced)
+   [DONE] Filter by plan (Free, Basic, Premium - server-side)
+   [DONE] Filter by status (Active, Expired, Cancelled - server-side)
+   [DONE] Change plan action (prompt for new plan)
+   [DONE] Cancel subscription action
+   [DONE] Renew subscription (30-day extension)
+   [DONE] Cursor-based pagination
+   [DONE] Audit logging for all subscription actions
+
+I. ANALYTICS PAGE
+   [DONE] KPI cards: Posts Today, New Users Today, Reports Today
+   [DONE] Category Popularity pie chart
+   [DONE] Reports Trend line chart (last 7 days)
+
+J. ADMIN MANAGEMENT (super-admin only)
+   [DONE] Add new admin form (email, password, role)
+   [DONE] Secondary Firebase app instance (create admin without logging out)
+   [DONE] Admin table with role badges
+   [DONE] Promote / Demote admin role
+   [DONE] Remove admin access
+   [DONE] Current user protection (can't modify own account)
+
+K. CROSS-CUTTING FEATURES
+   [DONE] Dark mode (both login and dashboard, localStorage persistence)
+   [DONE] Responsive design (mobile sidebar toggle, stacked layouts)
+   [DONE] Audit logging for all admin actions (auditLogs collection)
+   [DONE] Debounced search inputs (300ms)
+   [DONE] Cached post category data (60s TTL)
+   [DONE] Helper functions (createEl, createLoadingRow, createEmptyRow, createErrorRow)
+   [DONE] Consistent buildBaseQuery() pattern for Firestore queries
+   [DONE] Pagination state management with cursor stack for prev/next
+
+===============================================
+5. FIRESTORE DATABASE SCHEMA
+===============================================
+
+Collection: admins (doc ID = user UID)
+  - uid, email, name, role ("admin" | "super-admin"), status, createdAt
+
+Collection: users (auto-generated doc ID)
+  - name, email, role ("customer" | "artist"), status ("active" | "suspended"), createdAt
+  - Artists also have: category, averageRating
+
+Collection: posts (auto-generated doc ID)
+  - artistId, artistName, description, category, status ("active" | "reported" | "removed"), imageUrl, createdAt
+
+Collection: reports (auto-generated doc ID)
+  - postId, reporterId, reason, status ("pending" | "reviewed"), createdAt
+
+Collection: ratings (auto-generated doc ID)
+  - artistId, customerId, stars (1-5), feedback, createdAt
+
+Collection: subscriptions (doc ID = artistId for O(1) lookup)
+  - artistId, artistName, artistEmail
+  - plan ("free" | "basic" | "premium")
+  - amount (0 | 9.99 | 24.99)
+  - status ("active" | "expired" | "cancelled")
+  - postLimit (5 | 25 | -1 for unlimited)
+  - startDate, expiryDate (null for free plan)
+  - createdAt, updatedAt, assignedBy
+
+Collection: auditLogs (auto-generated doc ID, IMMUTABLE)
+  - adminId, adminEmail, action, targetId, targetType, timestamp, details
+
+===============================================
+6. FIRESTORE SECURITY RULES SUMMARY
+===============================================
+- Helper functions: isAdmin(), isSuperAdmin(), isAuthenticated()
+- admins: read by admins, write by super-admins only
+- users: read/write by admins OR own user
+- posts: read by authenticated, create by authenticated, update/delete by admin or post owner
+- reports: read/update/delete by admins, create by authenticated
+- ratings: read/create by authenticated, update/delete by admin or rating owner
+- subscriptions: read by admins or own artist, create/update by admins, delete by super-admins
+- auditLogs: read/create by admins, update/delete NEVER (immutable)
+
+===============================================
+7. FIRESTORE COMPOSITE INDEXES (14 total)
+===============================================
+Users:
+  1. role + createdAt DESC
+  2. role + createdAt ASC
+  3. role + name ASC
+  4. role + name DESC
+  5. role + averageRating DESC
+  6. role + status + name ASC (for artist dropdown)
+
+Posts:
+  7. category + createdAt DESC
+  8. status + createdAt DESC
+  9. category + status + createdAt DESC
+
+Reports:
+  10. status + createdAt DESC
+
+Subscriptions:
+  11. plan + createdAt DESC
+  12. status + createdAt DESC
+  13. plan + status + createdAt DESC
+
+===============================================
+8. HOW THE APPLICATION WORKS
+===============================================
+
+Login Flow:
+1. Admin opens admin-login.html
+2. Enters email/password, clicks Sign In
+3. Firebase Auth authenticates the user
+4. App checks Firestore 'admins' collection for user's UID
+5. If admin doc exists -> redirect to dashboard.html
+6. If not admin -> sign out, show "Access denied" error
+
+Dashboard Flow:
+1. dashboard.js checks auth state via onAuthStateChanged
+2. Verifies admin role from Firestore
+3. Shows/hides Admin Management menu based on role
+4. Loads Overview page (KPIs + charts)
+5. Sets up real-time listener for pending reports count
+6. Sidebar navigation switches between pages and loads data
+
+Data Loading Pattern:
+1. Each page uses cursor-based Firestore pagination (PAGE_SIZE = 20)
+2. Server-side filters (where clauses) are used when possible
+3. Client-side filters (search, category) are applied after fetch
+4. buildBaseQuery() pattern ensures consistent query construction
+5. Pagination state tracks: lastDoc, page number, hasMore flag, cursor stack
+
+Subscription Flow:
+1. Admin navigates to Subscriptions page
+2. KPI stats load from full collection scan
+3. Artist dropdown populated from active artists
+4. Admin selects artist + plan, submits form
+5. Subscription doc created with artistId as doc ID
+6. Table shows all subscriptions with filters
+7. Actions: Change plan, Cancel, Renew (all with audit logging)
+
+===============================================
+9. DEPLOYMENT NOTES
+===============================================
+- Firebase project: artisansmarket-5f2b6
+- Deploy indexes: firebase deploy --only firestore:indexes
+- Deploy rules: firebase deploy --only firestore:rules
+- Deploy hosting: firebase deploy --only hosting
+- Seed data: open seed.html locally, run steps 1-2
+
+===============================================
+10. WHAT IS NOT IMPLEMENTED (from original plan)
+===============================================
+- Password reset page (planned but no html/reset-password.html exists)
+- Cloud Functions for server-side operations (deleting auth users, scheduled tasks)
+- Firebase Storage integration for post images (imageUrl field exists but no upload)
+- Email notifications for admin actions
+- Export/download data functionality
+- Advanced analytics (user retention, engagement metrics)
+- Subscription auto-expiry (would need Cloud Functions scheduled task)
+- Payment gateway integration (Stripe, etc.) - currently admin-assigned plans only
+
+This summary covers the complete state of the codebase as of the latest update.

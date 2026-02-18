@@ -110,11 +110,24 @@
                     <span id="adminEmail">admin@artisans.com</span>
                 </div>
                 <div class="current-date" id="currentDate"></div>
-                <div class="notification-icon">
+                <div class="notification-icon" id="notificationIcon">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
                         <path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2zM8 1.918l-.797.161A4.002 4.002 0 0 0 4 6c0 .628-.134 2.197-.459 3.742-.16.767-.376 1.566-.663 2.258h10.244c-.287-.692-.502-1.49-.663-2.258C12.134 8.197 12 6.628 12 6a4.002 4.002 0 0 0-3.203-3.92L8 1.917zM14.22 12c.223.447.481.801.78 1H1c.299-.199.557-.553.78-1C2.68 10.2 3 6.88 3 6c0-2.42 1.72-4.44 4.005-4.901a1 1 0 1 1 1.99 0A5.002 5.002 0 0 1 13 6c0 .88.32 4.2 1.22 6z"/>
                     </svg>
                     <span class="notification-badge" id="notificationBadge" style="display:none;">0</span>
+                    <!-- Notification Popup -->
+                    <div class="notification-popup" id="notificationPopup">
+                        <div class="notification-popup-header">
+                            <span>Notifications</span>
+                            <span class="notification-count" id="notifCount">0</span>
+                        </div>
+                        <div class="notification-popup-body" id="notificationList">
+                            <div class="notification-empty">No new notifications</div>
+                        </div>
+                        <div class="notification-popup-footer">
+                            <a href="#" id="viewAllReports">View All Reports</a>
+                        </div>
+                    </div>
                 </div>
             </div>
             <button class="theme-toggle-dash" id="themeToggleDash">
@@ -661,22 +674,15 @@
                     <h5>Add New Admin</h5>
                     <form id="addAdminForm">
                         <div class="row g-3 align-items-end">
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <label for="newAdminEmail" class="form-label">Email</label>
                                 <input type="email" class="form-control filter-select" id="newAdminEmail" placeholder="admin@example.com" required>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <label for="newAdminPassword" class="form-label">Password</label>
                                 <input type="password" class="form-control filter-select" id="newAdminPassword" placeholder="Min 6 characters" required minlength="6">
                             </div>
-                            <div class="col-md-3">
-                                <label for="newAdminRole" class="form-label">Role</label>
-                                <select class="form-select filter-select" id="newAdminRole">
-                                    <option value="admin">Admin</option>
-                                    <option value="super-admin">Super Admin</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <button type="submit" class="btn-action btn-approve w-100">Add Admin</button>
                             </div>
                         </div>

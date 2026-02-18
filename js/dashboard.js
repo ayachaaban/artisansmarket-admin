@@ -358,6 +358,7 @@ function setupRealtimeListeners() {
 function updateReportsBadge(count) {
     const reportsBadge = document.getElementById('reportsBadge');
     const notificationBadge = document.getElementById('notificationBadge');
+    const notifCount = document.getElementById('notifCount');
 
     if (count > 0) {
         if (reportsBadge) {
@@ -368,11 +369,116 @@ function updateReportsBadge(count) {
             notificationBadge.textContent = count;
             notificationBadge.style.display = 'flex';
         }
+        if (notifCount) notifCount.textContent = count;
     } else {
         if (reportsBadge) reportsBadge.style.display = 'none';
         if (notificationBadge) notificationBadge.style.display = 'none';
+        if (notifCount) notifCount.textContent = '0';
     }
 }
+
+// =============================================
+// NOTIFICATION POPUP
+// =============================================
+(function () {
+    const notificationIcon = document.getElementById('notificationIcon');
+    const notificationPopup = document.getElementById('notificationPopup');
+    const notificationList = document.getElementById('notificationList');
+    const viewAllReports = document.getElementById('viewAllReports');
+
+    if (!notificationIcon || !notificationPopup) return;
+
+    // Toggle popup on bell click
+    notificationIcon.addEventListener('click', function (e) {
+        e.stopPropagation();
+        const isOpen = notificationPopup.classList.contains('show');
+        notificationPopup.classList.toggle('show');
+        if (!isOpen) loadNotifications();
+    });
+
+    // Close popup when clicking outside
+    document.addEventListener('click', function (e) {
+        if (!notificationIcon.contains(e.target)) {
+            notificationPopup.classList.remove('show');
+        }
+    });
+
+    // "View All Reports" navigates to reports page
+    if (viewAllReports) {
+        viewAllReports.addEventListener('click', function (e) {
+            e.preventDefault();
+            notificationPopup.classList.remove('show');
+            const reportsMenuItem = document.querySelector('[data-page="reports"]');
+            if (reportsMenuItem) reportsMenuItem.click();
+        });
+    }
+
+    function loadNotifications() {
+        notificationList.innerHTML = '<div class="notification-empty">Loading...</div>';
+
+        db.collection('reports')
+            .where('status', '==', 'pending')
+            .orderBy('createdAt', 'desc')
+            .limit(5)
+            .get()
+            .then(function (snapshot) {
+                if (snapshot.empty) {
+                    notificationList.innerHTML = '<div class="notification-empty">No new notifications</div>';
+                    return;
+                }
+
+                notificationList.innerHTML = '';
+                snapshot.forEach(function (doc) {
+                    const report = doc.data();
+                    const reason = report.reason || 'No reason provided';
+                    const time = report.createdAt ? timeAgo(report.createdAt.toDate()) : 'Unknown';
+
+                    const item = document.createElement('div');
+                    item.className = 'notification-item';
+                    item.innerHTML =
+                        '<div class="notification-item-icon">' +
+                            '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">' +
+                                '<path d="M7.938 2.016A.13.13 0 0 1 8.002 2a.13.13 0 0 1 .063.016.146.146 0 0 1 .054.057l6.857 11.667c.036.06.035.124.002.183a.163.163 0 0 1-.054.06.116.116 0 0 1-.066.017H1.146a.115.115 0 0 1-.066-.017.163.163 0 0 1-.054-.06.176.176 0 0 1 .002-.183L7.884 2.073a.147.147 0 0 1 .054-.057z"/>' +
+                            '</svg>' +
+                        '</div>' +
+                        '<div class="notification-item-content">' +
+                            '<div class="notification-item-text">New report: ' + escapeHtml(reason) + '</div>' +
+                            '<div class="notification-item-time">' + time + '</div>' +
+                        '</div>';
+
+                    item.addEventListener('click', function () {
+                        notificationPopup.classList.remove('show');
+                        const reportsMenuItem = document.querySelector('[data-page="reports"]');
+                        if (reportsMenuItem) reportsMenuItem.click();
+                    });
+
+                    notificationList.appendChild(item);
+                });
+            })
+            .catch(function (error) {
+                console.error('Error loading notifications:', error);
+                notificationList.innerHTML = '<div class="notification-empty">Error loading notifications</div>';
+            });
+    }
+
+    function timeAgo(date) {
+        const seconds = Math.floor((new Date() - date) / 1000);
+        if (seconds < 60) return 'Just now';
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return minutes + 'm ago';
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return hours + 'h ago';
+        const days = Math.floor(hours / 24);
+        if (days < 7) return days + 'd ago';
+        return date.toLocaleDateString();
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+})();
 
 // =============================================
 // OVERVIEW PAGE
@@ -1467,14 +1573,13 @@ async function loadAdmins() {
 
             const tdActions = document.createElement('td');
             if (doc.id !== currentUid) {
-                const toggleRoleBtn = createEl('button', { className: 'btn-action btn-view' },
-                    admin.role === 'super-admin' ? 'Demote' : 'Promote');
-                toggleRoleBtn.addEventListener('click', () => toggleAdminRole(doc.id, admin.role, admin.email));
+                const resetPwdBtn = createEl('button', { className: 'btn-action btn-suspend' }, 'Reset Password');
+                resetPwdBtn.addEventListener('click', () => sendAdminPasswordReset(doc.id, admin.email));
 
                 const deleteBtn = createEl('button', { className: 'btn-action btn-delete' }, 'Remove');
                 deleteBtn.addEventListener('click', () => deleteAdmin(doc.id, admin.email));
 
-                tdActions.append(toggleRoleBtn, deleteBtn);
+                tdActions.append(resetPwdBtn, deleteBtn);
             } else {
                 tdActions.appendChild(createEl('span', { className: 'text-muted' }, 'Current User'));
             }
@@ -1500,14 +1605,14 @@ document.getElementById('addAdminForm')?.addEventListener('submit', async functi
 
     const email = document.getElementById('newAdminEmail').value.trim();
     const password = document.getElementById('newAdminPassword').value;
-    const role = document.getElementById('newAdminRole').value;
+    const role = 'admin';
 
     if (!email || !password || password.length < 6) {
         alert('Please provide a valid email and password (min 6 characters).');
         return;
     }
 
-    if (!confirm('Add "' + email + '" as ' + role + '?')) return;
+    if (!confirm('Add "' + email + '" as admin?')) return;
 
     try {
         // Create user via secondary app so current session is preserved
@@ -1557,20 +1662,23 @@ async function deleteAdmin(adminId, adminEmail) {
     }
 }
 
-async function toggleAdminRole(adminId, currentRole, adminEmail) {
-    const newRole = currentRole === 'super-admin' ? 'admin' : 'super-admin';
-    if (!confirm('Change "' + adminEmail + '" from ' + currentRole + ' to ' + newRole + '?')) return;
+// =============================================
+// SEND ADMIN PASSWORD RESET EMAIL
+// =============================================
+async function sendAdminPasswordReset(adminId, adminEmail) {
+    if (!confirm('Send a password reset email to "' + adminEmail + '"?')) return;
 
     try {
-        await db.collection('admins').doc(adminId).update({ role: newRole });
-        await logAuditAction('change_admin_role', adminId, 'admin', {
-            email: adminEmail, oldRole: currentRole, newRole: newRole
-        });
-        alert('Admin role updated.');
-        loadAdmins();
+        await auth.sendPasswordResetEmail(adminEmail);
+        await logAuditAction('send_password_reset', adminId, 'admin', { email: adminEmail });
+        alert('Password reset email sent to ' + adminEmail + '.');
     } catch (error) {
-        console.error('Error updating admin role:', error);
-        alert('Error updating admin role.');
+        console.error('Error sending password reset:', error);
+        if (error.code === 'auth/user-not-found') {
+            alert('No Firebase Auth account found for this email. The admin document may be orphaned.');
+        } else {
+            alert('Error sending reset email: ' + error.message);
+        }
     }
 }
 
@@ -1758,9 +1866,44 @@ async function loadSubscriptions(direction) {
 
             const tdActions = document.createElement('td');
             if (sub.status === 'active') {
+                const changeWrapper = document.createElement('div');
+                changeWrapper.className = 'plan-change-wrapper';
+
                 const changeBtn = createEl('button', { className: 'btn-action btn-view' }, 'Change');
-                changeBtn.addEventListener('click', () => changePlanPrompt(doc.id, sub));
-                tdActions.appendChild(changeBtn);
+                changeWrapper.appendChild(changeBtn);
+
+                const planSelect = document.createElement('select');
+                planSelect.className = 'form-select form-select-sm plan-change-select';
+                planSelect.style.display = 'none';
+                Object.keys(PLANS).forEach(key => {
+                    const opt = document.createElement('option');
+                    opt.value = key;
+                    opt.textContent = PLANS[key].name + ' ($' + PLANS[key].amount + '/mo)';
+                    if (key === sub.plan) opt.selected = true;
+                    planSelect.appendChild(opt);
+                });
+
+                changeBtn.addEventListener('click', function () {
+                    changeBtn.style.display = 'none';
+                    planSelect.style.display = 'inline-block';
+                    planSelect.focus();
+                });
+
+                planSelect.addEventListener('change', function () {
+                    const newPlan = this.value;
+                    planSelect.style.display = 'none';
+                    changeBtn.style.display = 'inline-block';
+                    if (newPlan === sub.plan) return;
+                    changePlan(doc.id, newPlan, sub);
+                });
+
+                planSelect.addEventListener('blur', function () {
+                    planSelect.style.display = 'none';
+                    changeBtn.style.display = 'inline-block';
+                });
+
+                changeWrapper.appendChild(planSelect);
+                tdActions.appendChild(changeWrapper);
 
                 const cancelBtn = createEl('button', { className: 'btn-action btn-delete' }, 'Cancel');
                 cancelBtn.addEventListener('click', () => cancelSubscription(doc.id, sub.artistName));
@@ -1837,34 +1980,6 @@ async function assignPlan(artistId, planKey) {
 // =============================================
 // SUBSCRIPTIONS - Change Plan
 // =============================================
-function changePlanPrompt(subId, currentSub) {
-    const planOptions = Object.keys(PLANS)
-        .filter(k => k !== currentSub.plan)
-        .map(k => PLANS[k].name + ' ($' + PLANS[k].amount + '/mo)')
-        .join(', ');
-
-    const newPlan = prompt(
-        'Current plan: ' + (PLANS[currentSub.plan] ? PLANS[currentSub.plan].name : currentSub.plan) +
-        '\nAvailable plans: ' + planOptions +
-        '\n\nEnter new plan (free, basic, or premium):'
-    );
-
-    if (!newPlan) return;
-    const planKey = newPlan.trim().toLowerCase();
-
-    if (!PLANS[planKey]) {
-        alert('Invalid plan. Please enter: free, basic, or premium');
-        return;
-    }
-
-    if (planKey === currentSub.plan) {
-        alert('Artist is already on this plan.');
-        return;
-    }
-
-    changePlan(subId, planKey, currentSub);
-}
-
 async function changePlan(subId, newPlanKey, currentSub) {
     const plan = PLANS[newPlanKey];
     if (!confirm('Change ' + (currentSub.artistName || 'this artist') + ' from ' +

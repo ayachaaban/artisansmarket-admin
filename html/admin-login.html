@@ -61,6 +61,27 @@
                             </div>
                         </div>
 
+                        <!-- Forgot Password Section (hidden by default) -->
+                        <div id="forgotPasswordSection" style="display: none;" class="mb-3">
+                            <label for="resetEmail" class="form-label">Enter your email to reset password</label>
+                            <input type="email" class="form-control custom-input reset-email-input" id="resetEmail"
+                                placeholder="Enter your email">
+                            <div class="d-flex gap-2 mt-2">
+                                <button type="button" class="btn btn-primary reset-btn flex-grow-1" id="sendResetBtn">
+                                    Send Reset Link
+                                </button>
+                                <button type="button" class="btn btn-secondary flex-grow-0" id="cancelResetBtn"
+                                    style="border-radius: 0.75rem;">
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Forgot Password Link -->
+                        <div class="mb-3 text-end" id="forgotPasswordLink">
+                            <a href="#" class="forgot-password" id="forgotPasswordToggle">Forgot Password?</a>
+                        </div>
+
                         <!-- Sign In Button -->
                         <button type="submit" class="btn btn-primary w-100 reset-btn" id="signInBtn">
                             Sign In
