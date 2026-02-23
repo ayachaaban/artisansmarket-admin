@@ -7,6 +7,30 @@ let reportsUnsubscribe = null;
 let postCategoryCache = { data: null, timestamp: 0 };
 const CACHE_TTL = 60000; // 1 minute cache
 
+// Dark mode chart helper
+function getChartColors() {
+    const isDark = document.body.classList.contains('dark-mode');
+    return {
+        gridColor: isDark ? '#334155' : '#e2e8f0',
+        tickColor: isDark ? '#94a3b8' : '#6B8A9E',
+        legendColor: isDark ? '#e2e8f0' : '#2C3E50'
+    };
+}
+
+function getChartScaleOptions() {
+    const colors = getChartColors();
+    return {
+        x: {
+            ticks: { color: colors.tickColor },
+            grid: { color: colors.gridColor }
+        },
+        y: {
+            ticks: { color: colors.tickColor },
+            grid: { color: colors.gridColor }
+        }
+    };
+}
+
 // Plan definitions
 const PLANS = {
     free: { name: 'Free', amount: 0, postLimit: 5 },
@@ -300,6 +324,14 @@ themeToggleDash.addEventListener('click', function () {
         localStorage.setItem('theme', 'light');
         this.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M6 .278a.768.768 0 0 1 .08.858 7.208 7.208 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277.527 0 1.04-.055 1.533-.16a.787.787 0 0 1 .81.316.733.733 0 0 1-.031.893A8.349 8.349 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.752.752 0 0 1 6 .278z"/></svg>';
     }
+
+    // Re-render charts with updated dark/light colors
+    try {
+        loadUserGrowthChart();
+        loadPostsCategoryChart();
+        loadCategoryPieChart();
+        loadReportsTrendChart();
+    } catch (e) { /* charts may not be loaded yet */ }
 });
 
 // Load saved theme
@@ -553,8 +585,8 @@ async function loadUserGrowthChart() {
                     datasets: [{
                         label: 'New Users',
                         data: data,
-                        borderColor: '#0066cc',
-                        backgroundColor: 'rgba(0, 102, 204, 0.1)',
+                        borderColor: '#2E86AB',
+                        backgroundColor: 'rgba(46, 134, 171, 0.1)',
                         tension: 0.4,
                         fill: true
                     }]
@@ -562,7 +594,8 @@ async function loadUserGrowthChart() {
                 options: {
                     responsive: true,
                     maintainAspectRatio: true,
-                    plugins: { legend: { display: false } }
+                    plugins: { legend: { display: false } },
+                    scales: getChartScaleOptions()
                 }
             });
         }
@@ -593,13 +626,14 @@ async function loadPostsCategoryChart() {
                     datasets: [{
                         label: 'Posts',
                         data: data,
-                        backgroundColor: ['#0066cc', '#7c3aed', '#0891b2', '#10b981', '#f59e0b', '#ec4899']
+                        backgroundColor: ['#2E86AB', '#B07D4B', '#6BC5D2', '#7CB342', '#C4A265', '#E8837C']
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: true,
-                    plugins: { legend: { display: false } }
+                    plugins: { legend: { display: false } },
+                    scales: getChartScaleOptions()
                 }
             });
         }
@@ -1451,18 +1485,24 @@ async function loadCategoryPieChart() {
         const ctx = document.getElementById('categoryPieChart');
         if (ctx) {
             if (categoryPieChart) categoryPieChart.destroy();
+            const colors = getChartColors();
             categoryPieChart = new Chart(ctx, {
                 type: 'pie',
                 data: {
                     labels: Object.keys(categoryData),
                     datasets: [{
                         data: Object.values(categoryData),
-                        backgroundColor: ['#0066cc', '#7c3aed', '#0891b2', '#10b981', '#f59e0b', '#ec4899']
+                        backgroundColor: ['#2E86AB', '#B07D4B', '#6BC5D2', '#7CB342', '#C4A265', '#E8837C']
                     }]
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: true
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            labels: { color: colors.legendColor }
+                        }
+                    }
                 }
             });
         }
@@ -1519,8 +1559,8 @@ async function loadReportsTrendChart() {
                     datasets: [{
                         label: 'Reports',
                         data: reportCounts,
-                        borderColor: '#f59e0b',
-                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                        borderColor: '#C4A265',
+                        backgroundColor: 'rgba(196, 162, 101, 0.1)',
                         tension: 0.4,
                         fill: true
                     }]
@@ -1528,7 +1568,8 @@ async function loadReportsTrendChart() {
                 options: {
                     responsive: true,
                     maintainAspectRatio: true,
-                    plugins: { legend: { display: false } }
+                    plugins: { legend: { display: false } },
+                    scales: getChartScaleOptions()
                 }
             });
         }
