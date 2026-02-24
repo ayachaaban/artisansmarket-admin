@@ -141,20 +141,21 @@ body {
 
 /* Sign In Button */
 .sign-in-btn {
-    background-color: var(--primary-color);
+    background: linear-gradient(135deg, #2E86AB 0%, #236E8E 100%);
     border: none;
     padding: 0.875rem 1.5rem;
     font-size: 1.1rem;
     font-weight: 600;
     border-radius: 0.75rem;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     margin-top: 0.5rem;
+    box-shadow: 0 4px 12px rgba(46, 134, 171, 0.2);
 }
 
 .sign-in-btn:hover {
-    background-color: var(--primary-hover);
+    background: linear-gradient(135deg, #3A9BC2 0%, #2E86AB 100%);
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(46, 134, 171, 0.3);
+    box-shadow: 0 8px 24px rgba(46, 134, 171, 0.35);
 }
 
 .sign-in-btn:active {
@@ -318,20 +319,21 @@ body.dark-mode .theme-toggle {
 }
 
 .reset-btn {
-    background-color: #2E86AB !important;
+    background: linear-gradient(135deg, #2E86AB 0%, #236E8E 100%) !important;
     border: none;
     padding: 0.875rem 1.5rem;
     font-size: 1.1rem;
     font-weight: 600;
     border-radius: 0.75rem;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     margin-top: 0.5rem;
+    box-shadow: 0 4px 12px rgba(46, 134, 171, 0.2);
 }
 
 .reset-btn:hover {
-    background-color: #236E8E !important;
+    background: linear-gradient(135deg, #3A9BC2 0%, #2E86AB 100%) !important;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(46, 134, 171, 0.3);
+    box-shadow: 0 8px 24px rgba(46, 134, 171, 0.35);
 }
 
 .reset-btn:active {
@@ -360,18 +362,21 @@ body.dark-mode .theme-toggle {
     z-index: 1000;
     border-right: 1px solid #D4E4EC;
     transition: all 0.3s ease;
+    box-shadow: 2px 0 12px rgba(46, 134, 171, 0.06);
 }
 
 .sidebar-header {
     padding: 1.5rem 1.5rem;
     border-bottom: 1px solid #D4E4EC;
+    background: linear-gradient(135deg, #2E86AB 0%, #6BC5D2 100%);
 }
 
 .sidebar-header h4 {
     margin: 0;
     font-size: 1.2rem;
     font-weight: 700;
-    color: #2E86AB;
+    color: #ffffff;
+    letter-spacing: 0.3px;
 }
 
 .sidebar-menu {
@@ -396,11 +401,13 @@ body.dark-mode .theme-toggle {
 .sidebar-menu li:hover {
     background: #E8F4F8;
     color: #2C3E50;
+    transform: translateX(4px);
 }
 
 .sidebar-menu li.active {
-    background: #DCEEF5;
+    background: linear-gradient(135deg, #DCEEF5 0%, #E8F4F8 100%);
     color: #2E86AB;
+    border-left: 3px solid #2E86AB;
 }
 
 .sidebar-menu li svg {
@@ -426,6 +433,7 @@ body.dark-mode .theme-toggle {
     position: sticky;
     top: 0;
     z-index: 999;
+    box-shadow: 0 1px 4px rgba(46, 134, 171, 0.05);
 }
 
 .menu-toggle {
@@ -663,22 +671,25 @@ body.dark-mode .theme-toggle {
     display: flex;
     align-items: center;
     gap: 1rem;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 3px rgba(46, 134, 171, 0.06);
 }
 
 .kpi-card:hover {
     border-color: #2E86AB;
-    box-shadow: 0 2px 8px rgba(46, 134, 171, 0.15);
+    box-shadow: 0 8px 24px rgba(46, 134, 171, 0.15);
+    transform: translateY(-3px);
 }
 
 .kpi-icon {
     width: 50px;
     height: 50px;
-    border-radius: 0.5rem;
+    border-radius: 0.75rem;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .kpi-details h4 {
@@ -701,6 +712,12 @@ body.dark-mode .theme-toggle {
     border-radius: 0.75rem;
     padding: 1.5rem;
     border: 1px solid #D4E4EC;
+    box-shadow: 0 1px 3px rgba(46, 134, 171, 0.06);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.chart-card:hover {
+    box-shadow: 0 4px 16px rgba(46, 134, 171, 0.1);
 }
 
 .chart-card h5 {
@@ -752,22 +769,25 @@ body.dark-mode .theme-toggle {
     display: flex;
     align-items: center;
     gap: 1rem;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 3px rgba(46, 134, 171, 0.06);
 }
 
 .stat-card:hover {
     border-color: #2E86AB;
-    box-shadow: 0 2px 8px rgba(46, 134, 171, 0.15);
+    box-shadow: 0 8px 24px rgba(46, 134, 171, 0.15);
+    transform: translateY(-3px);
 }
 
 .stat-icon {
     width: 60px;
     height: 60px;
-    border-radius: 0.5rem;
+    border-radius: 0.75rem;
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .stat-card-users .stat-icon {
@@ -806,6 +826,7 @@ body.dark-mode .theme-toggle {
     border-radius: 0.75rem;
     overflow: hidden;
     border: 1px solid #D4E4EC;
+    box-shadow: 0 1px 3px rgba(46, 134, 171, 0.06);
 }
 
 .custom-table thead {
@@ -852,6 +873,7 @@ body.dark-mode .theme-toggle {
     border: 1px solid #D4E4EC;
     background: white;
     color: #2C3E50;
+    transition: all 0.3s ease;
 }
 
 .filter-select:focus {
@@ -892,72 +914,84 @@ body.dark-mode .plan-change-select {
     border-radius: 0.5rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     margin-right: 0.5rem;
     font-size: 0.875rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-action:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-action:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .btn-delete {
-    background: #dc3545;
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
     color: white;
 }
 
 .btn-delete:hover {
-    background: #c82333;
+    background: linear-gradient(135deg, #e04555 0%, #dc3545 100%);
 }
 
 .btn-approve {
-    background: #7CB342;
+    background: linear-gradient(135deg, #7CB342 0%, #689F38 100%);
     color: white;
 }
 
 .btn-approve:hover {
-    background: #689F38;
+    background: linear-gradient(135deg, #8BC34A 0%, #7CB342 100%);
 }
 
 .btn-reject {
-    background: #6c757d;
+    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
     color: white;
 }
 
 .btn-reject:hover {
-    background: #5a6268;
+    background: linear-gradient(135deg, #7c858d 0%, #6c757d 100%);
 }
 
 .btn-view {
-    background: #2E86AB;
+    background: linear-gradient(135deg, #2E86AB 0%, #236E8E 100%);
     color: white;
 }
 
 .btn-view:hover {
-    background: #236E8E;
+    background: linear-gradient(135deg, #3A9BC2 0%, #2E86AB 100%);
 }
 
 .btn-suspend {
-    background: #C4A265;
+    background: linear-gradient(135deg, #C4A265 0%, #B07D4B 100%);
     color: white;
 }
 
 .btn-suspend:hover {
-    background: #B07D4B;
+    background: linear-gradient(135deg, #D4B275 0%, #C4A265 100%);
 }
 
 .btn-activate {
-    background: #7CB342;
+    background: linear-gradient(135deg, #7CB342 0%, #689F38 100%);
     color: white;
 }
 
 .btn-activate:hover {
-    background: #689F38;
+    background: linear-gradient(135deg, #8BC34A 0%, #7CB342 100%);
 }
 
 /* Status Badges */
 .status-badge {
     padding: 0.375rem 0.875rem;
-    border-radius: 0.375rem;
-    font-size: 0.875rem;
+    border-radius: 2rem;
+    font-size: 0.8rem;
     font-weight: 600;
     display: inline-block;
+    letter-spacing: 0.3px;
 }
 
 .status-active {
@@ -1008,10 +1042,11 @@ body.dark-mode .plan-change-select {
 /* Plan Badges */
 .plan-badge {
     padding: 0.375rem 0.875rem;
-    border-radius: 0.375rem;
-    font-size: 0.875rem;
+    border-radius: 2rem;
+    font-size: 0.8rem;
     font-weight: 600;
     display: inline-block;
+    letter-spacing: 0.3px;
 }
 
 .plan-free {
@@ -1032,10 +1067,11 @@ body.dark-mode .plan-change-select {
 /* Role Badges */
 .role-badge {
     padding: 0.375rem 0.875rem;
-    border-radius: 0.375rem;
-    font-size: 0.875rem;
+    border-radius: 2rem;
+    font-size: 0.8rem;
     font-weight: 600;
     display: inline-block;
+    letter-spacing: 0.3px;
 }
 
 .role-customer {
@@ -1079,8 +1115,9 @@ body.dark-mode .sidebar-menu li:hover {
 }
 
 body.dark-mode .sidebar-menu li.active {
-    background: #1A3A4A;
+    background: linear-gradient(135deg, #1A3A4A 0%, #1e3a47 100%);
     color: #6BC5D2;
+    border-left: 3px solid #6BC5D2;
 }
 
 body.dark-mode .main-content {
@@ -1186,6 +1223,7 @@ body.dark-mode .pagination-controls .text-muted {
 
 body.dark-mode .sidebar-header {
     border-bottom-color: #334155;
+    background: linear-gradient(135deg, #1A3A4A 0%, #1e3a47 100%);
 }
 
 body.dark-mode .current-date {
@@ -1431,10 +1469,7 @@ body.dark-mode .table-responsive {
     background: transparent;
 }
 
-/* Dark Mode - Sidebar header text override */
-body.dark-mode .sidebar-header h4 {
-    color: #6BC5D2;
-}
+/* (Sidebar header h4 dark mode already defined above) */
 
 /* Dark Mode - Custom table thead th text */
 body.dark-mode .custom-table thead th {
