@@ -70,5 +70,46 @@ service cloud.firestore {
       allow create: if isAdmin();
       allow update, delete: if false;
     }
+
+    // Orders collection - admins full access, customers read own, artists read their orders
+    match /orders/{orderId} {
+      allow read: if isAdmin() ||
+        (isAuthenticated() && resource.data.customerId == request.auth.uid) ||
+        (isAuthenticated() && resource.data.artistId == request.auth.uid);
+      allow create: if isAuthenticated();
+      allow update: if isAdmin();
+      allow delete: if isSuperAdmin();
+    }
+
+    // Payments collection - admins read/update, users read own, no delete (immutable for audit)
+    match /payments/{paymentId} {
+      allow read: if isAdmin() ||
+        (isAuthenticated() && resource.data.userId == request.auth.uid);
+      allow create: if isAuthenticated();
+      allow update: if isAdmin();
+      allow delete: if false;
+    }
+
+    // Payouts collection - admins manage, artists read own, no delete (immutable)
+    match /payouts/{payoutId} {
+      allow read: if isAdmin() ||
+        (isAuthenticated() && resource.data.artistId == request.auth.uid);
+      allow create, update: if isAdmin();
+      allow delete: if false;
+    }
+
+    // Cart subcollection - users manage their own cart, admins can read
+    match /users/{userId}/cart/{cartItemId} {
+      allow read, write: if isAuthenticated() && request.auth.uid == userId;
+      allow read: if isAdmin();
+    }
+
+    // Wallets collection - virtual wallet for artists
+    match /wallets/{userId} {
+      allow read: if isAdmin() || (isAuthenticated() && request.auth.uid == userId);
+      allow create: if isAdmin() || (isAuthenticated() && request.auth.uid == userId);
+      allow update: if isAdmin();
+      allow delete: if false;
+    }
   }
 }

@@ -1084,6 +1084,93 @@ body.dark-mode .plan-change-select {
     color: #8B6914;
 }
 
+/* Payment Method Badges */
+.payment-method-badge {
+    padding: 0.375rem 0.875rem;
+    border-radius: 2rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: inline-block;
+    letter-spacing: 0.3px;
+}
+
+.payment-virtual_card {
+    background: #DCEEF5;
+    color: #2E86AB;
+}
+
+.payment-virtual_visa {
+    background: #FFF3D6;
+    color: #8B6914;
+}
+
+.payment-bank_transfer {
+    background: #E8F5E9;
+    color: #2E7D32;
+}
+
+.payment-wallet_withdrawal {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+/* Payment Type Badges */
+.type-badge {
+    padding: 0.375rem 0.875rem;
+    border-radius: 2rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: inline-block;
+    letter-spacing: 0.3px;
+}
+
+.type-order {
+    background: #DCEEF5;
+    color: #236E8E;
+}
+
+.type-subscription {
+    background: #FFF3D6;
+    color: #8B6914;
+}
+
+/* Policy Card */
+.policy-card {
+    border-left: 4px solid #2E86AB;
+}
+
+.policy-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.policy-label {
+    font-size: 0.8rem;
+    color: #6B8A9E;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.policy-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #2C3E50;
+}
+
+body.dark-mode .policy-label {
+    color: #94a3b8;
+}
+
+body.dark-mode .policy-value {
+    color: #f1f5f9;
+}
+
+body.dark-mode .policy-card {
+    border-left-color: #6BC5D2;
+}
+
 /* Pagination Controls */
 .pagination-controls .btn-action {
     padding: 0.4rem 1rem;
@@ -1341,6 +1428,38 @@ body.dark-mode .role-customer {
 }
 
 body.dark-mode .role-artist {
+    background: #3D3520;
+    color: #E8C96B;
+}
+
+/* Dark Mode - Payment Method Badges */
+body.dark-mode .payment-virtual_card {
+    background: #1A3A4A;
+    color: #6BC5D2;
+}
+
+body.dark-mode .payment-virtual_visa {
+    background: #3D3520;
+    color: #E8C96B;
+}
+
+body.dark-mode .payment-bank_transfer {
+    background: #1A3D1F;
+    color: #7CB342;
+}
+
+body.dark-mode .payment-wallet_withdrawal {
+    background: #2D3748;
+    color: #94a3b8;
+}
+
+/* Dark Mode - Type Badges */
+body.dark-mode .type-order {
+    background: #1A2E4A;
+    color: #6BC5D2;
+}
+
+body.dark-mode .type-subscription {
     background: #3D3520;
     color: #E8C96B;
 }

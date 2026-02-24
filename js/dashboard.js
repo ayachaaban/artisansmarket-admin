@@ -46,6 +46,20 @@ const paginationState = {
     posts: { lastDoc: null, page: 1, hasMore: true, stack: [] },
     reports: { lastDoc: null, page: 1, hasMore: true, stack: [] },
     subscriptions: { lastDoc: null, page: 1, hasMore: true, stack: [] },
+    orders: { lastDoc: null, page: 1, hasMore: true, stack: [] },
+    payments: { lastDoc: null, page: 1, hasMore: true, stack: [] },
+    payouts: { lastDoc: null, page: 1, hasMore: true, stack: [] },
+};
+
+// Platform fee percentage (10%)
+const PLATFORM_FEE_PERCENT = 0.10;
+
+// Payment policies
+const PAYMENT_POLICIES = {
+    commissionPercent: 10,    // 10% platform commission
+    refundDays: 7,            // 7-day refund window
+    minWithdrawal: 20,        // $20 minimum withdrawal
+    currency: 'USD'
 };
 
 // =============================================
@@ -286,6 +300,22 @@ sidebarMenuItems.forEach(item => {
                 populateArtistDropdown();
                 loadSubscriptions('first');
                 break;
+            case 'orders':
+                resetPagination('orders');
+                loadOrderStats();
+                loadOrders('first');
+                break;
+            case 'paymentsPayouts':
+                resetPagination('payments');
+                resetPagination('payouts');
+                loadPaymentStats();
+                loadPayments('first');
+                loadArtistWallets();
+                loadPayouts('first');
+                populatePayoutArtistDropdown();
+                loadRevenueTrendChart();
+                loadPaymentMethodsChart();
+                break;
             case 'analytics':
                 loadAnalytics();
                 break;
@@ -331,6 +361,8 @@ themeToggleDash.addEventListener('click', function () {
         loadPostsCategoryChart();
         loadCategoryPieChart();
         loadReportsTrendChart();
+        loadRevenueTrendChart();
+        loadPaymentMethodsChart();
     } catch (e) { /* charts may not be loaded yet */ }
 });
 
@@ -2142,3 +2174,1046 @@ document.getElementById('subscriptionStatusFilter')?.addEventListener('change', 
     resetPagination('subscriptions');
     loadSubscriptions('first');
 });
+
+// =============================================
+// ORDERS - Stats
+// =============================================
+async function loadOrderStats() {
+    try {
+        const snapshot = await db.collection('orders').get();
+        let total = 0, pending = 0, delivered = 0, revenue = 0;
+
+        snapshot.forEach(doc => {
+            const order = doc.data();
+            total++;
+            if (order.status === 'pending' || order.status === 'paid') pending++;
+            if (order.status === 'delivered') delivered++;
+            if (order.status !== 'cancelled' && order.status !== 'refunded') {
+                revenue += order.total || 0;
+            }
+        });
+
+        document.getElementById('totalOrders').textContent = total;
+        document.getElementById('pendingOrders').textContent = pending;
+        document.getElementById('deliveredOrders').textContent = delivered;
+        document.getElementById('orderRevenue').textContent = '$' + revenue.toFixed(2);
+    } catch (error) {
+        console.error('Error loading order stats:', error);
+    }
+}
+
+// =============================================
+// ORDERS - Load Table (paginated + filtered)
+// =============================================
+function getOrderStatusClass(status) {
+    const map = {
+        'pending': 'pending',
+        'paid': 'active',
+        'processing': 'reported',
+        'shipped': 'expired',
+        'delivered': 'reviewed',
+        'cancelled': 'cancelled',
+        'refunded': 'removed'
+    };
+    return map[status] || 'pending';
+}
+
+async function loadOrders(direction) {
+    if (!direction) direction = 'first';
+    const state = paginationState.orders;
+    const tbody = document.getElementById('ordersTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    tbody.appendChild(createLoadingRow(9));
+
+    try {
+        const statusFilter = document.getElementById('orderStatusFilter')?.value || '';
+        const methodFilter = document.getElementById('orderPaymentMethodFilter')?.value || '';
+        const searchQuery = (document.getElementById('orderSearchInput')?.value || '').toLowerCase();
+        const fetchLimit = searchQuery ? PAGE_SIZE * 5 : PAGE_SIZE + 1;
+
+        function buildOrderQuery() {
+            let q = db.collection('orders');
+            if (statusFilter) q = q.where('status', '==', statusFilter);
+            q = q.orderBy('createdAt', 'desc');
+            return q;
+        }
+
+        let query = buildOrderQuery().limit(fetchLimit);
+
+        if (direction === 'next' && state.lastDoc) {
+            query = buildOrderQuery().startAfter(state.lastDoc).limit(fetchLimit);
+        } else if (direction === 'prev' && state.stack.length > 1) {
+            state.stack.pop();
+            const prevCursor = state.stack[state.stack.length - 1];
+            query = buildOrderQuery().limit(fetchLimit);
+            if (prevCursor) {
+                query = buildOrderQuery().startAt(prevCursor).limit(fetchLimit);
+            }
+            state.page--;
+        } else {
+            state.page = 1;
+            state.stack = [null];
+        }
+
+        const snapshot = await query.get();
+        tbody.innerHTML = '';
+
+        let docs = snapshot.docs;
+
+        // Client-side filters
+        if (methodFilter) {
+            docs = docs.filter(doc => doc.data().paymentMethod === methodFilter);
+        }
+        if (searchQuery) {
+            docs = docs.filter(doc => {
+                const data = doc.data();
+                return (data.customerName || '').toLowerCase().includes(searchQuery) ||
+                    (data.artistName || '').toLowerCase().includes(searchQuery) ||
+                    (data.customerEmail || '').toLowerCase().includes(searchQuery);
+            });
+        }
+
+        const hasMore = docs.length > PAGE_SIZE;
+        const displayDocs = hasMore ? docs.slice(0, PAGE_SIZE) : docs;
+
+        if (displayDocs.length === 0) {
+            tbody.appendChild(createEmptyRow(9, 'No orders found'));
+            updatePaginationUI('orders', state.page, false);
+            return;
+        }
+
+        if (direction === 'first' || direction === 'next') {
+            if (direction === 'next') state.page++;
+            if (displayDocs.length > 0) state.stack.push(displayDocs[0]);
+        }
+        state.lastDoc = displayDocs[displayDocs.length - 1];
+        state.hasMore = hasMore;
+
+        displayDocs.forEach(doc => {
+            const order = doc.data();
+            const tr = document.createElement('tr');
+
+            tr.appendChild(createEl('td', {}, doc.id.substring(0, 8) + '...'));
+            tr.appendChild(createEl('td', {}, order.customerName || 'N/A'));
+            tr.appendChild(createEl('td', {}, order.artistName || 'N/A'));
+            tr.appendChild(createEl('td', {}, (order.items || []).length + ' item(s)'));
+            tr.appendChild(createEl('td', {}, '$' + (order.total || 0).toFixed(2)));
+
+            const tdStatus = document.createElement('td');
+            tdStatus.appendChild(createEl('span', {
+                className: 'status-badge status-' + getOrderStatusClass(order.status)
+            }, order.status || 'pending'));
+            tr.appendChild(tdStatus);
+
+            const tdPayment = document.createElement('td');
+            tdPayment.appendChild(createEl('span', {
+                className: 'payment-method-badge payment-' + (order.paymentMethod || 'stripe')
+            }, order.paymentMethod || 'N/A'));
+            tr.appendChild(tdPayment);
+
+            tr.appendChild(createEl('td', {},
+                order.createdAt ? order.createdAt.toDate().toLocaleDateString() : 'N/A'));
+
+            // Actions
+            const tdActions = document.createElement('td');
+
+            const viewBtn = createEl('button', { className: 'btn-action btn-view' }, 'View');
+            viewBtn.addEventListener('click', () => viewOrderDetails(doc.id));
+            tdActions.appendChild(viewBtn);
+
+            if (order.status === 'paid' || order.status === 'processing' || order.status === 'shipped') {
+                const updateBtn = createEl('button', { className: 'btn-action btn-approve' }, 'Update');
+                updateBtn.addEventListener('click', () => updateOrderStatus(doc.id, order));
+                tdActions.appendChild(updateBtn);
+            }
+
+            if (order.status !== 'refunded' && order.status !== 'cancelled') {
+                // Check refund window before showing button
+                let withinRefundWindow = true;
+                if (order.createdAt) {
+                    const daysSince = Math.floor((new Date() - order.createdAt.toDate()) / (1000 * 60 * 60 * 24));
+                    withinRefundWindow = daysSince <= PAYMENT_POLICIES.refundDays;
+                }
+                if (withinRefundWindow) {
+                    const refundBtn = createEl('button', { className: 'btn-action btn-delete' }, 'Refund');
+                    refundBtn.addEventListener('click', () => refundOrder(doc.id, order));
+                    tdActions.appendChild(refundBtn);
+                }
+            }
+
+            tr.appendChild(tdActions);
+            tbody.appendChild(tr);
+        });
+
+        updatePaginationUI('orders', state.page, hasMore);
+    } catch (error) {
+        console.error('Error loading orders:', error);
+        tbody.innerHTML = '';
+        tbody.appendChild(createErrorRow(9, 'Error loading orders'));
+    }
+}
+
+// =============================================
+// ORDERS - Actions
+// =============================================
+async function viewOrderDetails(orderId) {
+    try {
+        const doc = await db.collection('orders').doc(orderId).get();
+        if (!doc.exists) { alert('Order not found.'); return; }
+        const order = doc.data();
+
+        let itemsList = (order.items || []).map(i =>
+            '  - ' + i.title + ' x' + i.quantity + ' @ $' + i.price.toFixed(2)
+        ).join('\n');
+
+        alert(
+            'Order: ' + orderId + '\n' +
+            'Customer: ' + (order.customerName || 'N/A') + ' (' + (order.customerEmail || '') + ')\n' +
+            'Artist: ' + (order.artistName || 'N/A') + '\n' +
+            'Items:\n' + (itemsList || '  (none)') + '\n' +
+            'Subtotal: $' + (order.subtotal || 0).toFixed(2) + '\n' +
+            'Platform Fee: $' + (order.platformFee || 0).toFixed(2) + '\n' +
+            'Total: $' + (order.total || 0).toFixed(2) + '\n' +
+            'Status: ' + (order.status || 'N/A') + '\n' +
+            'Payment: ' + (order.paymentMethod || 'N/A') + '\n' +
+            'Payout Status: ' + (order.payoutStatus || 'N/A') + '\n' +
+            'Date: ' + (order.createdAt ? order.createdAt.toDate().toLocaleString() : 'N/A')
+        );
+    } catch (error) {
+        console.error('Error viewing order:', error);
+        alert('Error loading order details.');
+    }
+}
+
+async function updateOrderStatus(orderId, order) {
+    const nextStatus = {
+        'paid': 'processing',
+        'processing': 'shipped',
+        'shipped': 'delivered'
+    };
+    const newStatus = nextStatus[order.status];
+    if (!newStatus) { alert('Cannot update this order status.'); return; }
+
+    let trackingNumber = '';
+    if (newStatus === 'shipped') {
+        trackingNumber = prompt('Enter tracking number (optional):') || '';
+    }
+
+    if (!confirm('Update order to "' + newStatus + '"?')) return;
+
+    try {
+        const updateData = {
+            status: newStatus,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        if (trackingNumber) updateData.trackingNumber = trackingNumber;
+
+        await db.collection('orders').doc(orderId).update(updateData);
+        await logAuditAction('update_order_status', orderId, 'order', {
+            oldStatus: order.status, newStatus: newStatus, trackingNumber: trackingNumber
+        });
+        alert('Order updated to ' + newStatus + '.');
+        resetPagination('orders');
+        loadOrders('first');
+        loadOrderStats();
+    } catch (error) {
+        console.error('Error updating order:', error);
+        alert('Error updating order.');
+    }
+}
+
+async function refundOrder(orderId, order) {
+    // Check refund time limit policy
+    if (order.createdAt) {
+        const orderDate = order.createdAt.toDate();
+        const now = new Date();
+        const daysSinceOrder = Math.floor((now - orderDate) / (1000 * 60 * 60 * 24));
+        if (daysSinceOrder > PAYMENT_POLICIES.refundDays) {
+            alert('Refund denied: This order is ' + daysSinceOrder + ' days old. Refund window is ' + PAYMENT_POLICIES.refundDays + ' days.');
+            return;
+        }
+    }
+
+    if (!confirm('Refund $' + (order.total || 0).toFixed(2) + ' for this order? This will deduct from the artist\'s wallet.')) return;
+
+    try {
+        await db.collection('orders').doc(orderId).update({
+            status: 'refunded',
+            payoutStatus: 'unpaid',
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        if (order.paymentId) {
+            await db.collection('payments').doc(order.paymentId).update({
+                status: 'refunded',
+                refundedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        }
+
+        // Reverse artist wallet earnings
+        if (order.artistId && order.artistEarnings) {
+            const walletRef = db.collection('wallets').doc(order.artistId);
+            const walletDoc = await walletRef.get();
+            if (walletDoc.exists) {
+                const wallet = walletDoc.data();
+                const newBalance = Math.max(0, (wallet.balance || 0) - (order.artistEarnings || 0));
+                await walletRef.update({
+                    balance: newBalance,
+                    totalEarned: Math.max(0, (wallet.totalEarned || 0) - (order.artistEarnings || 0)),
+                    totalCommission: Math.max(0, (wallet.totalCommission || 0) - (order.platformFee || 0)),
+                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            }
+        }
+
+        await logAuditAction('refund_order', orderId, 'order', {
+            amount: order.total, customerName: order.customerName, artistId: order.artistId
+        });
+
+        alert('Order refunded. Artist wallet updated.');
+        resetPagination('orders');
+        loadOrders('first');
+        loadOrderStats();
+    } catch (error) {
+        console.error('Error refunding order:', error);
+        alert('Error refunding order.');
+    }
+}
+
+// Order event listeners
+document.getElementById('ordersPrevBtn')?.addEventListener('click', () => loadOrders('prev'));
+document.getElementById('ordersNextBtn')?.addEventListener('click', () => loadOrders('next'));
+
+document.getElementById('orderSearchInput')?.addEventListener('input', debounce(function () {
+    resetPagination('orders');
+    loadOrders('first');
+}, 300));
+
+document.getElementById('orderStatusFilter')?.addEventListener('change', function () {
+    resetPagination('orders');
+    loadOrders('first');
+});
+
+document.getElementById('orderPaymentMethodFilter')?.addEventListener('change', function () {
+    resetPagination('orders');
+    loadOrders('first');
+});
+
+// =============================================
+// PAYMENTS - Stats
+// =============================================
+async function loadPaymentStats() {
+    try {
+        const [paymentsSnap, payoutsSnap, unpaidOrdersSnap] = await Promise.all([
+            db.collection('payments').get(),
+            db.collection('payouts').get(),
+            db.collection('orders').where('payoutStatus', '==', 'unpaid').where('status', '==', 'delivered').get()
+        ]);
+
+        let totalPayments = 0, completedAmount = 0, platformRevenue = 0, refundedAmount = 0;
+        paymentsSnap.forEach(doc => {
+            const p = doc.data();
+            totalPayments++;
+            if (p.status === 'completed') completedAmount += p.amount || 0;
+            if (p.status === 'completed') platformRevenue += p.platformFee || 0;
+            if (p.status === 'refunded') refundedAmount += p.amount || 0;
+        });
+
+        let totalPayoutsAmount = 0;
+        payoutsSnap.forEach(doc => {
+            const p = doc.data();
+            if (p.status === 'completed') totalPayoutsAmount += p.amount || 0;
+        });
+
+        let pendingPayoutsAmount = 0;
+        unpaidOrdersSnap.forEach(doc => {
+            pendingPayoutsAmount += doc.data().artistEarnings || 0;
+        });
+
+        document.getElementById('totalPayments').textContent = totalPayments;
+        document.getElementById('completedPayments').textContent = '$' + completedAmount.toFixed(2);
+        document.getElementById('platformRevenue').textContent = '$' + platformRevenue.toFixed(2);
+        document.getElementById('totalPayoutsAmount').textContent = '$' + totalPayoutsAmount.toFixed(2);
+        document.getElementById('pendingPayouts').textContent = '$' + pendingPayoutsAmount.toFixed(2);
+        document.getElementById('refundedAmount').textContent = '$' + refundedAmount.toFixed(2);
+    } catch (error) {
+        console.error('Error loading payment stats:', error);
+    }
+}
+
+// =============================================
+// PAYMENTS - Load Table
+// =============================================
+async function loadPayments(direction) {
+    if (!direction) direction = 'first';
+    const state = paginationState.payments;
+    const tbody = document.getElementById('paymentsTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    tbody.appendChild(createLoadingRow(10));
+
+    try {
+        const typeFilter = document.getElementById('paymentTypeFilter')?.value || '';
+        const statusFilter = document.getElementById('paymentStatusFilter')?.value || '';
+        const methodFilter = document.getElementById('paymentMethodFilter')?.value || '';
+        const searchQuery = (document.getElementById('paymentSearchInput')?.value || '').toLowerCase();
+        const fetchLimit = searchQuery ? PAGE_SIZE * 5 : PAGE_SIZE + 1;
+
+        function buildPaymentQuery() {
+            let q = db.collection('payments');
+            if (typeFilter) q = q.where('type', '==', typeFilter);
+            if (statusFilter) q = q.where('status', '==', statusFilter);
+            q = q.orderBy('createdAt', 'desc');
+            return q;
+        }
+
+        let query = buildPaymentQuery().limit(fetchLimit);
+
+        if (direction === 'next' && state.lastDoc) {
+            query = buildPaymentQuery().startAfter(state.lastDoc).limit(fetchLimit);
+        } else if (direction === 'prev' && state.stack.length > 1) {
+            state.stack.pop();
+            const prevCursor = state.stack[state.stack.length - 1];
+            query = buildPaymentQuery().limit(fetchLimit);
+            if (prevCursor) {
+                query = buildPaymentQuery().startAt(prevCursor).limit(fetchLimit);
+            }
+            state.page--;
+        } else {
+            state.page = 1;
+            state.stack = [null];
+        }
+
+        const snapshot = await query.get();
+        tbody.innerHTML = '';
+
+        let docs = snapshot.docs;
+
+        if (methodFilter) {
+            docs = docs.filter(doc => doc.data().paymentMethod === methodFilter);
+        }
+        if (searchQuery) {
+            docs = docs.filter(doc => {
+                const data = doc.data();
+                return (data.userName || '').toLowerCase().includes(searchQuery) ||
+                    (data.userEmail || '').toLowerCase().includes(searchQuery);
+            });
+        }
+
+        const hasMore = docs.length > PAGE_SIZE;
+        const displayDocs = hasMore ? docs.slice(0, PAGE_SIZE) : docs;
+
+        if (displayDocs.length === 0) {
+            tbody.appendChild(createEmptyRow(10, 'No payments found'));
+            updatePaginationUI('payments', state.page, false);
+            return;
+        }
+
+        if (direction === 'first' || direction === 'next') {
+            if (direction === 'next') state.page++;
+            if (displayDocs.length > 0) state.stack.push(displayDocs[0]);
+        }
+        state.lastDoc = displayDocs[displayDocs.length - 1];
+        state.hasMore = hasMore;
+
+        displayDocs.forEach(doc => {
+            const payment = doc.data();
+            const tr = document.createElement('tr');
+
+            tr.appendChild(createEl('td', {}, doc.id.substring(0, 8) + '...'));
+
+            const tdType = document.createElement('td');
+            tdType.appendChild(createEl('span', {
+                className: 'type-badge type-' + (payment.type || 'order')
+            }, payment.type || 'order'));
+            tr.appendChild(tdType);
+
+            tr.appendChild(createEl('td', {}, (payment.userName || 'N/A') + '\n' + (payment.userEmail || '')));
+            tr.appendChild(createEl('td', {}, '$' + (payment.amount || 0).toFixed(2)));
+            tr.appendChild(createEl('td', {}, '$' + (payment.platformFee || 0).toFixed(2)));
+            tr.appendChild(createEl('td', {}, '$' + (payment.netAmount || 0).toFixed(2)));
+
+            const tdMethod = document.createElement('td');
+            tdMethod.appendChild(createEl('span', {
+                className: 'payment-method-badge payment-' + (payment.paymentMethod || 'stripe')
+            }, payment.paymentMethod || 'N/A'));
+            tr.appendChild(tdMethod);
+
+            const tdStatus = document.createElement('td');
+            tdStatus.appendChild(createEl('span', {
+                className: 'status-badge status-' + getPaymentStatusClass(payment.status)
+            }, payment.status || 'pending'));
+            tr.appendChild(tdStatus);
+
+            tr.appendChild(createEl('td', {},
+                payment.createdAt ? payment.createdAt.toDate().toLocaleDateString() : 'N/A'));
+
+            const tdActions = document.createElement('td');
+            const viewBtn = createEl('button', { className: 'btn-action btn-view' }, 'View');
+            viewBtn.addEventListener('click', () => {
+                alert(
+                    'Payment: ' + doc.id + '\n' +
+                    'Type: ' + (payment.type || 'N/A') + '\n' +
+                    'User: ' + (payment.userName || 'N/A') + '\n' +
+                    'Amount: $' + (payment.amount || 0).toFixed(2) + '\n' +
+                    'Platform Fee: $' + (payment.platformFee || 0).toFixed(2) + '\n' +
+                    'Net: $' + (payment.netAmount || 0).toFixed(2) + '\n' +
+                    'Method: ' + (payment.paymentMethod || 'N/A') + '\n' +
+                    'Status: ' + (payment.status || 'N/A') + '\n' +
+                    'Gateway ID: ' + (payment.gatewayTransactionId || 'N/A') + '\n' +
+                    'Reference: ' + (payment.referenceId || 'N/A')
+                );
+            });
+            tdActions.appendChild(viewBtn);
+            tr.appendChild(tdActions);
+            tbody.appendChild(tr);
+        });
+
+        updatePaginationUI('payments', state.page, hasMore);
+    } catch (error) {
+        console.error('Error loading payments:', error);
+        tbody.innerHTML = '';
+        tbody.appendChild(createErrorRow(10, 'Error loading payments'));
+    }
+}
+
+function getPaymentStatusClass(status) {
+    const map = {
+        'completed': 'reviewed',
+        'pending': 'pending',
+        'failed': 'removed',
+        'refunded': 'removed'
+    };
+    return map[status] || 'pending';
+}
+
+// Payment event listeners
+document.getElementById('paymentsPrevBtn')?.addEventListener('click', () => loadPayments('prev'));
+document.getElementById('paymentsNextBtn')?.addEventListener('click', () => loadPayments('next'));
+
+document.getElementById('paymentSearchInput')?.addEventListener('input', debounce(function () {
+    resetPagination('payments');
+    loadPayments('first');
+}, 300));
+
+document.getElementById('paymentTypeFilter')?.addEventListener('change', function () {
+    resetPagination('payments');
+    loadPayments('first');
+});
+
+document.getElementById('paymentStatusFilter')?.addEventListener('change', function () {
+    resetPagination('payments');
+    loadPayments('first');
+});
+
+document.getElementById('paymentMethodFilter')?.addEventListener('change', function () {
+    resetPagination('payments');
+    loadPayments('first');
+});
+
+// =============================================
+// PAYOUTS - Load Table
+// =============================================
+async function loadPayouts(direction) {
+    if (!direction) direction = 'first';
+    const state = paginationState.payouts;
+    const tbody = document.getElementById('payoutsTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    tbody.appendChild(createLoadingRow(8));
+
+    try {
+        const statusFilter = document.getElementById('payoutStatusFilter')?.value || '';
+        const searchQuery = (document.getElementById('payoutSearchInput')?.value || '').toLowerCase();
+        const fetchLimit = searchQuery ? PAGE_SIZE * 5 : PAGE_SIZE + 1;
+
+        function buildPayoutQuery() {
+            let q = db.collection('payouts');
+            if (statusFilter) q = q.where('status', '==', statusFilter);
+            q = q.orderBy('createdAt', 'desc');
+            return q;
+        }
+
+        let query = buildPayoutQuery().limit(fetchLimit);
+
+        if (direction === 'next' && state.lastDoc) {
+            query = buildPayoutQuery().startAfter(state.lastDoc).limit(fetchLimit);
+        } else if (direction === 'prev' && state.stack.length > 1) {
+            state.stack.pop();
+            const prevCursor = state.stack[state.stack.length - 1];
+            query = buildPayoutQuery().limit(fetchLimit);
+            if (prevCursor) {
+                query = buildPayoutQuery().startAt(prevCursor).limit(fetchLimit);
+            }
+            state.page--;
+        } else {
+            state.page = 1;
+            state.stack = [null];
+        }
+
+        const snapshot = await query.get();
+        tbody.innerHTML = '';
+
+        let docs = snapshot.docs;
+
+        if (searchQuery) {
+            docs = docs.filter(doc => {
+                const data = doc.data();
+                return (data.artistName || '').toLowerCase().includes(searchQuery) ||
+                    (data.artistEmail || '').toLowerCase().includes(searchQuery);
+            });
+        }
+
+        const hasMore = docs.length > PAGE_SIZE;
+        const displayDocs = hasMore ? docs.slice(0, PAGE_SIZE) : docs;
+
+        if (displayDocs.length === 0) {
+            tbody.appendChild(createEmptyRow(8, 'No payouts found'));
+            updatePaginationUI('payouts', state.page, false);
+            return;
+        }
+
+        if (direction === 'first' || direction === 'next') {
+            if (direction === 'next') state.page++;
+            if (displayDocs.length > 0) state.stack.push(displayDocs[0]);
+        }
+        state.lastDoc = displayDocs[displayDocs.length - 1];
+        state.hasMore = hasMore;
+
+        displayDocs.forEach(doc => {
+            const payout = doc.data();
+            const tr = document.createElement('tr');
+
+            tr.appendChild(createEl('td', {}, doc.id.substring(0, 8) + '...'));
+            tr.appendChild(createEl('td', {}, payout.artistName || 'N/A'));
+            tr.appendChild(createEl('td', {}, '$' + (payout.amount || 0).toFixed(2)));
+            tr.appendChild(createEl('td', {}, (payout.orderIds || []).length + ' order(s)'));
+
+            const tdMethod = document.createElement('td');
+            tdMethod.appendChild(createEl('span', {
+                className: 'payment-method-badge payment-' + (payout.paymentMethod || 'stripe')
+            }, payout.paymentMethod || 'N/A'));
+            tr.appendChild(tdMethod);
+
+            const tdStatus = document.createElement('td');
+            const statusClass = payout.status === 'completed' ? 'reviewed' :
+                payout.status === 'failed' ? 'removed' :
+                payout.status === 'processing' ? 'reported' : 'pending';
+            tdStatus.appendChild(createEl('span', {
+                className: 'status-badge status-' + statusClass
+            }, payout.status || 'pending'));
+            tr.appendChild(tdStatus);
+
+            tr.appendChild(createEl('td', {},
+                payout.createdAt ? payout.createdAt.toDate().toLocaleDateString() : 'N/A'));
+            tr.appendChild(createEl('td', {}, payout.processedBy || 'N/A'));
+
+            tbody.appendChild(tr);
+        });
+
+        updatePaginationUI('payouts', state.page, hasMore);
+    } catch (error) {
+        console.error('Error loading payouts:', error);
+        tbody.innerHTML = '';
+        tbody.appendChild(createErrorRow(8, 'Error loading payouts'));
+    }
+}
+
+// Payout event listeners
+document.getElementById('payoutsPrevBtn')?.addEventListener('click', () => loadPayouts('prev'));
+document.getElementById('payoutsNextBtn')?.addEventListener('click', () => loadPayouts('next'));
+
+document.getElementById('payoutSearchInput')?.addEventListener('input', debounce(function () {
+    resetPagination('payouts');
+    loadPayouts('first');
+}, 300));
+
+document.getElementById('payoutStatusFilter')?.addEventListener('change', function () {
+    resetPagination('payouts');
+    loadPayouts('first');
+});
+
+// =============================================
+// PAYOUTS - Populate Artist Dropdown
+// =============================================
+async function populatePayoutArtistDropdown() {
+    const select = document.getElementById('payoutArtistSelect');
+    if (!select) return;
+
+    try {
+        const snapshot = await db.collection('orders')
+            .where('payoutStatus', '==', 'unpaid')
+            .where('status', '==', 'delivered')
+            .get();
+
+        const artistAmounts = {};
+        snapshot.forEach(doc => {
+            const order = doc.data();
+            if (!artistAmounts[order.artistId]) {
+                artistAmounts[order.artistId] = {
+                    name: order.artistName || 'Unknown',
+                    amount: 0
+                };
+            }
+            artistAmounts[order.artistId].amount += order.artistEarnings || 0;
+        });
+
+        select.innerHTML = '<option value="">-- Choose Artist --</option>';
+        for (const [artistId, info] of Object.entries(artistAmounts)) {
+            const option = document.createElement('option');
+            option.value = artistId;
+            option.textContent = info.name + ' - $' + info.amount.toFixed(2) + ' pending';
+            option.dataset.amount = info.amount.toFixed(2);
+            select.appendChild(option);
+        }
+    } catch (error) {
+        console.error('Error populating payout artist dropdown:', error);
+    }
+}
+
+// Update preview when artist selected
+document.getElementById('payoutArtistSelect')?.addEventListener('change', function () {
+    const selected = this.options[this.selectedIndex];
+    const preview = document.getElementById('payoutAmountPreview');
+    if (preview) {
+        preview.value = selected.dataset.amount ? '$' + selected.dataset.amount : '$0.00';
+    }
+});
+
+// Process Payout form
+document.getElementById('processPayoutForm')?.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const artistId = document.getElementById('payoutArtistSelect').value;
+    const method = document.getElementById('payoutMethodSelect').value;
+
+    if (!artistId) { alert('Please select an artist.'); return; }
+
+    try {
+        // Check artist wallet balance
+        const walletDoc = await db.collection('wallets').doc(artistId).get();
+        const walletBalance = walletDoc.exists ? (walletDoc.data().balance || 0) : 0;
+
+        if (walletBalance < PAYMENT_POLICIES.minWithdrawal) {
+            alert('Payout denied: Artist wallet balance ($' + walletBalance.toFixed(2) + ') is below the minimum withdrawal of $' + PAYMENT_POLICIES.minWithdrawal.toFixed(2) + '.');
+            return;
+        }
+
+        const ordersSnap = await db.collection('orders')
+            .where('artistId', '==', artistId)
+            .where('payoutStatus', '==', 'unpaid')
+            .where('status', '==', 'delivered')
+            .get();
+
+        if (ordersSnap.empty) { alert('No unpaid delivered orders for this artist.'); return; }
+
+        const totalAmount = ordersSnap.docs.reduce((sum, d) => sum + (d.data().artistEarnings || 0), 0);
+
+        if (!confirm('Process payout of $' + totalAmount.toFixed(2) + ' for this artist? This will deduct from their wallet.')) return;
+
+        const orderIds = ordersSnap.docs.map(d => d.id);
+        const firstOrder = ordersSnap.docs[0].data();
+
+        const payoutRef = db.collection('payouts').doc();
+        const batch = db.batch();
+
+        batch.set(payoutRef, {
+            payoutId: payoutRef.id,
+            artistId: artistId,
+            artistName: firstOrder.artistName || 'Unknown',
+            artistEmail: firstOrder.artistEmail || '',
+            amount: totalAmount,
+            currency: 'USD',
+            orderIds: orderIds,
+            paymentMethod: method,
+            gatewayPayoutId: '',
+            status: 'completed',
+            processedBy: auth.currentUser.email,
+            notes: '',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            processedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        ordersSnap.forEach(doc => {
+            batch.update(doc.ref, {
+                payoutId: payoutRef.id,
+                payoutStatus: 'paid_out',
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        });
+
+        // Deduct from artist wallet
+        if (walletDoc.exists) {
+            batch.update(db.collection('wallets').doc(artistId), {
+                balance: Math.max(0, walletBalance - totalAmount),
+                totalWithdrawn: (walletDoc.data().totalWithdrawn || 0) + totalAmount,
+                lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        }
+
+        await batch.commit();
+        await logAuditAction('process_payout', payoutRef.id, 'payout', {
+            artistId: artistId, artistName: firstOrder.artistName, amount: totalAmount, method: method
+        });
+
+        alert('Payout completed! $' + totalAmount.toFixed(2) + ' withdrawn from artist wallet.');
+        this.reset();
+        document.getElementById('payoutAmountPreview').value = '$0.00';
+        resetPagination('payouts');
+        loadPayouts('first');
+        loadArtistWallets();
+        loadPaymentStats();
+        populatePayoutArtistDropdown();
+    } catch (error) {
+        console.error('Error processing payout:', error);
+        alert('Error processing payout: ' + error.message);
+    }
+});
+
+// =============================================
+// REVENUE CHARTS
+// =============================================
+let revenueTrendChart = null;
+let paymentMethodsPieChart = null;
+
+async function loadRevenueTrendChart() {
+    try {
+        const now = new Date();
+        const monthlyData = {};
+
+        const paymentsSnap = await db.collection('payments')
+            .where('status', '==', 'completed')
+            .get();
+
+        paymentsSnap.forEach(doc => {
+            const p = doc.data();
+            if (p.createdAt) {
+                const date = p.createdAt.toDate();
+                const key = date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0');
+                if (!monthlyData[key]) monthlyData[key] = { revenue: 0, fees: 0 };
+                monthlyData[key].revenue += p.amount || 0;
+                monthlyData[key].fees += p.platformFee || 0;
+            }
+        });
+
+        const labels = [], revenueData = [], feeData = [];
+        for (let i = 5; i >= 0; i--) {
+            const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+            labels.push(d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }));
+            revenueData.push((monthlyData[key] || {}).revenue || 0);
+            feeData.push((monthlyData[key] || {}).fees || 0);
+        }
+
+        const ctx = document.getElementById('revenueTrendChart');
+        if (!ctx) return;
+        if (revenueTrendChart) revenueTrendChart.destroy();
+
+        const colors = getChartColors();
+        revenueTrendChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Total Revenue',
+                        data: revenueData,
+                        borderColor: '#2E86AB',
+                        backgroundColor: 'rgba(46, 134, 171, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    },
+                    {
+                        label: 'Platform Fees',
+                        data: feeData,
+                        borderColor: '#C4A265',
+                        backgroundColor: 'rgba(196, 162, 101, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: { legend: { labels: { color: colors.legendColor } } },
+                scales: getChartScaleOptions()
+            }
+        });
+    } catch (error) {
+        console.error('Error loading revenue trend chart:', error);
+    }
+}
+
+async function loadPaymentMethodsChart() {
+    try {
+        const paymentsSnap = await db.collection('payments')
+            .where('status', '==', 'completed')
+            .get();
+
+        let virtualCardTotal = 0, virtualVisaTotal = 0;
+        paymentsSnap.forEach(doc => {
+            const p = doc.data();
+            if (p.paymentMethod === 'virtual_card') virtualCardTotal += p.amount || 0;
+            else if (p.paymentMethod === 'virtual_visa') virtualVisaTotal += p.amount || 0;
+        });
+
+        const ctx = document.getElementById('paymentMethodsChart');
+        if (!ctx) return;
+        if (paymentMethodsPieChart) paymentMethodsPieChart.destroy();
+
+        const colors = getChartColors();
+        paymentMethodsPieChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: ['Virtual Card', 'Virtual Visa'],
+                datasets: [{
+                    data: [virtualCardTotal, virtualVisaTotal],
+                    backgroundColor: ['#2E86AB', '#C4A265'],
+                    borderWidth: 2,
+                    borderColor: document.body.classList.contains('dark-mode') ? '#1e293b' : '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        labels: { color: colors.legendColor }
+                    }
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error loading payment methods chart:', error);
+    }
+}
+
+// =============================================
+// ARTIST WALLETS
+// =============================================
+async function loadArtistWallets() {
+    const tbody = document.getElementById('walletsTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    tbody.appendChild(createLoadingRow(7));
+
+    try {
+        const searchQuery = (document.getElementById('walletSearchInput')?.value || '').toLowerCase();
+
+        // Get all artists
+        const usersSnap = await db.collection('users').where('role', '==', 'artist').get();
+        const artistIds = usersSnap.docs.map(d => d.id);
+        const artistMap = {};
+        usersSnap.forEach(doc => {
+            const data = doc.data();
+            artistMap[doc.id] = { name: data.name || 'Unknown', email: data.email || '' };
+        });
+
+        // Get all wallets
+        const walletsSnap = await db.collection('wallets').get();
+        const walletMap = {};
+        walletsSnap.forEach(doc => {
+            walletMap[doc.id] = doc.data();
+        });
+
+        tbody.innerHTML = '';
+
+        // Build rows for each artist
+        let artists = artistIds.map(id => ({
+            id: id,
+            name: artistMap[id].name,
+            email: artistMap[id].email,
+            wallet: walletMap[id] || { balance: 0, totalEarned: 0, totalWithdrawn: 0, totalCommission: 0 }
+        }));
+
+        // Client-side search
+        if (searchQuery) {
+            artists = artists.filter(a =>
+                a.name.toLowerCase().includes(searchQuery) ||
+                a.email.toLowerCase().includes(searchQuery)
+            );
+        }
+
+        if (artists.length === 0) {
+            tbody.appendChild(createEmptyRow(7, 'No artist wallets found'));
+            return;
+        }
+
+        artists.forEach(artist => {
+            const tr = document.createElement('tr');
+            const w = artist.wallet;
+
+            tr.appendChild(createEl('td', {}, artist.name));
+            tr.appendChild(createEl('td', {}, artist.email));
+            tr.appendChild(createEl('td', {}, '$' + (w.balance || 0).toFixed(2)));
+            tr.appendChild(createEl('td', {}, '$' + (w.totalEarned || 0).toFixed(2)));
+            tr.appendChild(createEl('td', {}, '$' + (w.totalWithdrawn || 0).toFixed(2)));
+            tr.appendChild(createEl('td', {}, '$' + (w.totalCommission || 0).toFixed(2)));
+
+            const tdActions = document.createElement('td');
+            const addCreditBtn = createEl('button', { className: 'btn-action btn-approve' }, 'Add Credit');
+            addCreditBtn.addEventListener('click', () => addWalletCredit(artist.id, artist.name));
+            tdActions.appendChild(addCreditBtn);
+            tr.appendChild(tdActions);
+
+            tbody.appendChild(tr);
+        });
+    } catch (error) {
+        console.error('Error loading artist wallets:', error);
+        tbody.innerHTML = '';
+        tbody.appendChild(createErrorRow(7, 'Error loading wallets'));
+    }
+}
+
+async function addWalletCredit(artistId, artistName) {
+    const amountStr = prompt('Enter credit amount to add to ' + artistName + '\'s wallet:');
+    if (!amountStr) return;
+    const amount = parseFloat(amountStr);
+    if (isNaN(amount) || amount <= 0) {
+        alert('Please enter a valid positive amount.');
+        return;
+    }
+
+    if (!confirm('Add $' + amount.toFixed(2) + ' to ' + artistName + '\'s wallet?')) return;
+
+    try {
+        const walletRef = db.collection('wallets').doc(artistId);
+        const walletDoc = await walletRef.get();
+
+        if (walletDoc.exists) {
+            const wallet = walletDoc.data();
+            await walletRef.update({
+                balance: (wallet.balance || 0) + amount,
+                totalEarned: (wallet.totalEarned || 0) + amount,
+                lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        } else {
+            await walletRef.set({
+                balance: amount,
+                totalEarned: amount,
+                totalWithdrawn: 0,
+                totalCommission: 0,
+                lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        }
+
+        await logAuditAction('add_wallet_credit', artistId, 'wallet', {
+            artistName: artistName, amount: amount
+        });
+
+        alert('$' + amount.toFixed(2) + ' added to ' + artistName + '\'s wallet.');
+        loadArtistWallets();
+        loadPaymentStats();
+    } catch (error) {
+        console.error('Error adding wallet credit:', error);
+        alert('Error adding credit: ' + error.message);
+    }
+}
+
+// Wallet search listener
+document.getElementById('walletSearchInput')?.addEventListener('input', debounce(function () {
+    loadArtistWallets();
+}, 300));

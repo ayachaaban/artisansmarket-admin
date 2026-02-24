@@ -76,6 +76,19 @@
                 </svg>
                 Subscriptions
             </li>
+            <li data-page="orders">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .491.592l-1.5 8A.5.5 0 0 1 13 12H4a.5.5 0 0 1-.491-.408L2.01 3.607 1.61 2H.5a.5.5 0 0 1-.5-.5zM3.102 4l1.313 7h8.17l1.313-7H3.102zM5 12a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm7 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-7 1a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm7 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+                </svg>
+                Orders
+            </li>
+            <li data-page="paymentsPayouts">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M1 3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1H1zm0 1v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1zm3 3a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7z"/>
+                    <path d="M0 3a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3zm2-1a1 1 0 0 0-1 1v1h14V3a1 1 0 0 0-1-1H2zm13 3H1v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V5z"/>
+                </svg>
+                Payments & Payouts
+            </li>
             <li data-page="adminManagement" id="adminManagementMenuItem" style="display:none;">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
                     <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/>
@@ -662,6 +675,417 @@
                     <div>
                         <button class="btn-action btn-view" id="subscriptionsPrevBtn" disabled>Previous</button>
                         <button class="btn-action btn-view" id="subscriptionsNextBtn">Next</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Orders Page -->
+            <div class="page-content" id="ordersPage">
+                <h2 class="page-title">Orders Management</h2>
+
+                <!-- KPI Cards -->
+                <div class="row g-3 mb-4">
+                    <div class="col-lg-3 col-md-6">
+                        <div class="kpi-card">
+                            <div class="kpi-icon" style="background: #2E86AB;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
+                                    <path d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .491.592l-1.5 8A.5.5 0 0 1 13 12H4a.5.5 0 0 1-.491-.408L2.01 3.607 1.61 2H.5a.5.5 0 0 1-.5-.5z"/>
+                                </svg>
+                            </div>
+                            <div class="kpi-details">
+                                <h4 id="totalOrders">0</h4>
+                                <p>Total Orders</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="kpi-card">
+                            <div class="kpi-icon" style="background: #C4A265;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
+                                    <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.399l-.395.004.088-.416.913-.204c.484-.12.757-.17 1.048-.17.566 0 .83.33.687 1.166zM8.5 5.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+                                </svg>
+                            </div>
+                            <div class="kpi-details">
+                                <h4 id="pendingOrders">0</h4>
+                                <p>Pending</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="kpi-card">
+                            <div class="kpi-icon" style="background: #7CB342;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
+                                    <path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z"/>
+                                </svg>
+                            </div>
+                            <div class="kpi-details">
+                                <h4 id="deliveredOrders">0</h4>
+                                <p>Delivered</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="kpi-card">
+                            <div class="kpi-icon" style="background: #B07D4B;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
+                                    <path d="M4 10.781c.148 1.667 1.513 2.85 3.591 3.003V15h1.043v-1.216c2.27-.179 3.678-1.438 3.678-3.3 0-1.59-.947-2.51-2.956-3.028l-.722-.187V3.467c1.122.11 1.879.714 2.07 1.616h1.47c-.166-1.6-1.54-2.748-3.54-2.875V1H7.591v1.233c-1.939.23-3.27 1.472-3.27 3.156 0 1.454.966 2.483 2.661 2.917l.61.162v4.031c-1.149-.17-1.94-.8-2.131-1.718H4zm3.391-3.836c-1.043-.263-1.6-.825-1.6-1.616 0-.944.704-1.641 1.8-1.828v3.495l-.2-.05zm1.591 1.872c1.287.323 1.852.859 1.852 1.769 0 1.097-.826 1.828-2.2 1.939V8.73l.348.086z"/>
+                                </svg>
+                            </div>
+                            <div class="kpi-details">
+                                <h4 id="orderRevenue">$0.00</h4>
+                                <p>Total Revenue</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="filters mb-3">
+                    <input type="text" class="form-control filter-select" id="orderSearchInput" placeholder="Search by customer or artist...">
+                    <select class="form-select filter-select" id="orderStatusFilter">
+                        <option value="">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="paid">Paid</option>
+                        <option value="processing">Processing</option>
+                        <option value="shipped">Shipped</option>
+                        <option value="delivered">Delivered</option>
+                        <option value="cancelled">Cancelled</option>
+                        <option value="refunded">Refunded</option>
+                    </select>
+                    <select class="form-select filter-select" id="orderPaymentMethodFilter">
+                        <option value="">All Methods</option>
+                        <option value="virtual_card">Virtual Card</option>
+                        <option value="virtual_visa">Virtual Visa</option>
+                    </select>
+                </div>
+
+                <!-- Orders Table -->
+                <div class="table-responsive">
+                    <table class="table custom-table">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Customer</th>
+                                <th>Artist</th>
+                                <th>Items</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                                <th>Payment</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordersTableBody">
+                            <tr><td colspan="9" class="text-center">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination-controls d-flex justify-content-between align-items-center mt-3">
+                    <span class="text-muted" id="ordersPageInfo">Page 1</span>
+                    <div>
+                        <button class="btn-action btn-view" id="ordersPrevBtn" disabled>Previous</button>
+                        <button class="btn-action btn-view" id="ordersNextBtn">Next</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payments & Payouts Page -->
+            <div class="page-content" id="paymentsPayoutsPage">
+                <h2 class="page-title">Payments & Payouts</h2>
+
+                <!-- Payment Policies -->
+                <div class="row g-3 mb-4">
+                    <div class="col-12">
+                        <div class="chart-card policy-card">
+                            <h5>Payment Policies</h5>
+                            <div class="d-flex flex-wrap gap-4">
+                                <div class="policy-item">
+                                    <span class="policy-label">Platform Commission</span>
+                                    <span class="policy-value" id="policyCommission">10%</span>
+                                </div>
+                                <div class="policy-item">
+                                    <span class="policy-label">Refund Window</span>
+                                    <span class="policy-value" id="policyRefundDays">7 days</span>
+                                </div>
+                                <div class="policy-item">
+                                    <span class="policy-label">Min. Withdrawal</span>
+                                    <span class="policy-value" id="policyMinWithdrawal">$20.00</span>
+                                </div>
+                                <div class="policy-item">
+                                    <span class="policy-label">Currency</span>
+                                    <span class="policy-value">USD (Virtual)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI Cards -->
+                <div class="row g-3 mb-4">
+                    <div class="col-lg-2 col-md-4 col-sm-6">
+                        <div class="kpi-card">
+                            <div class="kpi-icon" style="background: #2E86AB;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
+                                    <path d="M5.5 9.511c.076.954.83 1.697 2.182 1.785V12h.6v-.709c1.4-.098 2.218-.846 2.218-1.932 0-.987-.626-1.496-1.745-1.76l-.473-.112V5.57c.6.068.982.396 1.074.85h1.052c-.076-.919-.864-1.638-2.126-1.716V4h-.6v.719c-1.195.117-2.01.836-2.01 1.853 0 .9.606 1.472 1.613 1.707l.397.098v2.034c-.615-.093-1.022-.43-1.114-.9H5.5zm2.177-2.166c-.59-.137-.91-.416-.91-.836 0-.47.345-.822.915-.925v1.76h-.005zm.692 1.193c.717.166 1.048.435 1.048.91 0 .542-.412.914-1.135.982V8.518l.087.02z"/>
+                                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                                </svg>
+                            </div>
+                            <div class="kpi-details">
+                                <h4 id="totalPayments">0</h4>
+                                <p>Total Payments</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-2 col-md-4 col-sm-6">
+                        <div class="kpi-card">
+                            <div class="kpi-icon" style="background: #7CB342;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
+                                    <path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z"/>
+                                </svg>
+                            </div>
+                            <div class="kpi-details">
+                                <h4 id="completedPayments">$0.00</h4>
+                                <p>Completed</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-2 col-md-4 col-sm-6">
+                        <div class="kpi-card">
+                            <div class="kpi-icon" style="background: #C4A265;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
+                                    <path d="M4 11H2v3h2v-3zm5-4H7v7h2V7zm5-5v12h-2V2h2zm-2-1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1h-2zM6 7a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7zm-5 4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1v-3z"/>
+                                </svg>
+                            </div>
+                            <div class="kpi-details">
+                                <h4 id="platformRevenue">$0.00</h4>
+                                <p>Platform Revenue</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-2 col-md-4 col-sm-6">
+                        <div class="kpi-card">
+                            <div class="kpi-icon" style="background: #B07D4B;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
+                                    <path d="M1 3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1H1zm0 1v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"/>
+                                </svg>
+                            </div>
+                            <div class="kpi-details">
+                                <h4 id="totalPayoutsAmount">$0.00</h4>
+                                <p>Total Payouts</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-2 col-md-4 col-sm-6">
+                        <div class="kpi-card">
+                            <div class="kpi-icon" style="background: #E8837C;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
+                                    <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.399l-.395.004.088-.416.913-.204c.484-.12.757-.17 1.048-.17.566 0 .83.33.687 1.166zM8.5 5.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+                                </svg>
+                            </div>
+                            <div class="kpi-details">
+                                <h4 id="pendingPayouts">$0.00</h4>
+                                <p>Pending Payouts</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-2 col-md-4 col-sm-6">
+                        <div class="kpi-card">
+                            <div class="kpi-icon" style="background: #6BC5D2;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
+                                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                                    <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1z"/>
+                                </svg>
+                            </div>
+                            <div class="kpi-details">
+                                <h4 id="refundedAmount">$0.00</h4>
+                                <p>Refunded</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabs: Payments / Payouts / Revenue -->
+                <ul class="nav nav-tabs mb-3" id="paymentsPayoutsTabs">
+                    <li class="nav-item">
+                        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#paymentsTab">Payments</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#artistWalletsTab">Artist Wallets</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#payoutsTab">Payouts</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#revenueChartTab">Revenue Analytics</button>
+                    </li>
+                </ul>
+
+                <div class="tab-content">
+                    <!-- Payments Tab -->
+                    <div class="tab-pane fade show active" id="paymentsTab">
+                        <div class="filters mb-3">
+                            <input type="text" class="form-control filter-select" id="paymentSearchInput" placeholder="Search by name or email...">
+                            <select class="form-select filter-select" id="paymentTypeFilter">
+                                <option value="">All Types</option>
+                                <option value="order">Order</option>
+                                <option value="subscription">Subscription</option>
+                            </select>
+                            <select class="form-select filter-select" id="paymentStatusFilter">
+                                <option value="">All Status</option>
+                                <option value="completed">Completed</option>
+                                <option value="pending">Pending</option>
+                                <option value="failed">Failed</option>
+                                <option value="refunded">Refunded</option>
+                            </select>
+                            <select class="form-select filter-select" id="paymentMethodFilter">
+                                <option value="">All Methods</option>
+                                <option value="virtual_card">Virtual Card</option>
+                                <option value="virtual_visa">Virtual Visa</option>
+                            </select>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table custom-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Type</th>
+                                        <th>User</th>
+                                        <th>Amount</th>
+                                        <th>Fee</th>
+                                        <th>Net</th>
+                                        <th>Method</th>
+                                        <th>Status</th>
+                                        <th>Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="paymentsTableBody">
+                                    <tr><td colspan="10" class="text-center">Loading...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="pagination-controls d-flex justify-content-between align-items-center mt-3">
+                            <span class="text-muted" id="paymentsPageInfo">Page 1</span>
+                            <div>
+                                <button class="btn-action btn-view" id="paymentsPrevBtn" disabled>Previous</button>
+                                <button class="btn-action btn-view" id="paymentsNextBtn">Next</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payouts Tab -->
+                    <!-- Artist Wallets Tab -->
+                    <div class="tab-pane fade" id="artistWalletsTab">
+                        <div class="filters mb-3">
+                            <input type="text" class="form-control filter-select" id="walletSearchInput" placeholder="Search by artist name or email...">
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table custom-table">
+                                <thead>
+                                    <tr>
+                                        <th>Artist</th>
+                                        <th>Email</th>
+                                        <th>Balance</th>
+                                        <th>Total Earned</th>
+                                        <th>Total Withdrawn</th>
+                                        <th>Commission Paid</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="walletsTableBody">
+                                    <tr><td colspan="7" class="text-center">Loading...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="payoutsTab">
+                        <!-- Process Payout Form -->
+                        <div class="chart-card mb-4">
+                            <h5>Process Artist Payout</h5>
+                            <form id="processPayoutForm">
+                                <div class="row g-3 align-items-end">
+                                    <div class="col-md-4">
+                                        <label for="payoutArtistSelect" class="form-label">Select Artist</label>
+                                        <select class="form-select filter-select" id="payoutArtistSelect" required>
+                                            <option value="">-- Choose Artist --</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Unpaid Amount</label>
+                                        <input type="text" class="form-control filter-select" id="payoutAmountPreview" readonly value="$0.00">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="payoutMethodSelect" class="form-label">Method</label>
+                                        <select class="form-select filter-select" id="payoutMethodSelect" required>
+                                            <option value="bank_transfer">Bank Transfer (Virtual)</option>
+                                            <option value="wallet_withdrawal">Wallet Withdrawal</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="submit" class="btn-action btn-approve w-100">Process Payout</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="filters mb-3">
+                            <input type="text" class="form-control filter-select" id="payoutSearchInput" placeholder="Search by artist name...">
+                            <select class="form-select filter-select" id="payoutStatusFilter">
+                                <option value="">All Status</option>
+                                <option value="pending">Pending</option>
+                                <option value="processing">Processing</option>
+                                <option value="completed">Completed</option>
+                                <option value="failed">Failed</option>
+                            </select>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table custom-table">
+                                <thead>
+                                    <tr>
+                                        <th>Payout ID</th>
+                                        <th>Artist</th>
+                                        <th>Amount</th>
+                                        <th>Orders</th>
+                                        <th>Method</th>
+                                        <th>Status</th>
+                                        <th>Date</th>
+                                        <th>Processed By</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="payoutsTableBody">
+                                    <tr><td colspan="8" class="text-center">Loading...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="pagination-controls d-flex justify-content-between align-items-center mt-3">
+                            <span class="text-muted" id="payoutsPageInfo">Page 1</span>
+                            <div>
+                                <button class="btn-action btn-view" id="payoutsPrevBtn" disabled>Previous</button>
+                                <button class="btn-action btn-view" id="payoutsNextBtn">Next</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Revenue Analytics Tab -->
+                    <div class="tab-pane fade" id="revenueChartTab">
+                        <div class="row g-3">
+                            <div class="col-lg-6">
+                                <div class="chart-card">
+                                    <h5>Revenue Trend (Last 6 Months)</h5>
+                                    <canvas id="revenueTrendChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="col-lg-6">
+                                <div class="chart-card">
+                                    <h5>Payment Methods Distribution</h5>
+                                    <canvas id="paymentMethodsChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
