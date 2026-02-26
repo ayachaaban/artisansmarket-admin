@@ -752,6 +752,12 @@ async function loadCustomers(direction) {
             const user = doc.data();
             const tr = document.createElement('tr');
 
+            const tdAvatar = document.createElement('td');
+            const avatar = createEl('img', { className: 'user-avatar', alt: user.name || '' });
+            avatar.src = user.profileImageUrl || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.name || '?') + '&background=D4A574&color=fff&size=40';
+            tdAvatar.appendChild(avatar);
+            tr.appendChild(tdAvatar);
+
             tr.appendChild(createEl('td', {}, user.name || 'N/A'));
             tr.appendChild(createEl('td', {}, user.email || 'N/A'));
 
@@ -790,7 +796,7 @@ async function loadCustomers(direction) {
     } catch (error) {
         console.error('Error loading customers:', error);
         tbody.innerHTML = '';
-        tbody.appendChild(createErrorRow(6, 'Error loading customers'));
+        tbody.appendChild(createErrorRow(7, 'Error loading customers'));
     }
 }
 
@@ -869,6 +875,12 @@ async function loadAllUsers(direction) {
             const user = doc.data();
             const tr = document.createElement('tr');
 
+            const tdAvatar = document.createElement('td');
+            const avatar = createEl('img', { className: 'user-avatar', alt: user.name || '' });
+            avatar.src = user.profileImageUrl || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.name || '?') + '&background=D4A574&color=fff&size=40';
+            tdAvatar.appendChild(avatar);
+            tr.appendChild(tdAvatar);
+
             tr.appendChild(createEl('td', {}, user.name || 'N/A'));
             tr.appendChild(createEl('td', {}, user.email || 'N/A'));
 
@@ -907,7 +919,7 @@ async function loadAllUsers(direction) {
     } catch (error) {
         console.error('Error loading all users:', error);
         tbody.innerHTML = '';
-        tbody.appendChild(createErrorRow(6, 'Error loading users'));
+        tbody.appendChild(createErrorRow(7, 'Error loading users'));
     }
 }
 
@@ -995,6 +1007,12 @@ async function loadArtists(direction) {
             const artist = doc.data();
             const tr = document.createElement('tr');
 
+            const tdAvatar = document.createElement('td');
+            const avatar = createEl('img', { className: 'user-avatar', alt: artist.name || '' });
+            avatar.src = artist.profileImageUrl || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(artist.name || '?') + '&background=D4A574&color=fff&size=40';
+            tdAvatar.appendChild(avatar);
+            tr.appendChild(tdAvatar);
+
             tr.appendChild(createEl('td', {}, artist.name || 'N/A'));
             tr.appendChild(createEl('td', {}, artist.email || 'N/A'));
             tr.appendChild(createEl('td', {}, artist.category || 'N/A'));
@@ -1031,7 +1049,7 @@ async function loadArtists(direction) {
     } catch (error) {
         console.error('Error loading artists:', error);
         tbody.innerHTML = '';
-        tbody.appendChild(createErrorRow(7, 'Error loading artists'));
+        tbody.appendChild(createErrorRow(8, 'Error loading artists'));
     }
 }
 
