@@ -2479,8 +2479,7 @@ async function refundOrder(orderId, order) {
                 const newBalance = Math.max(0, (wallet.balance || 0) - (order.artistEarnings || 0));
                 await walletRef.update({
                     balance: newBalance,
-                    totalEarned: Math.max(0, (wallet.totalEarned || 0) - (order.artistEarnings || 0)),
-                    totalCommission: Math.max(0, (wallet.totalCommission || 0) - (order.platformFee || 0)),
+                    totalEarnings: Math.max(0, (wallet.totalEarnings || 0) - (order.artistEarnings || 0)),
                     lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
                 });
             }
@@ -3144,7 +3143,7 @@ async function loadArtistWallets() {
             id: id,
             name: artistMap[id].name,
             email: artistMap[id].email,
-            wallet: walletMap[id] || { balance: 0, totalEarned: 0, totalWithdrawn: 0, totalCommission: 0 }
+            wallet: walletMap[id] || { balance: 0, totalEarnings: 0, totalWithdrawn: 0 }
         }));
 
         // Client-side search
@@ -3156,7 +3155,7 @@ async function loadArtistWallets() {
         }
 
         if (artists.length === 0) {
-            tbody.appendChild(createEmptyRow(7, 'No artist wallets found'));
+            tbody.appendChild(createEmptyRow(6, 'No artist wallets found'));
             return;
         }
 
@@ -3167,9 +3166,8 @@ async function loadArtistWallets() {
             tr.appendChild(createEl('td', {}, artist.name));
             tr.appendChild(createEl('td', {}, artist.email));
             tr.appendChild(createEl('td', {}, '$' + (w.balance || 0).toFixed(2)));
-            tr.appendChild(createEl('td', {}, '$' + (w.totalEarned || 0).toFixed(2)));
+            tr.appendChild(createEl('td', {}, '$' + (w.totalEarnings || 0).toFixed(2)));
             tr.appendChild(createEl('td', {}, '$' + (w.totalWithdrawn || 0).toFixed(2)));
-            tr.appendChild(createEl('td', {}, '$' + (w.totalCommission || 0).toFixed(2)));
 
             const tdActions = document.createElement('td');
             const addCreditBtn = createEl('button', { className: 'btn-action btn-approve' }, 'Add Credit');
@@ -3182,7 +3180,7 @@ async function loadArtistWallets() {
     } catch (error) {
         console.error('Error loading artist wallets:', error);
         tbody.innerHTML = '';
-        tbody.appendChild(createErrorRow(7, 'Error loading wallets'));
+        tbody.appendChild(createErrorRow(6, 'Error loading wallets'));
     }
 }
 
@@ -3205,15 +3203,14 @@ async function addWalletCredit(artistId, artistName) {
             const wallet = walletDoc.data();
             await walletRef.update({
                 balance: (wallet.balance || 0) + amount,
-                totalEarned: (wallet.totalEarned || 0) + amount,
+                totalEarnings: (wallet.totalEarnings || 0) + amount,
                 lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
             });
         } else {
             await walletRef.set({
                 balance: amount,
-                totalEarned: amount,
+                totalEarnings: amount,
                 totalWithdrawn: 0,
-                totalCommission: 0,
                 lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
             });
         }
