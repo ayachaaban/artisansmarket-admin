@@ -58,7 +58,7 @@ const PLATFORM_FEE_PERCENT = 0.10;
 const PAYMENT_POLICIES = {
     commissionPercent: 10,    // 10% platform commission
     refundDays: 7,            // 7-day refund window
-    minWithdrawal: 20,        // $20 minimum withdrawal
+    minWithdrawal: 5,         // $5 minimum withdrawal
     currency: 'USD'
 };
 

@@ -30,8 +30,11 @@ service cloud.firestore {
 
     // Users collection
     match /users/{userId} {
-      allow read: if isAdmin() || (isAuthenticated() && request.auth.uid == userId);
-      allow write: if isAdmin() || (isAuthenticated() && request.auth.uid == userId);
+      allow read: if isAdmin() || isAuthenticated();
+      allow update: if isAdmin() || (isAuthenticated() && request.auth.uid == userId)
+                    || (isAuthenticated()
+                        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['averageRating']));
+      allow create, delete: if isAdmin() || (isAuthenticated() && request.auth.uid == userId);
     }
 
     // Posts collection
