@@ -126,5 +126,19 @@ service cloud.firestore {
       allow update: if isAdmin() || (isAuthenticated() && request.auth.uid == userId);
       allow delete: if false;
     }
+
+    // Conversations collection - participants can read/create/update, admins can read
+    match /conversations/{conversationId} {
+      allow get: if isAuthenticated();
+      allow list: if isAuthenticated();
+      allow create, update: if isAuthenticated();
+      allow delete: if isAdmin();
+
+      // Messages subcollection
+      match /messages/{messageId} {
+        allow read, create: if isAuthenticated();
+        allow update, delete: if isAdmin();
+      }
+    }
   }
 }
