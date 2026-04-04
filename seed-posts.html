@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Seed Artists & Posts</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 700px; margin: 40px auto; padding: 20px; background: #f9f9f9; }
+        h2 { color: #333; }
+        .btn { padding: 12px 24px; font-size: 15px; cursor: pointer; border: none; border-radius: 6px; color: #fff; margin-right: 10px; margin-bottom: 10px; }
+        .btn-green { background: #4CAF50; }
+        .btn-red { background: #f44336; }
+        .btn:disabled { background: #999; cursor: not-allowed; }
+        #log { margin-top: 20px; padding: 14px; background: #1e1e1e; color: #0f0; border-radius: 8px; font-family: monospace; font-size: 13px; white-space: pre-line; max-height: 500px; overflow-y: auto; }
+        .info { margin: 10px 0; color: #555; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <h2>Seed Artists & Posts for Testing</h2>
+    <p class="info">Log in with your admin account first, then seed artists + posts.</p>
+    <p class="info"><b>Password for all test artists:</b> Test1234!</p>
+
+    <div id="loginBox" style="margin-bottom: 20px; padding: 16px; background: #fff; border-radius: 8px; border: 1px solid #ddd;">
+        <h4 style="margin-top:0;">Admin Login</h4>
+        <input type="email" id="adminEmail" placeholder="Admin email" style="padding:8px; width:220px; margin-right:8px;">
+        <input type="password" id="adminPass" placeholder="Password" style="padding:8px; width:180px; margin-right:8px;">
+        <button class="btn btn-green" id="loginBtn" onclick="adminLogin()">Login</button>
+        <span id="loginStatus" style="margin-left:10px; color:#555;"></span>
+    </div>
+
+    <button class="btn btn-green" id="seedBtn" onclick="seedAll()" disabled>Create Artists + Posts</button>
+    <button class="btn btn-red" id="cleanBtn" onclick="cleanSeedPosts()" disabled>Delete Seeded Posts</button>
+
+    <div id="log">Login with your admin account to start.
+</div>
+
+<script>
+const firebaseConfig = {
+    apiKey: "AIzaSyDG1fBMvyAmmk7qNBH-mRKAX1OCd3ouKUk",
+    authDomain: "artisansmarket-5f2b6.firebaseapp.com",
+    projectId: "artisansmarket-5f2b6",
+    storageBucket: "artisansmarket-5f2b6.firebasestorage.app",
+    messagingSenderId: "89551898663",
+    appId: "1:89551898663:web:1891c4639d293c861e2602"
+};
+
+firebase.initializeApp(firebaseConfig);
+const primaryAuth = firebase.auth();
+const secondaryApp = firebase.initializeApp(firebaseConfig, 'Secondary');
+const secondaryAuth = secondaryApp.auth();
+const db = firebase.firestore();
+const logEl = document.getElementById('log');
+
+function print(msg) {
+    logEl.textContent += msg + '\n';
+    logEl.scrollTop = logEl.scrollHeight;
+}
+
+const PASSWORD = 'Test1234!';
+
+// Supabase config (same as mobile app)
+const SUPABASE_URL = 'https://kkclietlnrumhptdyguj.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtrY2xpZXRsbnJ1bWhwdGR5Z3VqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIwNTg4NzksImV4cCI6MjA4NzYzNDg3OX0.DzE8HpbjpUQqNLGlu1CjaSnU9v9adpIWoXOmbJJp0NI';
+const BUCKET = 'images';
+
+async function uploadToSupabase(unsplashUrl, index) {
+    // Fetch image from Unsplash
+    const response = await fetch(unsplashUrl);
+    const blob = await response.blob();
+
+    const fileName = 'posts/seed_' + Date.now() + '_' + index + '.jpg';
+
+    // Upload to Supabase Storage
+    const uploadRes = await fetch(
+        SUPABASE_URL + '/storage/v1/object/' + BUCKET + '/' + fileName,
+        {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + SUPABASE_KEY,
+                'apikey': SUPABASE_KEY,
+                'Content-Type': 'image/jpeg',
+                'x-upsert': 'true'
+            },
+            body: blob
+        }
+    );
+
+    if (!uploadRes.ok) {
+        const err = await uploadRes.text();
+        throw new Error('Supabase upload failed: ' + err);
+    }
+
+    // Return public URL
+    return SUPABASE_URL + '/storage/v1/object/public/' + BUCKET + '/' + fileName;
+}
+
+async function adminLogin() {
+    const email = document.getElementById('adminEmail').value.trim();
+    const pass = document.getElementById('adminPass').value;
+    const status = document.getElementById('loginStatus');
+
+    if (!email || !pass) { status.textContent = 'Enter email & password'; return; }
+
+    status.textContent = 'Logging in...';
+    try {
+        await primaryAuth.signInWithEmailAndPassword(email, pass);
+        status.textContent = 'Logged in as ' + email;
+        status.style.color = 'green';
+        document.getElementById('seedBtn').disabled = false;
+        document.getElementById('cleanBtn').disabled = false;
+        document.getElementById('loginBtn').disabled = true;
+        logEl.textContent = 'Logged in! Ready to seed.\n';
+    } catch (err) {
+        status.textContent = 'Login failed: ' + err.message;
+        status.style.color = 'red';
+    }
+}
+
+const TEST_ARTISTS = [
+    { name: 'Mohammed Al-Rashid',  email: 'mohammed.rashid@artisans.com',  category: 'Painting' },
+    { name: 'Fatima Al-Zahra',     email: 'fatima.zahra@artisans.com',     category: 'Sculpture' },
+    { name: 'Hassan Al-Jubouri',   email: 'hassan.jubouri@artisans.com',   category: 'Photography' },
+    { name: 'Sara Al-Khaldi',      email: 'sara.khaldi@artisans.com',      category: 'Digital Art' },
+    { name: 'Ali Al-Moussawi',     email: 'ali.moussawi@artisans.com',     category: 'Crafts' },
+];
+
+const TEST_POSTS = {
+    'Mohammed Al-Rashid': [
+        { desc: 'Vibrant sunset landscape oil painting on canvas with warm golden Saharan hues.', cat: 'Painting', price: 120, img: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=600' },
+        { desc: 'Abstract watercolor composition with flowing blues and purples inspired by the Mediterranean.', cat: 'Painting', price: 85, img: 'https://images.unsplash.com/photo-1547891654-e66ed7ebb968?w=600' },
+        { desc: 'Large acrylic pour painting with swirling metallics — gold, copper, and deep teal.', cat: 'Painting', price: 200, img: 'https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=600' },
+    ],
+    'Fatima Al-Zahra': [
+        { desc: 'Hand-carved marble sculpture of intertwined hands symbolizing unity.', cat: 'Sculpture', price: 350, img: 'https://images.unsplash.com/photo-1544413660-299165566b1d?w=600' },
+        { desc: 'Modern bronze abstract figure with polished finish and organic flowing lines.', cat: 'Sculpture', price: 275, img: 'https://images.unsplash.com/photo-1561839561-b13bcfe95249?w=600' },
+        { desc: 'Miniature clay figurine collection depicting traditional musicians.', cat: 'Sculpture', price: 150, img: 'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=600' },
+    ],
+    'Hassan Al-Jubouri': [
+        { desc: 'Street photography — bustling souk market scene with rich textures and vivid colors.', cat: 'Photography', price: 65, img: 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=600' },
+        { desc: 'Black and white architectural photography of traditional arched doorways.', cat: 'Photography', price: 55, img: 'https://images.unsplash.com/photo-1500051638674-ff996a0ec29e?w=600' },
+        { desc: 'Nature macro photography — dewdrops on a spider web at sunrise.', cat: 'Photography', price: 70, img: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=600' },
+    ],
+    'Sara Al-Khaldi': [
+        { desc: 'Digital illustration of a futuristic cityscape blending traditional and cyberpunk aesthetics.', cat: 'Digital Art', price: 45, img: 'https://images.unsplash.com/photo-1563089145-599997674d42?w=600' },
+        { desc: 'Geometric digital art print with bold neon gradients and intricate patterns.', cat: 'Digital Art', price: 40, img: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600' },
+        { desc: 'Surreal digital portrait blending human features with botanical elements.', cat: 'Digital Art', price: 55, img: 'https://images.unsplash.com/photo-1633177317976-3f9bc45e1d1d?w=600' },
+    ],
+    'Ali Al-Moussawi': [
+        { desc: 'Handwoven macrame wall hanging with natural cotton cord and wooden beads.', cat: 'Crafts', price: 95, img: 'https://images.unsplash.com/photo-1590422749897-47036da0b0ff?w=600' },
+        { desc: 'Hand-painted ceramic vase set with geometric patterns in cobalt blue.', cat: 'Crafts', price: 110, img: 'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=600' },
+        { desc: 'Handmade leather-bound journal with embossed floral design.', cat: 'Crafts', price: 38, img: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=600' },
+    ],
+};
+
+async function seedAll() {
+    const btn = document.getElementById('seedBtn');
+    btn.disabled = true;
+    logEl.textContent = '';
+    print('=== Starting seed process ===\n');
+
+    const artistIds = {};
+
+    for (const artist of TEST_ARTISTS) {
+        print('--- Artist: ' + artist.name + ' (' + artist.email + ')');
+
+        const existing = await db.collection('users').where('email', '==', artist.email).limit(1).get();
+
+        if (!existing.empty) {
+            const doc = existing.docs[0];
+            artistIds[artist.name] = doc.id;
+            print('  Already exists (uid: ' + doc.id + ') - skipping creation');
+            continue;
+        }
+
+        try {
+            const cred = await secondaryAuth.createUserWithEmailAndPassword(artist.email, PASSWORD);
+            const uid = cred.user.uid;
+            await secondaryAuth.signOut();
+
+            await db.collection('users').doc(uid).set({
+                name: artist.name,
+                email: artist.email,
+                role: 'artist',
+                status: 'active',
+                category: artist.category,
+                averageRating: 0.0,
+                profileImageUrl: '',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            await db.collection('subscriptions').doc(uid).set({
+                orderId: '',
+                plan: 'free',
+                status: 'active',
+                postLimit: 5,
+                amount: 0,
+                startDate: firebase.firestore.FieldValue.serverTimestamp(),
+                endDate: null,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            artistIds[artist.name] = uid;
+            print('  Created! uid: ' + uid);
+        } catch (err) {
+            if (err.code === 'auth/email-already-in-use') {
+                print('  Auth exists but no Firestore doc - skipping');
+            } else {
+                print('  ERROR: ' + err.message);
+            }
+        }
+    }
+
+    print('\n=== Creating posts (uploading images to Supabase) ===\n');
+
+    let total = 0;
+    for (const [artistName, posts] of Object.entries(TEST_POSTS)) {
+        const uid = artistIds[artistName];
+        if (!uid) {
+            print('Skipping posts for ' + artistName + ' (no uid)');
+            continue;
+        }
+
+        for (const p of posts) {
+            total++;
+            print(total + '/15  Uploading image for [' + p.cat + ']...');
+
+            let imageUrl = '';
+            try {
+                imageUrl = await uploadToSupabase(p.img, total);
+                print('        Uploaded to Supabase');
+            } catch (err) {
+                print('        Image upload failed: ' + err.message + ' — using Unsplash URL');
+                imageUrl = p.img;
+            }
+
+            await db.collection('posts').add({
+                artistId: uid,
+                artistName: artistName,
+                description: p.desc,
+                category: p.cat,
+                price: p.price,
+                status: 'active',
+                imageUrl: imageUrl,
+                seeded: true,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            print('        Post saved!');
+        }
+    }
+
+    print('\n=== DONE! ===');
+    print(Object.keys(artistIds).length + ' artists ready, ' + total + ' posts created.');
+    print('\nLogin to mobile app with any test artist:');
+    print('  mohammed.rashid@artisans.com');
+    print('  fatima.zahra@artisans.com');
+    print('  hassan.jubouri@artisans.com');
+    print('  sara.khaldi@artisans.com');
+    print('  ali.moussawi@artisans.com');
+    print('Password: ' + PASSWORD);
+
+    btn.disabled = false;
+    btn.textContent = 'Create Artists + Posts';
+}
+
+async function cleanSeedPosts() {
+    if (!confirm('Delete all seeded test posts? (only posts with seeded=true)')) return;
+
+    const btn = document.getElementById('cleanBtn');
+    btn.disabled = true;
+    logEl.textContent = '';
+    print('Deleting seeded posts...\n');
+
+    const snap = await db.collection('posts').where('seeded', '==', true).get();
+    let count = 0;
+    for (const doc of snap.docs) {
+        await doc.ref.delete();
+        count++;
+        print('Deleted ' + count + '/' + snap.size);
+    }
+
+    print('\nDone! Removed ' + count + ' seeded posts.');
+    btn.disabled = false;
+}
+</script>
+</body>
+</html>
