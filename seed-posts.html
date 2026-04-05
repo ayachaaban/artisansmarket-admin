@@ -7,6 +7,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <style>
+        
         body { font-family: Arial, sans-serif; max-width: 700px; margin: 40px auto; padding: 20px; background: #f9f9f9; }
         h2 { color: #333; }
         .btn { padding: 12px 24px; font-size: 15px; cursor: pointer; border: none; border-radius: 6px; color: #fff; margin-right: 10px; margin-bottom: 10px; }
@@ -212,7 +213,7 @@ async function seedAll() {
         }
     }
 
-    print('\n=== Creating posts (uploading images to Supabase) ===\n');
+    print('\n=== Creating posts ===\n');
 
     let total = 0;
     for (const [artistName, posts] of Object.entries(TEST_POSTS)) {
@@ -223,18 +224,6 @@ async function seedAll() {
         }
 
         for (const p of posts) {
-            total++;
-            print(total + '/15  Uploading image for [' + p.cat + ']...');
-
-            let imageUrl = '';
-            try {
-                imageUrl = await uploadToSupabase(p.img, total);
-                print('        Uploaded to Supabase');
-            } catch (err) {
-                print('        Image upload failed: ' + err.message + ' — using Unsplash URL');
-                imageUrl = p.img;
-            }
-
             await db.collection('posts').add({
                 artistId: uid,
                 artistName: artistName,
@@ -242,11 +231,12 @@ async function seedAll() {
                 category: p.cat,
                 price: p.price,
                 status: 'active',
-                imageUrl: imageUrl,
+                imageUrl: p.img,
                 seeded: true,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
-            print('        Post saved!');
+            total++;
+            print(total + '/15  [' + p.cat + '] ' + p.desc.slice(0, 50) + '...');
         }
     }
 

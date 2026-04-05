@@ -1,4 +1,405 @@
 // =============================================
+// TOAST NOTIFICATION SYSTEM
+// =============================================
+function showToast(message, type = 'info', duration = 4000) {
+    let container = document.getElementById('toastContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toastContainer';
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+    }
+
+    const toast = document.createElement('div');
+    toast.className = 'toast-notification toast-' + type;
+
+    const icons = {
+        success: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/></svg>',
+        error: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293 5.354 4.646z"/></svg>',
+        warning: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>',
+        info: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.399l-.334-.027.09-.418H8.93zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/></svg>'
+    };
+
+    toast.innerHTML =
+        '<div class="toast-icon">' + (icons[type] || icons.info) + '</div>' +
+        '<div class="toast-message">' + message + '</div>' +
+        '<button class="toast-close" onclick="this.parentElement.classList.add(\'toast-exit\')">&times;</button>' +
+        '<div class="toast-progress"><div class="toast-progress-bar" style="animation-duration:' + duration + 'ms"></div></div>';
+
+    container.appendChild(toast);
+
+    // Auto-remove after duration
+    setTimeout(() => {
+        toast.classList.add('toast-exit');
+        setTimeout(() => toast.remove(), 400);
+    }, duration);
+}
+
+// =============================================
+// CUSTOM CONFIRMATION MODAL
+// =============================================
+function showConfirm(title, message, onConfirm, options = {}) {
+    const { confirmText = 'Confirm', cancelText = 'Cancel', type = 'warning' } = options;
+
+    // Remove existing modal
+    document.querySelector('.confirm-modal-overlay')?.remove();
+
+    const icons = {
+        warning: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="#C4A265" viewBox="0 0 16 16"><path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>',
+        danger: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="#dc3545" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293 5.354 4.646z"/></svg>',
+        info: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="#2E86AB" viewBox="0 0 16 16"><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.399l-.334-.027.09-.418H8.93zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/></svg>'
+    };
+
+    const overlay = document.createElement('div');
+    overlay.className = 'confirm-modal-overlay';
+    overlay.innerHTML =
+        '<div class="confirm-modal">' +
+            '<div class="confirm-modal-icon">' + (icons[type] || icons.warning) + '</div>' +
+            '<h3 class="confirm-modal-title">' + title + '</h3>' +
+            '<p class="confirm-modal-message">' + message + '</p>' +
+            '<div class="confirm-modal-actions">' +
+                '<button class="confirm-modal-btn confirm-modal-cancel">' + cancelText + '</button>' +
+                '<button class="confirm-modal-btn confirm-modal-confirm">' + confirmText + '</button>' +
+            '</div>' +
+        '</div>';
+
+    document.body.appendChild(overlay);
+
+    // Trigger animation on next frame
+    requestAnimationFrame(() => overlay.classList.add('active'));
+
+    // Focus trap
+    const confirmBtn = overlay.querySelector('.confirm-modal-confirm');
+    const cancelBtn = overlay.querySelector('.confirm-modal-cancel');
+    confirmBtn.focus();
+
+    cancelBtn.addEventListener('click', () => overlay.remove());
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+
+    confirmBtn.addEventListener('click', () => {
+        overlay.remove();
+        onConfirm();
+    });
+}
+
+// =============================================
+// DETAIL MODAL (for orders, payments, etc.)
+// =============================================
+function showDetailModal(title, items, listItems) {
+    document.querySelector('.detail-modal-overlay')?.remove();
+
+    let bodyHtml = '';
+    items.forEach(item => {
+        bodyHtml += '<div class="detail-item"><span class="detail-label">' + item.label + '</span><span class="detail-value">' + item.value + '</span></div>';
+    });
+
+    if (listItems && listItems.length > 0) {
+        bodyHtml += '<div class="detail-items-list"><div class="detail-label" style="margin-bottom:8px">Items</div>';
+        listItems.forEach(li => {
+            bodyHtml += '<div class="detail-list-item">' + li + '</div>';
+        });
+        bodyHtml += '</div>';
+    }
+
+    const overlay = document.createElement('div');
+    overlay.className = 'detail-modal-overlay';
+    overlay.innerHTML =
+        '<div class="detail-modal">' +
+            '<div class="detail-modal-header">' +
+                '<h3>' + title + '</h3>' +
+                '<button class="detail-modal-close">&times;</button>' +
+            '</div>' +
+            '<div class="detail-modal-body">' + bodyHtml + '</div>' +
+        '</div>';
+
+    document.body.appendChild(overlay);
+
+    // Trigger animation on next frame
+    requestAnimationFrame(() => overlay.classList.add('active'));
+
+    overlay.querySelector('.detail-modal-close').addEventListener('click', () => overlay.remove());
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+}
+
+// =============================================
+// POST DETAIL POPUP
+// =============================================
+function showPostDetail(postId, postData) {
+    // If we already have the data, show it; otherwise fetch it
+    if (postData) {
+        renderPostPopup(postId, postData);
+    } else {
+        db.collection('posts').doc(postId).get().then(doc => {
+            if (!doc.exists) { showToast('Post not found.', 'error'); return; }
+            renderPostPopup(doc.id, doc.data());
+        }).catch(err => {
+            console.error('Error fetching post:', err);
+            showToast('Error loading post details.', 'error');
+        });
+    }
+}
+
+function renderPostPopup(postId, post) {
+    document.querySelector('.detail-modal-overlay')?.remove();
+
+    const statusClass = 'status-' + (post.status || 'active');
+    const date = post.createdAt ? post.createdAt.toDate().toLocaleDateString('en-US', {
+        year: 'numeric', month: 'long', day: 'numeric'
+    }) : 'N/A';
+    const time = post.createdAt ? post.createdAt.toDate().toLocaleTimeString('en-US', {
+        hour: '2-digit', minute: '2-digit'
+    }) : '';
+
+    const overlay = document.createElement('div');
+    overlay.className = 'detail-modal-overlay';
+    overlay.innerHTML =
+        '<div class="detail-modal post-detail-modal">' +
+            '<div class="detail-modal-header">' +
+                '<h3>Post Details</h3>' +
+                '<button class="detail-modal-close">&times;</button>' +
+            '</div>' +
+            '<div class="detail-modal-body">' +
+                '<div class="post-detail-image-wrap">' +
+                    '<img src="' + (post.imageUrl || 'https://via.placeholder.com/400x300?text=No+Image') + '" alt="Post Image" class="post-detail-image"/>' +
+                '</div>' +
+                '<div class="post-detail-info">' +
+                    '<div class="post-detail-row">' +
+                        '<span class="post-detail-label">Artist</span>' +
+                        '<span class="post-detail-value">' + (post.artistName || 'Unknown') + '</span>' +
+                    '</div>' +
+                    '<div class="post-detail-row">' +
+                        '<span class="post-detail-label">Category</span>' +
+                        '<span class="post-detail-value">' + (post.category || 'N/A') + '</span>' +
+                    '</div>' +
+                    '<div class="post-detail-row">' +
+                        '<span class="post-detail-label">Price</span>' +
+                        '<span class="post-detail-value post-detail-price">$' + (post.price || 0).toFixed(2) + '</span>' +
+                    '</div>' +
+                    '<div class="post-detail-row">' +
+                        '<span class="post-detail-label">Status</span>' +
+                        '<span class="status-badge ' + statusClass + '">' + (post.status || 'active') + '</span>' +
+                    '</div>' +
+                    '<div class="post-detail-row">' +
+                        '<span class="post-detail-label">Posted</span>' +
+                        '<span class="post-detail-value">' + date + (time ? ' at ' + time : '') + '</span>' +
+                    '</div>' +
+                    '<div class="post-detail-row">' +
+                        '<span class="post-detail-label">Post ID</span>' +
+                        '<span class="post-detail-value" style="font-size:0.8rem;color:var(--text-light)">' + postId + '</span>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="post-detail-desc">' +
+                    '<span class="post-detail-label">Description</span>' +
+                    '<p class="post-detail-desc-text">' + (post.description || 'No description provided.') + '</p>' +
+                '</div>' +
+            '</div>' +
+        '</div>';
+
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => overlay.classList.add('active'));
+
+    overlay.querySelector('.detail-modal-close').addEventListener('click', () => overlay.remove());
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+}
+
+// =============================================
+// REPORT DETAIL POPUP
+// =============================================
+function showReportDetail(reportId, report, postData, reporterData) {
+    document.querySelector('.detail-modal-overlay')?.remove();
+
+    const statusClass = 'status-' + (report.status || 'pending');
+    const date = report.createdAt ? report.createdAt.toDate().toLocaleDateString('en-US', {
+        year: 'numeric', month: 'long', day: 'numeric'
+    }) : 'N/A';
+    const time = report.createdAt ? report.createdAt.toDate().toLocaleTimeString('en-US', {
+        hour: '2-digit', minute: '2-digit'
+    }) : '';
+
+    const reporterName = reporterData ? (reporterData.name || 'Unknown') : 'Unknown';
+    const reporterEmail = reporterData ? (reporterData.email || '') : '';
+
+    // Build post preview section
+    let postPreviewHtml = '';
+    if (postData) {
+        postPreviewHtml =
+            '<div class="report-post-preview">' +
+                '<div class="report-post-preview-header">Reported Post</div>' +
+                '<div class="report-post-preview-content">' +
+                    '<img src="' + (postData.imageUrl || 'https://via.placeholder.com/80') + '" alt="Post" class="report-post-preview-img" onclick="showPostDetail(\'' + report.postId + '\', null)"/>' +
+                    '<div class="report-post-preview-info">' +
+                        '<div class="report-post-preview-artist">' + (postData.artistName || 'Unknown') + '</div>' +
+                        '<div class="report-post-preview-cat">' + (postData.category || 'N/A') + ' &middot; $' + (postData.price || 0).toFixed(2) + '</div>' +
+                        '<div class="report-post-preview-desc">' + (postData.description ? (postData.description.length > 80 ? postData.description.substring(0, 80) + '...' : postData.description) : 'No description') + '</div>' +
+                    '</div>' +
+                '</div>' +
+            '</div>';
+    } else {
+        postPreviewHtml = '<div class="report-post-preview"><div class="report-post-preview-header">Reported Post</div><p style="color:var(--text-light);font-size:0.85rem;margin:0.5rem 0 0">Post not found or deleted.</p></div>';
+    }
+
+    const overlay = document.createElement('div');
+    overlay.className = 'detail-modal-overlay';
+    overlay.innerHTML =
+        '<div class="detail-modal report-detail-modal">' +
+            '<div class="detail-modal-header">' +
+                '<h3>Report Details</h3>' +
+                '<button class="detail-modal-close">&times;</button>' +
+            '</div>' +
+            '<div class="detail-modal-body">' +
+                '<div class="post-detail-info">' +
+                    '<div class="post-detail-row">' +
+                        '<span class="post-detail-label">Report ID</span>' +
+                        '<span class="post-detail-value" style="font-size:0.8rem;color:var(--text-light)">' + reportId + '</span>' +
+                    '</div>' +
+                    '<div class="post-detail-row">' +
+                        '<span class="post-detail-label">Reporter</span>' +
+                        '<span class="post-detail-value">' + reporterName + (reporterEmail ? ' <span style="color:var(--text-light);font-weight:400">(' + reporterEmail + ')</span>' : '') + '</span>' +
+                    '</div>' +
+                    '<div class="post-detail-row">' +
+                        '<span class="post-detail-label">Status</span>' +
+                        '<span class="status-badge ' + statusClass + '">' + (report.status || 'pending') + '</span>' +
+                    '</div>' +
+                    '<div class="post-detail-row">' +
+                        '<span class="post-detail-label">Reported On</span>' +
+                        '<span class="post-detail-value">' + date + (time ? ' at ' + time : '') + '</span>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="post-detail-desc" style="margin-bottom:1.25rem">' +
+                    '<span class="post-detail-label">Reason</span>' +
+                    '<p class="post-detail-desc-text">' + (report.reason || 'No reason provided.') + '</p>' +
+                '</div>' +
+                postPreviewHtml +
+            '</div>' +
+        '</div>';
+
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => overlay.classList.add('active'));
+
+    overlay.querySelector('.detail-modal-close').addEventListener('click', () => overlay.remove());
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+}
+
+// =============================================
+// ANIMATED KPI COUNTER
+// =============================================
+function animateCounter(elementId, targetValue, prefix = '', suffix = '', duration = 800) {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+
+    const isFloat = prefix === '$' || String(targetValue).includes('.');
+    const decimals = prefix === '$' ? 2 : (String(targetValue).includes('.') ? 1 : 0);
+    const start = 0;
+    const startTime = performance.now();
+
+    el.classList.add('counter-updating');
+
+    function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const current = start + (targetValue - start) * eased;
+
+        el.textContent = prefix + (isFloat ? current.toFixed(decimals) : Math.round(current)) + suffix;
+
+        if (progress < 1) {
+            requestAnimationFrame(update);
+        } else {
+            el.textContent = prefix + (isFloat ? targetValue.toFixed(decimals) : targetValue) + suffix;
+            el.classList.remove('counter-updating');
+        }
+    }
+
+    requestAnimationFrame(update);
+}
+
+// =============================================
+// SKELETON LOADING ROWS
+// =============================================
+function createSkeletonRows(count, cols) {
+    const fragment = document.createDocumentFragment();
+    for (let i = 0; i < count; i++) {
+        const tr = document.createElement('tr');
+        tr.className = 'skeleton-row';
+        for (let j = 0; j < cols; j++) {
+            const td = document.createElement('td');
+            const div = document.createElement('div');
+            div.className = 'skeleton skeleton-cell';
+            td.appendChild(div);
+            tr.appendChild(td);
+        }
+        fragment.appendChild(tr);
+    }
+    return fragment;
+}
+
+// =============================================
+// EXCEL EXPORT
+// =============================================
+function exportTableToCSV(tableId, filename) {
+    const container = document.getElementById(tableId);
+    if (!container) { showToast('Table not found.', 'error'); return; }
+
+    // Find the table inside the container (or use it directly if it's a table)
+    const table = container.tagName === 'TABLE' ? container : container.querySelector('table');
+    if (!table) { showToast('No table found to export.', 'error'); return; }
+
+    // Build data array from table rows
+    const data = [];
+    const rows = table.querySelectorAll('tr');
+
+    rows.forEach(row => {
+        // Skip skeleton loading rows
+        if (row.classList.contains('skeleton-row')) return;
+
+        const cols = row.querySelectorAll('th, td');
+        const rowData = [];
+        cols.forEach(col => {
+            // Skip action columns
+            if (col.querySelector('.btn-action') || col.querySelector('.btn-export')) return;
+            // Skip image-only columns (avatar/thumbnail with no text)
+            const text = col.textContent.trim();
+            if (!text && col.querySelector('img')) { rowData.push(''); return; }
+            rowData.push(text);
+        });
+        if (rowData.length > 0) data.push(rowData);
+    });
+
+    if (data.length <= 1) { showToast('No data to export.', 'warning'); return; }
+
+    // Create workbook and worksheet
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(data);
+
+    // Auto-size columns
+    const colWidths = data[0].map((_, colIdx) => {
+        let maxLen = 10;
+        data.forEach(row => {
+            if (row[colIdx] && row[colIdx].length > maxLen) maxLen = row[colIdx].length;
+        });
+        return { wch: Math.min(maxLen + 2, 40) };
+    });
+    ws['!cols'] = colWidths;
+
+    // Style header row bold
+    const headerRange = XLSX.utils.decode_range(ws['!ref']);
+    for (let c = headerRange.s.c; c <= headerRange.e.c; c++) {
+        const addr = XLSX.utils.encode_cell({ r: 0, c: c });
+        if (ws[addr]) {
+            ws[addr].s = { font: { bold: true } };
+        }
+    }
+
+    const sheetName = filename.charAt(0).toUpperCase() + filename.slice(1);
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+
+    // Download
+    const dateStr = new Date().toISOString().split('T')[0];
+    XLSX.writeFile(wb, filename + '_' + dateStr + '.xlsx');
+    showToast('Exported ' + filename + '.xlsx successfully!', 'success');
+}
+
+// =============================================
 // GLOBAL STATE
 // =============================================
 let currentAdminRole = null;
@@ -201,8 +602,8 @@ auth.onAuthStateChanged(async (user) => {
         const adminDoc = await db.collection('admins').doc(user.uid).get();
         if (!adminDoc.exists) {
             await auth.signOut();
-            alert('Access denied. You are not authorized.');
-            window.location.href = 'admin-login.html';
+            showToast('Access denied. You are not authorized.', 'error');
+            setTimeout(() => { window.location.href = 'admin-login.html'; }, 1500);
             return;
         }
 
@@ -379,20 +780,18 @@ window.addEventListener('DOMContentLoaded', () => {
 // LOGOUT
 // =============================================
 logoutBtn.addEventListener('click', async function () {
-    if (confirm('Are you sure you want to logout?')) {
-        try {
-            if (reportsUnsubscribe) {
-                reportsUnsubscribe();
-                reportsUnsubscribe = null;
-            }
-            await auth.signOut();
-            localStorage.removeItem('adminEmail');
-            localStorage.removeItem('adminRole');
-            window.location.href = 'admin-login.html';
-        } catch (error) {
-            console.error('Logout error:', error);
-            alert('Error logging out.');
+    try {
+        if (reportsUnsubscribe) {
+            reportsUnsubscribe();
+            reportsUnsubscribe = null;
         }
+        await auth.signOut();
+        localStorage.removeItem('adminEmail');
+        localStorage.removeItem('adminRole');
+        window.location.href = 'admin-login.html';
+    } catch (error) {
+        console.error('Logout error:', error);
+        showToast('Error logging out.', 'error');
     }
 });
 
@@ -564,12 +963,12 @@ async function loadOverview() {
         });
         const avgRating = ratingsSnap.size > 0 ? (totalRating / ratingsSnap.size).toFixed(1) : '0.0';
 
-        document.getElementById('totalUsers').textContent = usersSnap.size;
-        document.getElementById('totalArtists').textContent = artistsSnap.size;
-        document.getElementById('totalPosts').textContent = postsSnap.size;
-        document.getElementById('activePosts').textContent = activePostsSnap.size;
-        document.getElementById('pendingReports').textContent = pendingReportsSnap.size;
-        document.getElementById('avgRating').textContent = avgRating;
+        animateCounter('totalUsers', usersSnap.size);
+        animateCounter('totalArtists', artistsSnap.size);
+        animateCounter('totalPosts', postsSnap.size);
+        animateCounter('activePosts', activePostsSnap.size);
+        animateCounter('pendingReports', pendingReportsSnap.size);
+        animateCounter('avgRating', parseFloat(avgRating));
 
         loadUserGrowthChart();
         loadPostsCategoryChart();
@@ -617,8 +1016,8 @@ async function loadUserGrowthChart() {
                     datasets: [{
                         label: 'New Users',
                         data: data,
-                        borderColor: '#2E86AB',
-                        backgroundColor: 'rgba(46, 134, 171, 0.1)',
+                        borderColor: '#4F46E5',
+                        backgroundColor: 'rgba(79, 70, 229, 0.1)',
                         tension: 0.4,
                         fill: true
                     }]
@@ -658,7 +1057,7 @@ async function loadPostsCategoryChart() {
                     datasets: [{
                         label: 'Posts',
                         data: data,
-                        backgroundColor: ['#2E86AB', '#B07D4B', '#6BC5D2', '#7CB342', '#C4A265', '#E8837C']
+                        backgroundColor: ['#4F46E5', '#D97706', '#0EA5E9', '#10B981', '#8B5CF6', '#F43F5E']
                     }]
                 },
                 options: {
@@ -682,7 +1081,7 @@ async function loadCustomers(direction) {
     const state = paginationState.customers;
     const tbody = document.getElementById('customersTableBody');
     tbody.innerHTML = '';
-    tbody.appendChild(createLoadingRow(6));
+    tbody.appendChild(createSkeletonRows(5, 7));
 
     try {
         const sortValue = document.getElementById('userSortSelect') ? document.getElementById('userSortSelect').value : 'createdAt-desc';
@@ -808,7 +1207,7 @@ async function loadAllUsers(direction) {
     const state = paginationState.allUsers;
     const tbody = document.getElementById('allUsersTableBody');
     tbody.innerHTML = '';
-    tbody.appendChild(createLoadingRow(6));
+    tbody.appendChild(createSkeletonRows(5, 7));
 
     try {
         const sortValue = document.getElementById('userSortSelect') ? document.getElementById('userSortSelect').value : 'createdAt-desc';
@@ -931,7 +1330,7 @@ async function loadArtists(direction) {
     const state = paginationState.artists;
     const tbody = document.getElementById('artistsTableBody');
     tbody.innerHTML = '';
-    tbody.appendChild(createLoadingRow(7));
+    tbody.appendChild(createSkeletonRows(5, 7));
 
     try {
         const sortValue = document.getElementById('artistSortSelect') ? document.getElementById('artistSortSelect').value : 'createdAt-desc';
@@ -1056,50 +1455,50 @@ async function loadArtists(direction) {
 // =============================================
 // SUSPEND / ACTIVATE USER
 // =============================================
-async function suspendUser(userId, userName) {
-    if (!confirm('Suspend user "' + userName + '"?')) return;
-
-    try {
-        await db.collection('users').doc(userId).update({ status: 'suspended' });
-        await logAuditAction('suspend_user', userId, 'user', { name: userName });
-        alert('User suspended.');
-        reloadVisibleUserTables();
-    } catch (error) {
-        console.error('Error suspending user:', error);
-        alert('Error suspending user.');
-    }
+function suspendUser(userId, userName) {
+    showConfirm('Suspend User', 'Suspend user "' + userName + '"?', async () => {
+        try {
+            await db.collection('users').doc(userId).update({ status: 'suspended' });
+            await logAuditAction('suspend_user', userId, 'user', { name: userName });
+            showToast('User "' + userName + '" suspended.', 'warning');
+            reloadVisibleUserTables();
+        } catch (error) {
+            console.error('Error suspending user:', error);
+            showToast('Error suspending user.', 'error');
+        }
+    }, { confirmText: 'Suspend', type: 'warning' });
 }
 
-async function activateUser(userId, userName) {
-    if (!confirm('Activate user "' + userName + '"?')) return;
-
-    try {
-        await db.collection('users').doc(userId).update({ status: 'active' });
-        await logAuditAction('activate_user', userId, 'user', { name: userName });
-        alert('User activated.');
-        reloadVisibleUserTables();
-    } catch (error) {
-        console.error('Error activating user:', error);
-        alert('Error activating user.');
-    }
+function activateUser(userId, userName) {
+    showConfirm('Activate User', 'Activate user "' + userName + '"?', async () => {
+        try {
+            await db.collection('users').doc(userId).update({ status: 'active' });
+            await logAuditAction('activate_user', userId, 'user', { name: userName });
+            showToast('User "' + userName + '" activated.', 'success');
+            reloadVisibleUserTables();
+        } catch (error) {
+            console.error('Error activating user:', error);
+            showToast('Error activating user.', 'error');
+        }
+    }, { confirmText: 'Activate', type: 'info' });
 }
 
 // =============================================
 // DELETE USER
 // =============================================
-async function deleteUser(userId, userName) {
-    if (!confirm('Delete user "' + userName + '"? This cannot be undone.')) return;
-
-    try {
-        await db.collection('users').doc(userId).delete();
-        await logAuditAction('delete_user', userId, 'user', { name: userName });
-        alert('User deleted successfully!');
-        reloadVisibleUserTables();
-        loadOverview();
-    } catch (error) {
-        console.error('Error deleting user:', error);
-        alert('Error deleting user.');
-    }
+function deleteUser(userId, userName) {
+    showConfirm('Delete User', 'Delete user "' + userName + '"? This cannot be undone.', async () => {
+        try {
+            await db.collection('users').doc(userId).delete();
+            await logAuditAction('delete_user', userId, 'user', { name: userName });
+            showToast('User "' + userName + '" deleted.', 'success');
+            reloadVisibleUserTables();
+            loadOverview();
+        } catch (error) {
+            console.error('Error deleting user:', error);
+            showToast('Error deleting user.', 'error');
+        }
+    }, { confirmText: 'Delete', type: 'danger' });
 }
 
 // =============================================
@@ -1110,7 +1509,7 @@ async function loadPosts(direction) {
     const state = paginationState.posts;
     const tbody = document.getElementById('postsTableBody');
     tbody.innerHTML = '';
-    tbody.appendChild(createLoadingRow(7));
+    tbody.appendChild(createSkeletonRows(5, 7));
 
     try {
         const categoryFilter = document.getElementById('categoryFilter') ? document.getElementById('categoryFilter').value : '';
@@ -1175,6 +1574,7 @@ async function loadPosts(direction) {
         displayDocs.forEach(doc => {
             const post = doc.data();
             const tr = document.createElement('tr');
+            tr.style.cursor = 'pointer';
 
             const tdImg = document.createElement('td');
             const img = createEl('img', { className: 'post-thumbnail', alt: 'Post' });
@@ -1198,9 +1598,12 @@ async function loadPosts(direction) {
 
             const tdActions = document.createElement('td');
             const deleteBtn = createEl('button', { className: 'btn-action btn-delete' }, 'Delete');
-            deleteBtn.addEventListener('click', () => deletePost(doc.id));
+            deleteBtn.addEventListener('click', (e) => { e.stopPropagation(); deletePost(doc.id); });
             tdActions.appendChild(deleteBtn);
             tr.appendChild(tdActions);
+
+            // Click row to view post
+            tr.addEventListener('click', () => showPostDetail(doc.id, post));
 
             tbody.appendChild(tr);
         });
@@ -1254,20 +1657,20 @@ document.getElementById('reportStatusFilter')?.addEventListener('change', functi
 // =============================================
 // DELETE POST
 // =============================================
-async function deletePost(postId) {
-    if (!confirm('Delete this post? This cannot be undone.')) return;
-
-    try {
-        await db.collection('posts').doc(postId).delete();
-        await logAuditAction('delete_post', postId, 'post', {});
-        alert('Post deleted successfully!');
-        resetPagination('posts');
-        loadPosts('first');
-        loadOverview();
-    } catch (error) {
-        console.error('Error deleting post:', error);
-        alert('Error deleting post.');
-    }
+function deletePost(postId) {
+    showConfirm('Delete Post', 'Delete this post? This cannot be undone.', async () => {
+        try {
+            await db.collection('posts').doc(postId).delete();
+            await logAuditAction('delete_post', postId, 'post', {});
+            showToast('Post deleted successfully!', 'success');
+            resetPagination('posts');
+            loadPosts('first');
+            loadOverview();
+        } catch (error) {
+            console.error('Error deleting post:', error);
+            showToast('Error deleting post.', 'error');
+        }
+    }, { confirmText: 'Delete', type: 'danger' });
 }
 
 // =============================================
@@ -1278,7 +1681,7 @@ async function loadReports(direction) {
     const state = paginationState.reports;
     const tbody = document.getElementById('reportsTableBody');
     tbody.innerHTML = '';
-    tbody.appendChild(createLoadingRow(6));
+    tbody.appendChild(createSkeletonRows(5, 6));
 
     try {
         const statusFilter = document.getElementById('reportStatusFilter') ? document.getElementById('reportStatusFilter').value : '';
@@ -1349,13 +1752,21 @@ async function loadReports(direction) {
         displayDocs.forEach(doc => {
             const report = doc.data();
             const tr = document.createElement('tr');
+            tr.style.cursor = 'pointer';
 
-            // Post thumbnail + info
-            const tdPost = document.createElement('td');
             const postData = postMap[report.postId];
+            const reporterData = reporterMap[report.reporterId];
+
+            // Click row to view report detail
+            tr.addEventListener('click', () => showReportDetail(doc.id, report, postData, reporterData));
+
+            // Post thumbnail + info (clickable)
+            const tdPost = document.createElement('td');
             if (postData) {
-                const img = createEl('img', { className: 'post-thumbnail', alt: 'Post' });
+                const img = createEl('img', { className: 'post-thumbnail post-thumbnail-clickable', alt: 'Post' });
                 img.src = postData.imageUrl || 'https://via.placeholder.com/60';
+                img.style.cursor = 'pointer';
+                img.addEventListener('click', (e) => { e.stopPropagation(); showPostDetail(report.postId, postData); });
                 tdPost.appendChild(img);
             } else {
                 tdPost.textContent = 'N/A';
@@ -1363,7 +1774,6 @@ async function loadReports(direction) {
             tr.appendChild(tdPost);
 
             // Reporter name
-            const reporterData = reporterMap[report.reporterId];
             tr.appendChild(createEl('td', {}, reporterData ? reporterData.name || 'Unknown' : 'Unknown'));
 
             tr.appendChild(createEl('td', {}, report.reason || 'No reason'));
@@ -1377,9 +1787,9 @@ async function loadReports(direction) {
             const tdActions = document.createElement('td');
             if (report.status === 'pending') {
                 const approveBtn = createEl('button', { className: 'btn-action btn-approve' }, 'Approve');
-                approveBtn.addEventListener('click', () => approveReport(doc.id, report.postId));
+                approveBtn.addEventListener('click', (e) => { e.stopPropagation(); approveReport(doc.id, report.postId); });
                 const rejectBtn = createEl('button', { className: 'btn-action btn-reject' }, 'Reject');
-                rejectBtn.addEventListener('click', () => rejectReport(doc.id));
+                rejectBtn.addEventListener('click', (e) => { e.stopPropagation(); rejectReport(doc.id); });
                 tdActions.append(approveBtn, rejectBtn);
             } else {
                 tdActions.appendChild(createEl('span', { className: 'text-muted' }, 'Reviewed'));
@@ -1400,41 +1810,62 @@ async function loadReports(direction) {
 // =============================================
 // APPROVE / REJECT REPORT
 // =============================================
-async function approveReport(reportId, postId) {
+function approveReport(reportId, postId) {
     if (!postId) {
-        alert('Cannot approve: this report has no associated post.');
+        showToast('Cannot approve: this report has no associated post.', 'error');
         return;
     }
-    if (!confirm('This will remove the reported post. Continue?')) return;
+    showConfirm('Approve Report', 'This will remove the reported post. Continue?', async () => {
+        try {
+            // Fetch the post to get artist info before updating
+            const postDoc = await db.collection('posts').doc(postId).get();
+            const postData = postDoc.exists ? postDoc.data() : null;
 
-    try {
-        await db.collection('posts').doc(postId).update({ status: 'removed' });
-        await db.collection('reports').doc(reportId).update({ status: 'reviewed' });
-        await logAuditAction('approve_report', reportId, 'report', { postId: postId });
-        alert('Report approved. Post removed.');
-        resetPagination('reports');
-        loadReports('first');
-        loadOverview();
-    } catch (error) {
-        console.error('Error approving report:', error);
-        alert('Error approving report.');
-    }
+            await db.collection('posts').doc(postId).update({ status: 'removed' });
+            await db.collection('reports').doc(reportId).update({ status: 'reviewed' });
+
+            // Send notification to the artist
+            if (postData && postData.artistId) {
+                const postDesc = postData.description
+                    ? (postData.description.length > 50 ? postData.description.substring(0, 50) + '...' : postData.description)
+                    : 'your post';
+                await db.collection('notifications').add({
+                    userId: postData.artistId,
+                    title: 'Post Removed',
+                    message: 'Your post "' + postDesc + '" has been removed due to a report violation. If you believe this was a mistake, please contact support.',
+                    type: 'post_removed',
+                    referenceId: postId,
+                    isRead: false,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            }
+
+            await logAuditAction('approve_report', reportId, 'report', { postId: postId });
+            showToast('Report approved. Post removed. Artist notified.', 'success');
+            resetPagination('reports');
+            loadReports('first');
+            loadOverview();
+        } catch (error) {
+            console.error('Error approving report:', error);
+            showToast('Error approving report.', 'error');
+        }
+    }, { confirmText: 'Approve', type: 'danger' });
 }
 
-async function rejectReport(reportId) {
-    if (!confirm('Mark report as reviewed without action?')) return;
-
-    try {
-        await db.collection('reports').doc(reportId).update({ status: 'reviewed' });
-        await logAuditAction('reject_report', reportId, 'report', {});
-        alert('Report rejected.');
-        resetPagination('reports');
-        loadReports('first');
-        loadOverview();
-    } catch (error) {
-        console.error('Error rejecting report:', error);
-        alert('Error rejecting report.');
-    }
+function rejectReport(reportId) {
+    showConfirm('Reject Report', 'Mark report as reviewed without action?', async () => {
+        try {
+            await db.collection('reports').doc(reportId).update({ status: 'reviewed' });
+            await logAuditAction('reject_report', reportId, 'report', {});
+            showToast('Report rejected.', 'info');
+            resetPagination('reports');
+            loadReports('first');
+            loadOverview();
+        } catch (error) {
+            console.error('Error rejecting report:', error);
+            showToast('Error rejecting report.', 'error');
+        }
+    }, { confirmText: 'Reject', type: 'warning' });
 }
 
 // =============================================
@@ -1542,7 +1973,7 @@ async function loadCategoryPieChart() {
                     labels: Object.keys(categoryData),
                     datasets: [{
                         data: Object.values(categoryData),
-                        backgroundColor: ['#2E86AB', '#B07D4B', '#6BC5D2', '#7CB342', '#C4A265', '#E8837C']
+                        backgroundColor: ['#4F46E5', '#D97706', '#0EA5E9', '#10B981', '#8B5CF6', '#F43F5E']
                     }]
                 },
                 options: {
@@ -1609,8 +2040,8 @@ async function loadReportsTrendChart() {
                     datasets: [{
                         label: 'Reports',
                         data: reportCounts,
-                        borderColor: '#C4A265',
-                        backgroundColor: 'rgba(196, 162, 101, 0.1)',
+                        borderColor: '#F59E0B',
+                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
                         tension: 0.4,
                         fill: true
                     }]
@@ -1635,7 +2066,7 @@ async function loadAdmins() {
     const tbody = document.getElementById('adminsTableBody');
     if (!tbody) return;
     tbody.innerHTML = '';
-    tbody.appendChild(createLoadingRow(4));
+    tbody.appendChild(createSkeletonRows(3, 4));
 
     try {
         const snapshot = await db.collection('admins').orderBy('createdAt', 'desc').get();
@@ -1690,7 +2121,7 @@ document.getElementById('addAdminForm')?.addEventListener('submit', async functi
     e.preventDefault();
 
     if (currentAdminRole !== 'super-admin') {
-        alert('Only super-admins can add new admins.');
+        showToast('Only super-admins can add new admins.', 'error');
         return;
     }
 
@@ -1699,78 +2130,75 @@ document.getElementById('addAdminForm')?.addEventListener('submit', async functi
     const role = 'admin';
 
     if (!email || !password || password.length < 6) {
-        alert('Please provide a valid email and password (min 6 characters).');
+        showToast('Please provide a valid email and password (min 6 characters).', 'warning');
         return;
     }
 
-    if (!confirm('Add "' + email + '" as admin?')) return;
+    const form = this;
+    showConfirm('Add Admin', 'Add "' + email + '" as admin?', async () => {
+        try {
+            const userCredential = await secondaryAuth.createUserWithEmailAndPassword(email, password);
+            const newUid = userCredential.user.uid;
+            await secondaryAuth.signOut();
 
-    try {
-        // Create user via secondary app so current session is preserved
-        const userCredential = await secondaryAuth.createUserWithEmailAndPassword(email, password);
-        const newUid = userCredential.user.uid;
+            await db.collection('admins').doc(newUid).set({
+                uid: newUid,
+                email: email,
+                role: role,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
 
-        // Sign out secondary auth immediately
-        await secondaryAuth.signOut();
+            await logAuditAction('add_admin', newUid, 'admin', { email: email, role: role });
 
-        // Create admin document in Firestore
-        await db.collection('admins').doc(newUid).set({
-            uid: newUid,
-            email: email,
-            role: role,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-
-        await logAuditAction('add_admin', newUid, 'admin', { email: email, role: role });
-
-        alert('Admin added successfully!');
-        this.reset();
-        loadAdmins();
-    } catch (error) {
-        console.error('Error adding admin:', error);
-        if (error.code === 'auth/email-already-in-use') {
-            alert('This email is already in use.');
-        } else {
-            alert('Error adding admin: ' + error.message);
+            showToast('Admin added successfully!', 'success');
+            form.reset();
+            loadAdmins();
+        } catch (error) {
+            console.error('Error adding admin:', error);
+            if (error.code === 'auth/email-already-in-use') {
+                showToast('This email is already in use.', 'error');
+            } else {
+                showToast('Error adding admin: ' + error.message, 'error');
+            }
         }
-    }
+    }, { confirmText: 'Add Admin', type: 'info' });
 });
 
 // NOTE: This only removes the Firestore admin document. The Firebase Auth account
 // remains (deleting auth users requires the Firebase Admin SDK / Cloud Functions).
 // Access is still blocked since the login flow checks for the admin doc.
-async function deleteAdmin(adminId, adminEmail) {
-    if (!confirm('Remove admin "' + adminEmail + '"? They will lose admin access.')) return;
-
-    try {
-        await db.collection('admins').doc(adminId).delete();
-        await logAuditAction('remove_admin', adminId, 'admin', { email: adminEmail });
-        alert('Admin removed successfully.');
-        loadAdmins();
-    } catch (error) {
-        console.error('Error removing admin:', error);
-        alert('Error removing admin.');
-    }
+function deleteAdmin(adminId, adminEmail) {
+    showConfirm('Remove Admin', 'Remove admin "' + adminEmail + '"? They will lose admin access.', async () => {
+        try {
+            await db.collection('admins').doc(adminId).delete();
+            await logAuditAction('remove_admin', adminId, 'admin', { email: adminEmail });
+            showToast('Admin removed successfully.', 'success');
+            loadAdmins();
+        } catch (error) {
+            console.error('Error removing admin:', error);
+            showToast('Error removing admin.', 'error');
+        }
+    }, { confirmText: 'Remove', type: 'danger' });
 }
 
 // =============================================
 // SEND ADMIN PASSWORD RESET EMAIL
 // =============================================
-async function sendAdminPasswordReset(adminId, adminEmail) {
-    if (!confirm('Send a password reset email to "' + adminEmail + '"?')) return;
-
-    try {
-        await auth.sendPasswordResetEmail(adminEmail);
-        await logAuditAction('send_password_reset', adminId, 'admin', { email: adminEmail });
-        alert('Password reset email sent to ' + adminEmail + '.');
-    } catch (error) {
-        console.error('Error sending password reset:', error);
-        if (error.code === 'auth/user-not-found') {
-            alert('No Firebase Auth account found for this email. The admin document may be orphaned.');
-        } else {
-            alert('Error sending reset email: ' + error.message);
+function sendAdminPasswordReset(adminId, adminEmail) {
+    showConfirm('Reset Password', 'Send a password reset email to "' + adminEmail + '"?', async () => {
+        try {
+            await auth.sendPasswordResetEmail(adminEmail);
+            await logAuditAction('send_password_reset', adminId, 'admin', { email: adminEmail });
+            showToast('Password reset email sent to ' + adminEmail + '.', 'success');
+        } catch (error) {
+            console.error('Error sending password reset:', error);
+            if (error.code === 'auth/user-not-found') {
+                showToast('No Firebase Auth account found for this email.', 'error');
+            } else {
+                showToast('Error sending reset email: ' + error.message, 'error');
+            }
         }
-    }
+    }, { confirmText: 'Send Reset', type: 'info' });
 }
 
 // =============================================
@@ -1825,10 +2253,10 @@ async function loadSubscriptionStats() {
             }
         });
 
-        document.getElementById('totalSubscriptions').textContent = total;
-        document.getElementById('activeSubscriptions').textContent = active;
-        document.getElementById('expiredSubscriptions').textContent = expired;
-        document.getElementById('monthlyRevenue').textContent = '$' + revenue.toFixed(2);
+        animateCounter('totalSubscriptions', total);
+        animateCounter('activeSubscriptions', active);
+        animateCounter('expiredSubscriptions', expired);
+        animateCounter('monthlyRevenue', revenue, '$');
     } catch (error) {
         console.error('Error loading subscription stats:', error);
     }
@@ -1872,7 +2300,7 @@ async function loadSubscriptions(direction) {
     const tbody = document.getElementById('subscriptionsTableBody');
     if (!tbody) return;
     tbody.innerHTML = '';
-    tbody.appendChild(createLoadingRow(7));
+    tbody.appendChild(createSkeletonRows(5, 7));
 
     try {
         const planFilter = document.getElementById('subscriptionPlanFilter') ? document.getElementById('subscriptionPlanFilter').value : '';
@@ -2023,7 +2451,7 @@ async function loadSubscriptions(direction) {
 async function assignPlan(artistId, planKey) {
     const plan = PLANS[planKey];
     if (!plan) {
-        alert('Invalid plan selected.');
+        showToast('Invalid plan selected.', 'error');
         return;
     }
 
@@ -2031,7 +2459,7 @@ async function assignPlan(artistId, planKey) {
         // Fetch artist info
         const artistDoc = await db.collection('users').doc(artistId).get();
         if (!artistDoc.exists) {
-            alert('Artist not found.');
+            showToast('Artist not found.', 'error');
             return;
         }
         const artist = artistDoc.data();
@@ -2058,107 +2486,107 @@ async function assignPlan(artistId, planKey) {
             artistName: artist.name, plan: planKey, amount: plan.amount
         });
 
-        alert('Plan "' + plan.name + '" assigned to ' + artist.name + '!');
+        showToast('Plan "' + plan.name + '" assigned to ' + artist.name + '!', 'success');
         resetPagination('subscriptions');
         loadSubscriptions('first');
         loadSubscriptionStats();
     } catch (error) {
         console.error('Error assigning plan:', error);
-        alert('Error assigning plan: ' + error.message);
+        showToast('Error assigning plan: ' + error.message, 'error');
     }
 }
 
 // =============================================
 // SUBSCRIPTIONS - Change Plan
 // =============================================
-async function changePlan(subId, newPlanKey, currentSub) {
+function changePlan(subId, newPlanKey, currentSub) {
     const plan = PLANS[newPlanKey];
-    if (!confirm('Change ' + (currentSub.artistName || 'this artist') + ' from ' +
-        (PLANS[currentSub.plan] ? PLANS[currentSub.plan].name : currentSub.plan) + ' to ' + plan.name + '?')) return;
+    showConfirm('Change Plan', 'Change ' + (currentSub.artistName || 'this artist') + ' from ' +
+        (PLANS[currentSub.plan] ? PLANS[currentSub.plan].name : currentSub.plan) + ' to ' + plan.name + '?', async () => {
+        try {
+            const now = new Date();
+            const expiryDate = newPlanKey === 'free' ? null : new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
-    try {
-        const now = new Date();
-        const expiryDate = newPlanKey === 'free' ? null : new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+            await db.collection('subscriptions').doc(subId).update({
+                plan: newPlanKey,
+                amount: plan.amount,
+                postLimit: plan.postLimit,
+                startDate: firebase.firestore.Timestamp.fromDate(now),
+                expiryDate: expiryDate ? firebase.firestore.Timestamp.fromDate(expiryDate) : null,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                assignedBy: auth.currentUser.email
+            });
 
-        await db.collection('subscriptions').doc(subId).update({
-            plan: newPlanKey,
-            amount: plan.amount,
-            postLimit: plan.postLimit,
-            startDate: firebase.firestore.Timestamp.fromDate(now),
-            expiryDate: expiryDate ? firebase.firestore.Timestamp.fromDate(expiryDate) : null,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-            assignedBy: auth.currentUser.email
-        });
+            await logAuditAction('change_plan', subId, 'subscription', {
+                artistName: currentSub.artistName, oldPlan: currentSub.plan, newPlan: newPlanKey
+            });
 
-        await logAuditAction('change_plan', subId, 'subscription', {
-            artistName: currentSub.artistName, oldPlan: currentSub.plan, newPlan: newPlanKey
-        });
-
-        alert('Plan changed to ' + plan.name + '!');
-        resetPagination('subscriptions');
-        loadSubscriptions('first');
-        loadSubscriptionStats();
-    } catch (error) {
-        console.error('Error changing plan:', error);
-        alert('Error changing plan.');
-    }
+            showToast('Plan changed to ' + plan.name + '!', 'success');
+            resetPagination('subscriptions');
+            loadSubscriptions('first');
+            loadSubscriptionStats();
+        } catch (error) {
+            console.error('Error changing plan:', error);
+            showToast('Error changing plan.', 'error');
+        }
+    }, { confirmText: 'Change Plan', type: 'info' });
 }
 
 // =============================================
 // SUBSCRIPTIONS - Cancel
 // =============================================
-async function cancelSubscription(subId, artistName) {
-    if (!confirm('Cancel subscription for "' + (artistName || 'this artist') + '"?')) return;
+function cancelSubscription(subId, artistName) {
+    showConfirm('Cancel Subscription', 'Cancel subscription for "' + (artistName || 'this artist') + '"?', async () => {
+        try {
+            await db.collection('subscriptions').doc(subId).update({
+                status: 'cancelled',
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
 
-    try {
-        await db.collection('subscriptions').doc(subId).update({
-            status: 'cancelled',
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
+            await logAuditAction('cancel_subscription', subId, 'subscription', { artistName: artistName });
 
-        await logAuditAction('cancel_subscription', subId, 'subscription', { artistName: artistName });
-
-        alert('Subscription cancelled.');
-        resetPagination('subscriptions');
-        loadSubscriptions('first');
-        loadSubscriptionStats();
-    } catch (error) {
-        console.error('Error cancelling subscription:', error);
-        alert('Error cancelling subscription.');
-    }
+            showToast('Subscription cancelled.', 'warning');
+            resetPagination('subscriptions');
+            loadSubscriptions('first');
+            loadSubscriptionStats();
+        } catch (error) {
+            console.error('Error cancelling subscription:', error);
+            showToast('Error cancelling subscription.', 'error');
+        }
+    }, { confirmText: 'Cancel Subscription', type: 'danger' });
 }
 
 // =============================================
 // SUBSCRIPTIONS - Renew
 // =============================================
-async function renewSubscription(subId, currentSub) {
-    if (!confirm('Renew subscription for "' + (currentSub.artistName || 'this artist') + '" for 30 days?')) return;
+function renewSubscription(subId, currentSub) {
+    showConfirm('Renew Subscription', 'Renew subscription for "' + (currentSub.artistName || 'this artist') + '" for 30 days?', async () => {
+        try {
+            const now = new Date();
+            const planKey = currentSub.plan || 'free';
+            const expiryDate = planKey === 'free' ? null : new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
-    try {
-        const now = new Date();
-        const planKey = currentSub.plan || 'free';
-        const expiryDate = planKey === 'free' ? null : new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+            await db.collection('subscriptions').doc(subId).update({
+                status: 'active',
+                startDate: firebase.firestore.Timestamp.fromDate(now),
+                expiryDate: expiryDate ? firebase.firestore.Timestamp.fromDate(expiryDate) : null,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                assignedBy: auth.currentUser.email
+            });
 
-        await db.collection('subscriptions').doc(subId).update({
-            status: 'active',
-            startDate: firebase.firestore.Timestamp.fromDate(now),
-            expiryDate: expiryDate ? firebase.firestore.Timestamp.fromDate(expiryDate) : null,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-            assignedBy: auth.currentUser.email
-        });
+            await logAuditAction('renew_subscription', subId, 'subscription', {
+                artistName: currentSub.artistName, plan: planKey
+            });
 
-        await logAuditAction('renew_subscription', subId, 'subscription', {
-            artistName: currentSub.artistName, plan: planKey
-        });
-
-        alert('Subscription renewed!');
-        resetPagination('subscriptions');
-        loadSubscriptions('first');
-        loadSubscriptionStats();
-    } catch (error) {
-        console.error('Error renewing subscription:', error);
-        alert('Error renewing subscription.');
-    }
+            showToast('Subscription renewed!', 'success');
+            resetPagination('subscriptions');
+            loadSubscriptions('first');
+            loadSubscriptionStats();
+        } catch (error) {
+            console.error('Error renewing subscription:', error);
+            showToast('Error renewing subscription.', 'error');
+        }
+    }, { confirmText: 'Renew', type: 'info' });
 }
 
 // =============================================
@@ -2170,7 +2598,7 @@ document.getElementById('assignPlanForm')?.addEventListener('submit', async func
     const planKey = document.getElementById('planSelect').value;
 
     if (!artistId) {
-        alert('Please select an artist.');
+        showToast('Please select an artist.', 'warning');
         return;
     }
 
@@ -2211,10 +2639,10 @@ async function loadOrderStats() {
             }
         });
 
-        document.getElementById('totalOrders').textContent = total;
-        document.getElementById('pendingOrders').textContent = pending;
-        document.getElementById('deliveredOrders').textContent = delivered;
-        document.getElementById('orderRevenue').textContent = '$' + revenue.toFixed(2);
+        animateCounter('totalOrders', total);
+        animateCounter('pendingOrders', pending);
+        animateCounter('deliveredOrders', delivered);
+        animateCounter('orderRevenue', revenue, '$');
     } catch (error) {
         console.error('Error loading order stats:', error);
     }
@@ -2242,7 +2670,7 @@ async function loadOrders(direction) {
     const tbody = document.getElementById('ordersTableBody');
     if (!tbody) return;
     tbody.innerHTML = '';
-    tbody.appendChild(createLoadingRow(9));
+    tbody.appendChild(createSkeletonRows(5, 9));
 
     try {
         const statusFilter = document.getElementById('orderStatusFilter')?.value || '';
@@ -2378,125 +2806,118 @@ async function loadOrders(direction) {
 async function viewOrderDetails(orderId) {
     try {
         const doc = await db.collection('orders').doc(orderId).get();
-        if (!doc.exists) { alert('Order not found.'); return; }
+        if (!doc.exists) { showToast('Order not found.', 'error'); return; }
         const order = doc.data();
 
-        let itemsList = (order.items || []).map(i =>
-            '  - ' + i.title + ' x' + i.quantity + ' @ $' + i.price.toFixed(2)
-        ).join('\n');
+        const items = [
+            { label: 'Order ID', value: orderId },
+            { label: 'Customer', value: (order.customerName || 'N/A') + ' (' + (order.customerEmail || '') + ')' },
+            { label: 'Artist', value: order.artistName || 'N/A' },
+            { label: 'Subtotal', value: '$' + (order.subtotal || 0).toFixed(2) },
+            { label: 'Platform Fee', value: '$' + (order.platformFee || 0).toFixed(2) },
+            { label: 'Total', value: '$' + (order.total || 0).toFixed(2) },
+            { label: 'Status', value: order.status || 'N/A' },
+            { label: 'Payment Method', value: order.paymentMethod || 'N/A' },
+            { label: 'Payout Status', value: order.payoutStatus || 'N/A' },
+            { label: 'Date', value: order.createdAt ? order.createdAt.toDate().toLocaleString() : 'N/A' }
+        ];
 
-        alert(
-            'Order: ' + orderId + '\n' +
-            'Customer: ' + (order.customerName || 'N/A') + ' (' + (order.customerEmail || '') + ')\n' +
-            'Artist: ' + (order.artistName || 'N/A') + '\n' +
-            'Items:\n' + (itemsList || '  (none)') + '\n' +
-            'Subtotal: $' + (order.subtotal || 0).toFixed(2) + '\n' +
-            'Platform Fee: $' + (order.platformFee || 0).toFixed(2) + '\n' +
-            'Total: $' + (order.total || 0).toFixed(2) + '\n' +
-            'Status: ' + (order.status || 'N/A') + '\n' +
-            'Payment: ' + (order.paymentMethod || 'N/A') + '\n' +
-            'Payout Status: ' + (order.payoutStatus || 'N/A') + '\n' +
-            'Date: ' + (order.createdAt ? order.createdAt.toDate().toLocaleString() : 'N/A')
+        const listItems = (order.items || []).map(i =>
+            i.title + ' x' + i.quantity + ' @ $' + i.price.toFixed(2)
         );
+
+        showDetailModal('Order Details', items, listItems);
     } catch (error) {
         console.error('Error viewing order:', error);
-        alert('Error loading order details.');
+        showToast('Error loading order details.', 'error');
     }
 }
 
-async function updateOrderStatus(orderId, order) {
+function updateOrderStatus(orderId, order) {
     const nextStatus = {
         'paid': 'processing',
         'processing': 'shipped',
         'shipped': 'delivered'
     };
     const newStatus = nextStatus[order.status];
-    if (!newStatus) { alert('Cannot update this order status.'); return; }
+    if (!newStatus) { showToast('Cannot update this order status.', 'warning'); return; }
 
-    let trackingNumber = '';
-    if (newStatus === 'shipped') {
-        trackingNumber = prompt('Enter tracking number (optional):') || '';
-    }
+    showConfirm('Update Order', 'Update order to "' + newStatus + '"?', async () => {
+        try {
+            const updateData = {
+                status: newStatus,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
 
-    if (!confirm('Update order to "' + newStatus + '"?')) return;
-
-    try {
-        const updateData = {
-            status: newStatus,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        };
-        if (trackingNumber) updateData.trackingNumber = trackingNumber;
-
-        await db.collection('orders').doc(orderId).update(updateData);
-        await logAuditAction('update_order_status', orderId, 'order', {
-            oldStatus: order.status, newStatus: newStatus, trackingNumber: trackingNumber
-        });
-        alert('Order updated to ' + newStatus + '.');
-        resetPagination('orders');
-        loadOrders('first');
-        loadOrderStats();
-    } catch (error) {
-        console.error('Error updating order:', error);
-        alert('Error updating order.');
-    }
+            await db.collection('orders').doc(orderId).update(updateData);
+            await logAuditAction('update_order_status', orderId, 'order', {
+                oldStatus: order.status, newStatus: newStatus
+            });
+            showToast('Order updated to ' + newStatus + '.', 'success');
+            resetPagination('orders');
+            loadOrders('first');
+            loadOrderStats();
+        } catch (error) {
+            console.error('Error updating order:', error);
+            showToast('Error updating order.', 'error');
+        }
+    }, { confirmText: 'Update', type: 'info' });
 }
 
-async function refundOrder(orderId, order) {
-    // Check refund time limit policy
+function refundOrder(orderId, order) {
     if (order.createdAt) {
         const orderDate = order.createdAt.toDate();
         const now = new Date();
         const daysSinceOrder = Math.floor((now - orderDate) / (1000 * 60 * 60 * 24));
         if (daysSinceOrder > PAYMENT_POLICIES.refundDays) {
-            alert('Refund denied: This order is ' + daysSinceOrder + ' days old. Refund window is ' + PAYMENT_POLICIES.refundDays + ' days.');
+            showToast('Refund denied: This order is ' + daysSinceOrder + ' days old. Refund window is ' + PAYMENT_POLICIES.refundDays + ' days.', 'error');
             return;
         }
     }
 
-    if (!confirm('Refund $' + (order.total || 0).toFixed(2) + ' for this order? This will deduct from the artist\'s wallet.')) return;
-
-    try {
-        await db.collection('orders').doc(orderId).update({
-            status: 'refunded',
-            payoutStatus: 'unpaid',
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-
-        if (order.paymentId) {
-            await db.collection('payments').doc(order.paymentId).update({
+    showConfirm('Refund Order', 'Refund $' + (order.total || 0).toFixed(2) + ' for this order? This will deduct from the artist\'s wallet.', async () => {
+        try {
+            await db.collection('orders').doc(orderId).update({
                 status: 'refunded',
-                refundedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                payoutStatus: 'unpaid',
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             });
-        }
 
-        // Reverse artist wallet earnings
-        if (order.artistId && order.artistEarnings) {
-            const walletRef = db.collection('wallets').doc(order.artistId);
-            const walletDoc = await walletRef.get();
-            if (walletDoc.exists) {
-                const wallet = walletDoc.data();
-                const newBalance = Math.max(0, (wallet.balance || 0) - (order.artistEarnings || 0));
-                await walletRef.update({
-                    balance: newBalance,
-                    totalEarnings: Math.max(0, (wallet.totalEarnings || 0) - (order.artistEarnings || 0)),
-                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+            if (order.paymentId) {
+                await db.collection('payments').doc(order.paymentId).update({
+                    status: 'refunded',
+                    refundedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
             }
+
+            if (order.artistId && order.artistEarnings) {
+                const walletRef = db.collection('wallets').doc(order.artistId);
+                const walletDoc = await walletRef.get();
+                if (walletDoc.exists) {
+                    const wallet = walletDoc.data();
+                    const newBalance = Math.max(0, (wallet.balance || 0) - (order.artistEarnings || 0));
+                    await walletRef.update({
+                        balance: newBalance,
+                        totalEarnings: Math.max(0, (wallet.totalEarnings || 0) - (order.artistEarnings || 0)),
+                        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+            }
+
+            await logAuditAction('refund_order', orderId, 'order', {
+                amount: order.total, customerName: order.customerName, artistId: order.artistId
+            });
+
+            showToast('Order refunded. Artist wallet updated.', 'success');
+            resetPagination('orders');
+            loadOrders('first');
+            loadOrderStats();
+        } catch (error) {
+            console.error('Error refunding order:', error);
+            showToast('Error refunding order.', 'error');
         }
-
-        await logAuditAction('refund_order', orderId, 'order', {
-            amount: order.total, customerName: order.customerName, artistId: order.artistId
-        });
-
-        alert('Order refunded. Artist wallet updated.');
-        resetPagination('orders');
-        loadOrders('first');
-        loadOrderStats();
-    } catch (error) {
-        console.error('Error refunding order:', error);
-        alert('Error refunding order.');
-    }
+    }, { confirmText: 'Refund', type: 'danger' });
 }
 
 // Order event listeners
@@ -2549,12 +2970,12 @@ async function loadPaymentStats() {
             pendingPayoutsAmount += doc.data().artistEarnings || 0;
         });
 
-        document.getElementById('totalPayments').textContent = totalPayments;
-        document.getElementById('completedPayments').textContent = '$' + completedAmount.toFixed(2);
-        document.getElementById('platformRevenue').textContent = '$' + platformRevenue.toFixed(2);
-        document.getElementById('totalPayoutsAmount').textContent = '$' + totalPayoutsAmount.toFixed(2);
-        document.getElementById('pendingPayouts').textContent = '$' + pendingPayoutsAmount.toFixed(2);
-        document.getElementById('refundedAmount').textContent = '$' + refundedAmount.toFixed(2);
+        animateCounter('totalPayments', totalPayments);
+        animateCounter('completedPayments', completedAmount, '$');
+        animateCounter('platformRevenue', platformRevenue, '$');
+        animateCounter('totalPayoutsAmount', totalPayoutsAmount, '$');
+        animateCounter('pendingPayouts', pendingPayoutsAmount, '$');
+        animateCounter('refundedAmount', refundedAmount, '$');
     } catch (error) {
         console.error('Error loading payment stats:', error);
     }
@@ -2569,7 +2990,7 @@ async function loadPayments(direction) {
     const tbody = document.getElementById('paymentsTableBody');
     if (!tbody) return;
     tbody.innerHTML = '';
-    tbody.appendChild(createLoadingRow(10));
+    tbody.appendChild(createSkeletonRows(5, 10));
 
     try {
         const typeFilter = document.getElementById('paymentTypeFilter')?.value || '';
@@ -2670,18 +3091,18 @@ async function loadPayments(direction) {
             const tdActions = document.createElement('td');
             const viewBtn = createEl('button', { className: 'btn-action btn-view' }, 'View');
             viewBtn.addEventListener('click', () => {
-                alert(
-                    'Payment: ' + doc.id + '\n' +
-                    'Type: ' + (payment.type || 'N/A') + '\n' +
-                    'User: ' + (payment.userName || 'N/A') + '\n' +
-                    'Amount: $' + (payment.amount || 0).toFixed(2) + '\n' +
-                    'Platform Fee: $' + (payment.platformFee || 0).toFixed(2) + '\n' +
-                    'Net: $' + (payment.netAmount || 0).toFixed(2) + '\n' +
-                    'Method: ' + (payment.paymentMethod || 'N/A') + '\n' +
-                    'Status: ' + (payment.status || 'N/A') + '\n' +
-                    'Gateway ID: ' + (payment.gatewayTransactionId || 'N/A') + '\n' +
-                    'Reference: ' + (payment.referenceId || 'N/A')
-                );
+                showDetailModal('Payment Details', [
+                    { label: 'Payment ID', value: doc.id },
+                    { label: 'Type', value: payment.type || 'N/A' },
+                    { label: 'User', value: payment.userName || 'N/A' },
+                    { label: 'Amount', value: '$' + (payment.amount || 0).toFixed(2) },
+                    { label: 'Platform Fee', value: '$' + (payment.platformFee || 0).toFixed(2) },
+                    { label: 'Net Amount', value: '$' + (payment.netAmount || 0).toFixed(2) },
+                    { label: 'Method', value: payment.paymentMethod || 'N/A' },
+                    { label: 'Status', value: payment.status || 'N/A' },
+                    { label: 'Gateway ID', value: payment.gatewayTransactionId || 'N/A' },
+                    { label: 'Reference', value: payment.referenceId || 'N/A' }
+                ]);
             });
             tdActions.appendChild(viewBtn);
             tr.appendChild(tdActions);
@@ -2739,7 +3160,7 @@ async function loadPayouts(direction) {
     const tbody = document.getElementById('payoutsTableBody');
     if (!tbody) return;
     tbody.innerHTML = '';
-    tbody.appendChild(createLoadingRow(8));
+    tbody.appendChild(createSkeletonRows(5, 8));
 
     try {
         const statusFilter = document.getElementById('payoutStatusFilter')?.value || '';
@@ -2905,15 +3326,14 @@ document.getElementById('processPayoutForm')?.addEventListener('submit', async f
     const artistId = document.getElementById('payoutArtistSelect').value;
     const method = document.getElementById('payoutMethodSelect').value;
 
-    if (!artistId) { alert('Please select an artist.'); return; }
+    if (!artistId) { showToast('Please select an artist.', 'warning'); return; }
 
     try {
-        // Check artist wallet balance
         const walletDoc = await db.collection('wallets').doc(artistId).get();
         const walletBalance = walletDoc.exists ? (walletDoc.data().balance || 0) : 0;
 
         if (walletBalance < PAYMENT_POLICIES.minWithdrawal) {
-            alert('Payout denied: Artist wallet balance ($' + walletBalance.toFixed(2) + ') is below the minimum withdrawal of $' + PAYMENT_POLICIES.minWithdrawal.toFixed(2) + '.');
+            showToast('Payout denied: Wallet balance ($' + walletBalance.toFixed(2) + ') below minimum $' + PAYMENT_POLICIES.minWithdrawal.toFixed(2) + '.', 'error');
             return;
         }
 
@@ -2923,69 +3343,74 @@ document.getElementById('processPayoutForm')?.addEventListener('submit', async f
             .where('status', '==', 'delivered')
             .get();
 
-        if (ordersSnap.empty) { alert('No unpaid delivered orders for this artist.'); return; }
+        if (ordersSnap.empty) { showToast('No unpaid delivered orders for this artist.', 'warning'); return; }
 
         const totalAmount = ordersSnap.docs.reduce((sum, d) => sum + (d.data().artistEarnings || 0), 0);
+        const form = this;
 
-        if (!confirm('Process payout of $' + totalAmount.toFixed(2) + ' for this artist? This will deduct from their wallet.')) return;
+        showConfirm('Process Payout', 'Process payout of $' + totalAmount.toFixed(2) + '? This will deduct from the artist\'s wallet.', async () => {
+            try {
+                const orderIds = ordersSnap.docs.map(d => d.id);
+                const firstOrder = ordersSnap.docs[0].data();
 
-        const orderIds = ordersSnap.docs.map(d => d.id);
-        const firstOrder = ordersSnap.docs[0].data();
+                const payoutRef = db.collection('payouts').doc();
+                const batch = db.batch();
 
-        const payoutRef = db.collection('payouts').doc();
-        const batch = db.batch();
+                batch.set(payoutRef, {
+                    payoutId: payoutRef.id,
+                    artistId: artistId,
+                    artistName: firstOrder.artistName || 'Unknown',
+                    artistEmail: firstOrder.artistEmail || '',
+                    amount: totalAmount,
+                    currency: 'USD',
+                    orderIds: orderIds,
+                    paymentMethod: method,
+                    gatewayPayoutId: '',
+                    status: 'completed',
+                    processedBy: auth.currentUser.email,
+                    notes: '',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    processedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
 
-        batch.set(payoutRef, {
-            payoutId: payoutRef.id,
-            artistId: artistId,
-            artistName: firstOrder.artistName || 'Unknown',
-            artistEmail: firstOrder.artistEmail || '',
-            amount: totalAmount,
-            currency: 'USD',
-            orderIds: orderIds,
-            paymentMethod: method,
-            gatewayPayoutId: '',
-            status: 'completed',
-            processedBy: auth.currentUser.email,
-            notes: '',
-            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            processedAt: firebase.firestore.FieldValue.serverTimestamp(),
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
+                ordersSnap.forEach(doc => {
+                    batch.update(doc.ref, {
+                        payoutId: payoutRef.id,
+                        payoutStatus: 'paid_out',
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                });
 
-        ordersSnap.forEach(doc => {
-            batch.update(doc.ref, {
-                payoutId: payoutRef.id,
-                payoutStatus: 'paid_out',
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-        });
+                if (walletDoc.exists) {
+                    batch.update(db.collection('wallets').doc(artistId), {
+                        balance: Math.max(0, walletBalance - totalAmount),
+                        totalWithdrawn: (walletDoc.data().totalWithdrawn || 0) + totalAmount,
+                        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }
 
-        // Deduct from artist wallet
-        if (walletDoc.exists) {
-            batch.update(db.collection('wallets').doc(artistId), {
-                balance: Math.max(0, walletBalance - totalAmount),
-                totalWithdrawn: (walletDoc.data().totalWithdrawn || 0) + totalAmount,
-                lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-            });
-        }
+                await batch.commit();
+                await logAuditAction('process_payout', payoutRef.id, 'payout', {
+                    artistId: artistId, artistName: firstOrder.artistName, amount: totalAmount, method: method
+                });
 
-        await batch.commit();
-        await logAuditAction('process_payout', payoutRef.id, 'payout', {
-            artistId: artistId, artistName: firstOrder.artistName, amount: totalAmount, method: method
-        });
-
-        alert('Payout completed! $' + totalAmount.toFixed(2) + ' withdrawn from artist wallet.');
-        this.reset();
-        document.getElementById('payoutAmountPreview').value = '$0.00';
-        resetPagination('payouts');
-        loadPayouts('first');
-        loadArtistWallets();
-        loadPaymentStats();
-        populatePayoutArtistDropdown();
+                showToast('Payout completed! $' + totalAmount.toFixed(2) + ' withdrawn.', 'success');
+                form.reset();
+                document.getElementById('payoutAmountPreview').value = '$0.00';
+                resetPagination('payouts');
+                loadPayouts('first');
+                loadArtistWallets();
+                loadPaymentStats();
+                populatePayoutArtistDropdown();
+            } catch (error) {
+                console.error('Error processing payout:', error);
+                showToast('Error processing payout: ' + error.message, 'error');
+            }
+        }, { confirmText: 'Process Payout', type: 'warning' });
     } catch (error) {
         console.error('Error processing payout:', error);
-        alert('Error processing payout: ' + error.message);
+        showToast('Error processing payout: ' + error.message, 'error');
     }
 });
 
@@ -3037,16 +3462,16 @@ async function loadRevenueTrendChart() {
                     {
                         label: 'Total Revenue',
                         data: revenueData,
-                        borderColor: '#2E86AB',
-                        backgroundColor: 'rgba(46, 134, 171, 0.1)',
+                        borderColor: '#4F46E5',
+                        backgroundColor: 'rgba(79, 70, 229, 0.1)',
                         tension: 0.4,
                         fill: true
                     },
                     {
                         label: 'Platform Fees',
                         data: feeData,
-                        borderColor: '#C4A265',
-                        backgroundColor: 'rgba(196, 162, 101, 0.1)',
+                        borderColor: '#F59E0B',
+                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
                         tension: 0.4,
                         fill: true
                     }
@@ -3088,7 +3513,7 @@ async function loadPaymentMethodsChart() {
                 labels: ['Virtual Card', 'Virtual Visa'],
                 datasets: [{
                     data: [virtualCardTotal, virtualVisaTotal],
-                    backgroundColor: ['#2E86AB', '#C4A265'],
+                    backgroundColor: ['#4F46E5', '#F59E0B'],
                     borderWidth: 2,
                     borderColor: document.body.classList.contains('dark-mode') ? '#1e293b' : '#ffffff'
                 }]
@@ -3115,7 +3540,7 @@ async function loadArtistWallets() {
     const tbody = document.getElementById('walletsTableBody');
     if (!tbody) return;
     tbody.innerHTML = '';
-    tbody.appendChild(createLoadingRow(7));
+    tbody.appendChild(createSkeletonRows(5, 7));
 
     try {
         const searchQuery = (document.getElementById('walletSearchInput')?.value || '').toLowerCase();
@@ -3189,11 +3614,9 @@ async function addWalletCredit(artistId, artistName) {
     if (!amountStr) return;
     const amount = parseFloat(amountStr);
     if (isNaN(amount) || amount <= 0) {
-        alert('Please enter a valid positive amount.');
+        showToast('Please enter a valid positive amount.', 'warning');
         return;
     }
-
-    if (!confirm('Add $' + amount.toFixed(2) + ' to ' + artistName + '\'s wallet?')) return;
 
     try {
         const walletRef = db.collection('wallets').doc(artistId);
@@ -3219,12 +3642,12 @@ async function addWalletCredit(artistId, artistName) {
             artistName: artistName, amount: amount
         });
 
-        alert('$' + amount.toFixed(2) + ' added to ' + artistName + '\'s wallet.');
+        showToast('$' + amount.toFixed(2) + ' added to ' + artistName + '\'s wallet.', 'success');
         loadArtistWallets();
         loadPaymentStats();
     } catch (error) {
         console.error('Error adding wallet credit:', error);
-        alert('Error adding credit: ' + error.message);
+        showToast('Error adding credit: ' + error.message, 'error');
     }
 }
 
