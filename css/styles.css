@@ -236,8 +236,8 @@ body {
 /* Logo */
 .logo-placeholder {
     width: 100%;
-    max-width: 350px;
-    margin: 0 auto 2rem;
+    max-width: 480px;
+    margin: 0 auto;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -254,6 +254,14 @@ body {
     object-fit: contain;
     border-radius: 50%;
     background-color: #ffffff;
+}
+
+.login-banner {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
 }
 
 .welcome-title {
