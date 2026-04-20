@@ -1,33 +1,47 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 :root {
-    --primary-color: #4F46E5;
-    --primary-hover: #4338CA;
-    --primary-light: #EEF2FF;
-    --primary-glow: rgba(79, 70, 229, 0.15);
-    --secondary-color: #0EA5E9;
-    --secondary-light: #E0F2FE;
-    --text-dark: #1E293B;
-    --text-medium: #475569;
+    /* 🎨 Primary (from S letter in logo) */
+    --primary-color: #6F8FA3;
+    --primary-hover: #5A7A8D;
+    --primary-light: #EAF0F4;
+    --primary-glow: rgba(111, 143, 163, 0.18);
+    --primary-text: #FFFFFF;
+
+    /* 🎨 Secondary (soft terracotta - reduced intensity) */
+    --secondary-color: #C98A5B;
+    --secondary-light: #F6E3D7;
+
+    /* 🖋 Text */
+    --text-dark: #2C3E50;
+    --text-medium: #5C6B73;
     --text-light: #94A3B8;
-    --border-color: #E2E8F0;
-    --bg-light: #F8FAFC;
-    --bg-white: #ffffff;
-    --link-color: #4F46E5;
-    --error-color: #EF4444;
-    --success-color: #10B981;
-    --warning-color: #F59E0B;
-    --logo-bg: #EEF2FF;
-    --logo-border: #C7D2FE;
-    --accent-gold: #D97706;
-    --accent-brown: #B45309;
-    --accent-teal: #14B8A6;
-    --accent-rose: #F43F5E;
-    --accent-violet: #8B5CF6;
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.07);
-    --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.1);
-    --shadow-glow: 0 0 20px rgba(79, 70, 229, 0.15);
+
+    /* 🧱 Borders & Backgrounds */
+    --border-color: #E6ECF1;
+    --bg-light: #FAFBFC;
+    --bg-white: #FFFFFF;
+
+    /* 🔗 Links */
+    --link-color: #C98A5B;
+
+    /* ⚠️ States (soft, not aggressive) */
+    --error-color: #A44A3F;
+    --success-color: #7A9A7A;
+    --warning-color: #E3A93C;
+
+    /* 🎨 Accent system (minimal & elegant) */
+    --accent-gold: #E3A93C;
+    --accent-brown: #C98A5B;
+    --accent-teal: #6F8FA3;
+
+    /* 🪞 Shadows (softer = more premium) */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+    --shadow-md: 0 4px 10px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08);
+    --shadow-glow: 0 0 16px rgba(111, 143, 163, 0.18);
+
+    /* 🔲 Radius */
     --radius-sm: 0.5rem;
     --radius-md: 0.75rem;
     --radius-lg: 1rem;
@@ -152,7 +166,7 @@ body {
 
 /* Forgot Password (kept for reset page) */
 .forgot-password {
-    color: var(--primary-color);
+    color: var(--link-color);
     text-decoration: none;
     font-size: 0.95rem;
     font-weight: 500;
@@ -160,27 +174,30 @@ body {
 }
 
 .forgot-password:hover {
-    color: var(--primary-hover);
+    color: #A44A3F;
     text-decoration: underline;
 }
 
 /* Sign In Button */
 .sign-in-btn {
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+    background: var(--primary-color);
+    color: #FFFFFF;
     border: none;
     padding: 0.875rem 1.5rem;
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 600;
+    letter-spacing: 0.3px;
     border-radius: var(--radius-md);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     margin-top: 0.5rem;
-    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.3);
+    box-shadow: 0 4px 14px rgba(111, 143, 163, 0.28);
 }
 
 .sign-in-btn:hover {
-    background: linear-gradient(135deg, #6366F1 0%, var(--primary-color) 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(79, 70, 229, 0.4);
+    background: var(--primary-hover);
+    color: #FFFFFF;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 22px rgba(111, 143, 163, 0.38);
 }
 
 .sign-in-btn:active {
@@ -225,7 +242,7 @@ body {
 
 /* Right Section */
 .right-section {
-    background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 50%, #C7D2FE 100%);
+    background: #FFFFFF;
     padding: 2rem;
 }
 
@@ -336,7 +353,7 @@ body.dark-mode .custom-input:focus {
 }
 
 body.dark-mode .right-section {
-    background: linear-gradient(135deg, #1E1B4B 0%, #312E81 50%, #1E1B4B 100%);
+    background: #FFFFFF;
 }
 
 body.dark-mode .theme-toggle {
@@ -345,30 +362,35 @@ body.dark-mode .theme-toggle {
 
 /* Reset Password & Login Page Styles */
 .reset-email-input {
-    border-left: 4px solid var(--primary-color) !important;
+    border-left: 4px solid #3D7A88 !important;
 }
 
 .reset-email-input:focus {
-    border-left: 4px solid var(--primary-color) !important;
+    border-left: 4px solid #3D7A88 !important;
+    border-color: #3D7A88 !important;
+    box-shadow: 0 0 0 4px rgba(61, 122, 136, 0.18) !important;
 }
 
 .reset-btn {
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%) !important;
+    background: #4A8AA6 !important;
+    color: #FFFFFF !important;
     border: none;
     padding: 0.875rem 1.5rem;
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 600;
+    letter-spacing: 0.3px;
     border-radius: var(--radius-md);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     margin-top: 0.5rem;
-    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.3);
+    box-shadow: 0 4px 14px rgba(74, 138, 166, 0.3);
     font-family: inherit;
 }
 
 .reset-btn:hover {
-    background: linear-gradient(135deg, #6366F1 0%, var(--primary-color) 100%) !important;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(79, 70, 229, 0.4);
+    background: #3D7A94 !important;
+    color: #FFFFFF !important;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 22px rgba(61, 122, 148, 0.4);
 }
 
 .reset-btn:active {
@@ -380,30 +402,40 @@ body.dark-mode .theme-toggle {
     cursor: not-allowed;
 }
 
+/* Login success alert — teal match */
+#loginForm .alert-success {
+    background-color: #EAF3F7;
+    color: #2C5566;
+    border-color: #4A8AA6;
+}
+
 /* =============================================
    DASHBOARD STYLES
    ============================================= */
 
-/* Sidebar */
+/* =============================================
+   SIDEBAR — S-Teal Anchor + Orange Burst
+   ============================================= */
+
 .sidebar {
     position: fixed;
     left: 0;
     top: 0;
     width: 270px;
     height: 100vh;
-    background: linear-gradient(180deg, #1E1B4B 0%, #312E81 50%, #3730A3 100%);
-    color: #C7D2FE;
+    background: #FFFFFF;
+    color: var(--text-medium);
     padding: 0;
     z-index: 1000;
-    border-right: none;
+    border-right: 1px solid var(--border-color);
     transition: all 0.3s ease;
-    box-shadow: 4px 0 24px rgba(30, 27, 75, 0.2);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.04);
     overflow-y: auto;
 }
 
 .sidebar-header {
     padding: 1.5rem 1.5rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.10);
     background: transparent;
     display: flex;
     align-items: center;
@@ -414,12 +446,8 @@ body.dark-mode .theme-toggle {
     margin: 0;
     font-size: 1.25rem;
     font-weight: 800;
-    color: #ffffff;
+    color: var(--link-color);
     letter-spacing: -0.2px;
-    background: linear-gradient(135deg, #A5B4FC, #818CF8, #C084FC);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
 }
 
 .sidebar-menu {
@@ -434,30 +462,32 @@ body.dark-mode .theme-toggle {
     padding: 0.75rem 1.25rem;
     cursor: pointer;
     transition: all 0.25s ease;
-    color: #A5B4FC;
+    color: var(--text-medium);
     font-weight: 500;
     font-size: 0.9rem;
     margin: 2px 0.75rem;
     border-radius: var(--radius-sm);
     border-left: 3px solid transparent;
+    position: relative;
 }
 
 .sidebar-menu li:hover {
-    background: rgba(255, 255, 255, 0.08);
-    color: #ffffff;
+    background: #F3F6F8;
+    color: var(--text-dark);
     transform: translateX(3px);
 }
 
 .sidebar-menu li.active {
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.3) 0%, rgba(139, 92, 246, 0.2) 100%);
-    color: #ffffff;
-    border-left: 3px solid #818CF8;
-    box-shadow: 0 0 16px rgba(99, 102, 241, 0.15);
+    background: #EAF3F7;
+    color: var(--text-dark);
+    border-left: 3px solid #E05C2A;
+    font-weight: 700;
+    box-shadow: none;
 }
 
 .sidebar-menu li svg {
     margin-right: 12px;
-    opacity: 0.8;
+    opacity: 0.70;
 }
 
 .sidebar-menu li.active svg,
@@ -853,7 +883,7 @@ body.dark-mode .theme-toggle {
     height: 40px;
     object-fit: cover;
     border-radius: 50%;
-    border: 2px solid #C7D2FE;
+    border: 2px solid #B5D4E0;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
@@ -888,19 +918,19 @@ body.dark-mode .theme-toggle {
 }
 
 .stat-card-users .stat-icon {
-    background: linear-gradient(135deg, #4F46E5, #6366F1);
+    background: linear-gradient(135deg, #6F8FA3, #5A7A8D);
 }
 
 .stat-card-artists .stat-icon {
-    background: linear-gradient(135deg, #D97706, #F59E0B);
+    background: linear-gradient(135deg, #C98A5B, #B07448);
 }
 
 .stat-card-posts .stat-icon {
-    background: linear-gradient(135deg, #0EA5E9, #38BDF8);
+    background: #5B9BB5;
 }
 
 .stat-card-reports .stat-icon {
-    background: linear-gradient(135deg, #F43F5E, #FB7185);
+    background: linear-gradient(135deg, #C96A3D, #A44A3F);
 }
 
 .stat-details h3 {
@@ -1040,48 +1070,62 @@ body.dark-mode .plan-change-select {
 }
 
 .btn-delete {
-    background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
-    color: white;
+    background: #F7E4DA;
+    color: #B85C38;
+    box-shadow: none;
 }
 
 .btn-delete:hover {
-    background: linear-gradient(135deg, #F87171 0%, #EF4444 100%);
+    background: #F0CFBE;
 }
 
 .btn-approve {
-    background: linear-gradient(135deg, #10B981 0%, #059669 100%);
-    color: white;
+    background: #D1FAE5;
+    color: #065F46;
+    box-shadow: none;
 }
 
 .btn-approve:hover {
-    background: linear-gradient(135deg, #34D399 0%, #10B981 100%);
+    background: #A7F3D0;
 }
 
 .btn-reject {
-    background: linear-gradient(135deg, #64748B 0%, #475569 100%);
-    color: white;
+    background: #F7E4DA;
+    color: #B85C38;
+    box-shadow: none;
 }
 
 .btn-reject:hover {
-    background: linear-gradient(135deg, #94A3B8 0%, #64748B 100%);
+    background: #F0CFBE;
 }
 
 .btn-view {
-    background: linear-gradient(135deg, #4F46E5 0%, #4338CA 100%);
+    background: linear-gradient(135deg, #C65D2E 0%, #A03E2B 100%);
     color: white;
 }
 
 .btn-view:hover {
-    background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);
+    background: linear-gradient(135deg, #D97044 0%, #C65D2E 100%);
+}
+
+.btn-view-paid {
+    background: #EAF3F7;
+    color: #5B9BB5;
+    box-shadow: none;
+}
+
+.btn-view-paid:hover {
+    background: #D6E7EF;
 }
 
 .btn-suspend {
-    background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
-    color: white;
+    background: #FEF3C7;
+    color: #92400E;
+    box-shadow: none;
 }
 
 .btn-suspend:hover {
-    background: linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%);
+    background: #FDE68A;
 }
 
 .btn-activate {
@@ -1105,8 +1149,8 @@ body.dark-mode .plan-change-select {
 }
 
 .status-active {
-    background: #ECFDF5;
-    color: #065F46;
+    background: #EAF3F7;
+    color: #5B9BB5;
 }
 
 .status-reported {
@@ -1120,8 +1164,8 @@ body.dark-mode .plan-change-select {
 }
 
 .status-pending {
-    background: #EEF2FF;
-    color: #3730A3;
+    background: #FEF3C7;
+    color: #92400E;
 }
 
 .status-reviewed {
@@ -1130,8 +1174,8 @@ body.dark-mode .plan-change-select {
 }
 
 .status-active-user {
-    background: #ECFDF5;
-    color: #065F46;
+    background: #EAF3F7;
+    color: #5B9BB5;
 }
 
 .status-suspended {
@@ -1165,8 +1209,8 @@ body.dark-mode .plan-change-select {
 }
 
 .plan-basic {
-    background: #EEF2FF;
-    color: #4338CA;
+    background: #FBE9DD;
+    color: #A03E2B;
 }
 
 .plan-premium {
@@ -1185,8 +1229,8 @@ body.dark-mode .plan-change-select {
 }
 
 .role-customer {
-    background: #EEF2FF;
-    color: #4338CA;
+    background: #FBE9DD;
+    color: #A03E2B;
 }
 
 .role-artist {
@@ -1205,8 +1249,8 @@ body.dark-mode .plan-change-select {
 }
 
 .payment-virtual_card {
-    background: #EEF2FF;
-    color: #4338CA;
+    background: #FBE9DD;
+    color: #A03E2B;
 }
 
 .payment-virtual_visa {
@@ -1235,8 +1279,8 @@ body.dark-mode .plan-change-select {
 }
 
 .type-order {
-    background: #EEF2FF;
-    color: #4338CA;
+    background: #FBE9DD;
+    color: #A03E2B;
 }
 
 .type-subscription {
@@ -1278,7 +1322,7 @@ body.dark-mode .policy-value {
 }
 
 body.dark-mode .policy-card {
-    border-left-color: #818CF8;
+    border-left-color: #E8B54A;
 }
 
 /* Pagination Controls */
@@ -1294,30 +1338,28 @@ body.dark-mode .policy-card {
 
 /* Dark Mode Dashboard */
 body.dark-mode .sidebar {
-    background: linear-gradient(180deg, #0F0A2A 0%, #1E1B4B 50%, #1E1B4B 100%);
+    background: #1E293B;
+    border-right-color: #334155;
     box-shadow: 4px 0 24px rgba(0, 0, 0, 0.4);
 }
 
 body.dark-mode .sidebar-header h4 {
-    background: linear-gradient(135deg, #A5B4FC, #818CF8, #C084FC);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: var(--link-color);
 }
 
 body.dark-mode .sidebar-menu li {
-    color: #818CF8;
+    color: #CBD5E1;
 }
 
 body.dark-mode .sidebar-menu li:hover {
     background: rgba(255, 255, 255, 0.06);
-    color: #E0E7FF;
+    color: #FFFFFF;
 }
 
 body.dark-mode .sidebar-menu li.active {
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.25) 0%, rgba(139, 92, 246, 0.15) 100%);
-    color: #E0E7FF;
-    border-left: 3px solid #818CF8;
+    background: rgba(255, 255, 255, 0.08);
+    color: #FFFFFF;
+    border-left: 3px solid #E05C2A;
 }
 
 body.dark-mode .main-content {
@@ -1413,8 +1455,8 @@ body.dark-mode .nav-tabs .nav-link {
 }
 
 body.dark-mode .nav-tabs .nav-link.active {
-    color: #A5B4FC;
-    border-bottom-color: #A5B4FC;
+    color: #F5E6C8;
+    border-bottom-color: #F5E6C8;
 }
 
 body.dark-mode .pagination-controls .text-muted {
@@ -1422,7 +1464,7 @@ body.dark-mode .pagination-controls .text-muted {
 }
 
 body.dark-mode .sidebar-header {
-    border-bottom-color: rgba(255, 255, 255, 0.06);
+    border-bottom-color: rgba(255, 255, 255, 0.07);
     background: transparent;
 }
 
@@ -1469,7 +1511,7 @@ body.dark-mode .notification-popup-footer {
 }
 
 body.dark-mode .notification-popup-footer a {
-    color: #A5B4FC;
+    color: #F5E6C8;
 }
 
 body.dark-mode .menu-toggle {
@@ -1487,8 +1529,8 @@ body.dark-mode .theme-toggle-dash:hover {
 /* Dark Mode - Status Badges */
 body.dark-mode .status-active,
 body.dark-mode .status-active-user {
-    background: rgba(16, 185, 129, 0.15);
-    color: #6EE7B7;
+    background: rgba(91, 155, 181, 0.15);
+    color: #5B9BB5;
 }
 
 body.dark-mode .status-reported,
@@ -1504,8 +1546,8 @@ body.dark-mode .status-suspended {
 }
 
 body.dark-mode .status-pending {
-    background: rgba(99, 102, 241, 0.15);
-    color: #A5B4FC;
+    background: rgba(46, 125, 122, 0.15);
+    color: #F5E6C8;
 }
 
 body.dark-mode .status-reviewed {
@@ -1525,8 +1567,8 @@ body.dark-mode .plan-free {
 }
 
 body.dark-mode .plan-basic {
-    background: rgba(99, 102, 241, 0.15);
-    color: #A5B4FC;
+    background: rgba(46, 125, 122, 0.15);
+    color: #F5E6C8;
 }
 
 body.dark-mode .plan-premium {
@@ -1536,8 +1578,8 @@ body.dark-mode .plan-premium {
 
 /* Dark Mode - Role Badges */
 body.dark-mode .role-customer {
-    background: rgba(99, 102, 241, 0.15);
-    color: #A5B4FC;
+    background: rgba(46, 125, 122, 0.15);
+    color: #F5E6C8;
 }
 
 body.dark-mode .role-artist {
@@ -1547,8 +1589,8 @@ body.dark-mode .role-artist {
 
 /* Dark Mode - Payment Method Badges */
 body.dark-mode .payment-virtual_card {
-    background: rgba(99, 102, 241, 0.15);
-    color: #A5B4FC;
+    background: rgba(46, 125, 122, 0.15);
+    color: #F5E6C8;
 }
 
 body.dark-mode .payment-virtual_visa {
@@ -1568,8 +1610,8 @@ body.dark-mode .payment-wallet_withdrawal {
 
 /* Dark Mode - Type Badges */
 body.dark-mode .type-order {
-    background: rgba(99, 102, 241, 0.15);
-    color: #A5B4FC;
+    background: rgba(46, 125, 122, 0.15);
+    color: #F5E6C8;
 }
 
 body.dark-mode .type-subscription {
@@ -1618,17 +1660,17 @@ body.dark-mode .chart-card .table tbody tr:hover {
 
 /* Dark Mode - Notification Item Icon */
 body.dark-mode .notification-item-icon {
-    background: rgba(99, 102, 241, 0.15);
-    color: #A5B4FC;
+    background: rgba(46, 125, 122, 0.15);
+    color: #F5E6C8;
 }
 
 /* Dark Mode - Action Buttons (softer in dark) */
 body.dark-mode .btn-view {
-    background: linear-gradient(135deg, #6366F1, #4F46E5);
+    background: linear-gradient(135deg, #D97044, #C65D2E);
 }
 
 body.dark-mode .btn-view:hover {
-    background: linear-gradient(135deg, #818CF8, #6366F1);
+    background: linear-gradient(135deg, #E8B54A, #D97044);
 }
 
 /* Dark Mode - Form Selects (Bootstrap override) */
@@ -1651,9 +1693,9 @@ body.dark-mode .form-control::placeholder {
 body.dark-mode .form-control:focus,
 body.dark-mode .form-select:focus {
     background-color: #1e293b;
-    border-color: #6366F1;
+    border-color: #D97044;
     color: #f1f5f9;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    box-shadow: 0 0 0 3px rgba(46, 125, 122, 0.2);
 }
 
 /* Dark Mode - Tab content area */
@@ -1900,15 +1942,15 @@ body.dark-mode .card {
 
 /* Toast types */
 .toast-success {
-    border-left: 4px solid #7CB342;
+    border-left: 4px solid #6F8FA3;
 }
 
 .toast-success .toast-icon {
-    color: #7CB342;
+    color: #6F8FA3;
 }
 
 .toast-success .toast-progress {
-    background: #7CB342;
+    background: #6F8FA3;
 }
 
 .toast-error {
@@ -2103,6 +2145,137 @@ body.dark-mode .confirm-modal .btn-cancel:hover {
     background: #475569;
 }
 
+/* Suspend confirmation variant */
+.confirm-modal.confirm-modal-suspend .confirm-modal-icon svg,
+.confirm-modal.confirm-modal-suspend .confirm-modal-icon svg path {
+    fill: #FDE68A !important;
+}
+
+.confirm-modal.confirm-modal-suspend .confirm-modal-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 1rem;
+}
+
+.confirm-modal.confirm-modal-suspend .confirm-modal-btn {
+    padding: 0.6rem 1.5rem;
+    border-radius: 8px;
+    border: none;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    background: #FEF3C7;
+    color: #92400E;
+    transition: background 0.2s, transform 0.15s;
+}
+
+.confirm-modal.confirm-modal-suspend .confirm-modal-btn:hover {
+    background: #FDE68A;
+}
+
+.confirm-modal.confirm-modal-suspend .confirm-modal-btn:active {
+    transform: scale(0.97);
+}
+
+/* Delete confirmation variant */
+.confirm-modal.confirm-modal-delete .confirm-modal-icon svg {
+    fill: #B85C38;
+}
+
+.confirm-modal.confirm-modal-delete .confirm-modal-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 1rem;
+}
+
+.confirm-modal.confirm-modal-delete .confirm-modal-btn {
+    padding: 0.6rem 1.5rem;
+    border-radius: 8px;
+    border: none;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    background: #F7E4DA;
+    color: #B85C38;
+    transition: background 0.2s, transform 0.15s;
+}
+
+.confirm-modal.confirm-modal-delete .confirm-modal-btn:hover {
+    background: #F0CFBE;
+}
+
+.confirm-modal.confirm-modal-delete .confirm-modal-btn:active {
+    transform: scale(0.97);
+}
+
+/* Approve/Update confirmation variant */
+.confirm-modal.confirm-modal-approve .confirm-modal-icon svg,
+.confirm-modal.confirm-modal-approve .confirm-modal-icon svg path {
+    fill: #A7F3D0 !important;
+}
+
+.confirm-modal.confirm-modal-approve .confirm-modal-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 1rem;
+}
+
+.confirm-modal.confirm-modal-approve .confirm-modal-btn {
+    padding: 0.6rem 1.5rem;
+    border-radius: 8px;
+    border: none;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    background: #D1FAE5;
+    color: #065F46;
+    transition: background 0.2s, transform 0.15s;
+}
+
+.confirm-modal.confirm-modal-approve .confirm-modal-btn:hover {
+    background: #A7F3D0;
+}
+
+.confirm-modal.confirm-modal-approve .confirm-modal-btn:active {
+    transform: scale(0.97);
+}
+
+/* Reset password confirmation variant */
+.confirm-modal.confirm-modal-reset .confirm-modal-icon svg,
+.confirm-modal.confirm-modal-reset .confirm-modal-icon svg path {
+    fill: #FDE68A !important;
+}
+
+.confirm-modal.confirm-modal-reset .confirm-modal-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 1rem;
+}
+
+.confirm-modal.confirm-modal-reset .confirm-modal-btn {
+    padding: 0.6rem 1.5rem;
+    border-radius: 8px;
+    border: none;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    background: #FEF3C7;
+    color: #92400E;
+    transition: background 0.2s, transform 0.15s;
+}
+
+.confirm-modal.confirm-modal-reset .confirm-modal-btn:hover {
+    background: #FDE68A;
+}
+
+.confirm-modal.confirm-modal-reset .confirm-modal-btn:active {
+    transform: scale(0.97);
+}
+
 /* =============================================
    ORDER DETAIL MODAL
    ============================================= */
@@ -2160,19 +2333,22 @@ body.dark-mode .confirm-modal .btn-cancel:hover {
     margin: 0;
 }
 
-.detail-modal-header .detail-close {
+.detail-modal-header .detail-close,
+.detail-modal-header .detail-modal-close {
     background: none;
     border: none;
-    font-size: 1.25rem;
+    font-size: 1.5rem;
+    line-height: 1;
     color: #94a3b8;
     cursor: pointer;
     padding: 0.25rem;
-    border-radius: 6px;
-    transition: background 0.2s, color 0.2s;
+    box-shadow: none;
+    transition: color 0.2s;
 }
 
-.detail-modal-header .detail-close:hover {
-    background: #f1f5f9;
+.detail-modal-header .detail-close:hover,
+.detail-modal-header .detail-modal-close:hover {
+    background: none;
     color: #475569;
 }
 
@@ -2496,7 +2672,7 @@ body.dark-mode .post-detail-value {
 }
 
 body.dark-mode .post-detail-price {
-    color: #A5B4FC;
+    color: #F5E6C8;
 }
 
 body.dark-mode .post-detail-desc {

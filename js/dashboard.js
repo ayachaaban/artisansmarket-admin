@@ -39,7 +39,7 @@ function showToast(message, type = 'info', duration = 4000) {
 // CUSTOM CONFIRMATION MODAL
 // =============================================
 function showConfirm(title, message, onConfirm, options = {}) {
-    const { confirmText = 'Confirm', cancelText = 'Cancel', type = 'warning' } = options;
+    const { confirmText = 'Confirm', cancelText = 'Cancel', type = 'warning', modalClass = '' } = options;
 
     // Remove existing modal
     document.querySelector('.confirm-modal-overlay')?.remove();
@@ -53,7 +53,7 @@ function showConfirm(title, message, onConfirm, options = {}) {
     const overlay = document.createElement('div');
     overlay.className = 'confirm-modal-overlay';
     overlay.innerHTML =
-        '<div class="confirm-modal">' +
+        '<div class="confirm-modal' + (modalClass ? ' ' + modalClass : '') + '">' +
             '<div class="confirm-modal-icon">' + (icons[type] || icons.warning) + '</div>' +
             '<h3 class="confirm-modal-title">' + title + '</h3>' +
             '<p class="confirm-modal-message">' + message + '</p>' +
@@ -1016,8 +1016,8 @@ async function loadUserGrowthChart() {
                     datasets: [{
                         label: 'New Users',
                         data: data,
-                        borderColor: '#4F46E5',
-                        backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                        borderColor: '#6F8FA3',
+                        backgroundColor: 'rgba(111, 143, 163, 0.12)',
                         tension: 0.4,
                         fill: true
                     }]
@@ -1057,7 +1057,7 @@ async function loadPostsCategoryChart() {
                     datasets: [{
                         label: 'Posts',
                         data: data,
-                        backgroundColor: ['#4F46E5', '#D97706', '#0EA5E9', '#10B981', '#8B5CF6', '#F43F5E']
+                        backgroundColor: ['#6F8FA3', '#C96A3D', '#E3A93C', '#7A9A7A', '#A44A3F', '#C98A5B']
                     }]
                 },
                 options: {
@@ -1153,7 +1153,7 @@ async function loadCustomers(direction) {
 
             const tdAvatar = document.createElement('td');
             const avatar = createEl('img', { className: 'user-avatar', alt: user.name || '' });
-            avatar.src = user.profileImageUrl || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.name || '?') + '&background=D4A574&color=fff&size=40';
+            avatar.src = user.profileImageUrl || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.name || '?') + '&background=5B9BB5&color=fff&size=40';
             tdAvatar.appendChild(avatar);
             tr.appendChild(tdAvatar);
 
@@ -1276,7 +1276,7 @@ async function loadAllUsers(direction) {
 
             const tdAvatar = document.createElement('td');
             const avatar = createEl('img', { className: 'user-avatar', alt: user.name || '' });
-            avatar.src = user.profileImageUrl || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.name || '?') + '&background=D4A574&color=fff&size=40';
+            avatar.src = user.profileImageUrl || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.name || '?') + '&background=5B9BB5&color=fff&size=40';
             tdAvatar.appendChild(avatar);
             tr.appendChild(tdAvatar);
 
@@ -1408,7 +1408,7 @@ async function loadArtists(direction) {
 
             const tdAvatar = document.createElement('td');
             const avatar = createEl('img', { className: 'user-avatar', alt: artist.name || '' });
-            avatar.src = artist.profileImageUrl || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(artist.name || '?') + '&background=D4A574&color=fff&size=40';
+            avatar.src = artist.profileImageUrl || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(artist.name || '?') + '&background=5B9BB5&color=fff&size=40';
             tdAvatar.appendChild(avatar);
             tr.appendChild(tdAvatar);
 
@@ -1466,7 +1466,7 @@ function suspendUser(userId, userName) {
             console.error('Error suspending user:', error);
             showToast('Error suspending user.', 'error');
         }
-    }, { confirmText: 'Suspend', type: 'warning' });
+    }, { confirmText: 'Suspend', type: 'warning', modalClass: 'confirm-modal-suspend' });
 }
 
 function activateUser(userId, userName) {
@@ -1498,7 +1498,7 @@ function deleteUser(userId, userName) {
             console.error('Error deleting user:', error);
             showToast('Error deleting user.', 'error');
         }
-    }, { confirmText: 'Delete', type: 'danger' });
+    }, { confirmText: 'Delete', type: 'danger', modalClass: 'confirm-modal-delete' });
 }
 
 // =============================================
@@ -1670,7 +1670,7 @@ function deletePost(postId) {
             console.error('Error deleting post:', error);
             showToast('Error deleting post.', 'error');
         }
-    }, { confirmText: 'Delete', type: 'danger' });
+    }, { confirmText: 'Delete', type: 'danger', modalClass: 'confirm-modal-delete' });
 }
 
 // =============================================
@@ -1849,7 +1849,7 @@ function approveReport(reportId, postId) {
             console.error('Error approving report:', error);
             showToast('Error approving report.', 'error');
         }
-    }, { confirmText: 'Approve', type: 'danger' });
+    }, { confirmText: 'Approve', type: 'danger', modalClass: 'confirm-modal-approve' });
 }
 
 function rejectReport(reportId) {
@@ -1865,7 +1865,7 @@ function rejectReport(reportId) {
             console.error('Error rejecting report:', error);
             showToast('Error rejecting report.', 'error');
         }
-    }, { confirmText: 'Reject', type: 'warning' });
+    }, { confirmText: 'Reject', type: 'warning', modalClass: 'confirm-modal-delete' });
 }
 
 // =============================================
@@ -1973,7 +1973,7 @@ async function loadCategoryPieChart() {
                     labels: Object.keys(categoryData),
                     datasets: [{
                         data: Object.values(categoryData),
-                        backgroundColor: ['#4F46E5', '#D97706', '#0EA5E9', '#10B981', '#8B5CF6', '#F43F5E']
+                        backgroundColor: ['#6F8FA3', '#C96A3D', '#E3A93C', '#7A9A7A', '#A44A3F', '#C98A5B']
                     }]
                 },
                 options: {
@@ -2161,7 +2161,7 @@ document.getElementById('addAdminForm')?.addEventListener('submit', async functi
                 showToast('Error adding admin: ' + error.message, 'error');
             }
         }
-    }, { confirmText: 'Add Admin', type: 'info' });
+    }, { confirmText: 'Add Admin', type: 'info', modalClass: 'confirm-modal-approve' });
 });
 
 // NOTE: This only removes the Firestore admin document. The Firebase Auth account
@@ -2178,7 +2178,7 @@ function deleteAdmin(adminId, adminEmail) {
             console.error('Error removing admin:', error);
             showToast('Error removing admin.', 'error');
         }
-    }, { confirmText: 'Remove', type: 'danger' });
+    }, { confirmText: 'Remove', type: 'danger', modalClass: 'confirm-modal-delete' });
 }
 
 // =============================================
@@ -2198,7 +2198,7 @@ function sendAdminPasswordReset(adminId, adminEmail) {
                 showToast('Error sending reset email: ' + error.message, 'error');
             }
         }
-    }, { confirmText: 'Send Reset', type: 'info' });
+    }, { confirmText: 'Send Reset', type: 'warning', modalClass: 'confirm-modal-reset' });
 }
 
 // =============================================
@@ -2388,7 +2388,7 @@ async function loadSubscriptions(direction) {
                 const changeWrapper = document.createElement('div');
                 changeWrapper.className = 'plan-change-wrapper';
 
-                const changeBtn = createEl('button', { className: 'btn-action btn-view' }, 'Change');
+                const changeBtn = createEl('button', { className: 'btn-action btn-suspend' }, 'Change');
                 changeWrapper.appendChild(changeBtn);
 
                 const planSelect = document.createElement('select');
@@ -2529,7 +2529,7 @@ function changePlan(subId, newPlanKey, currentSub) {
             console.error('Error changing plan:', error);
             showToast('Error changing plan.', 'error');
         }
-    }, { confirmText: 'Change Plan', type: 'info' });
+    }, { confirmText: 'Change Plan', type: 'warning', modalClass: 'confirm-modal-suspend' });
 }
 
 // =============================================
@@ -2553,7 +2553,7 @@ function cancelSubscription(subId, artistName) {
             console.error('Error cancelling subscription:', error);
             showToast('Error cancelling subscription.', 'error');
         }
-    }, { confirmText: 'Cancel Subscription', type: 'danger' });
+    }, { confirmText: 'Cancel Subscription', type: 'danger', modalClass: 'confirm-modal-delete' });
 }
 
 // =============================================
@@ -2764,7 +2764,7 @@ async function loadOrders(direction) {
             // Actions
             const tdActions = document.createElement('td');
 
-            const viewBtn = createEl('button', { className: 'btn-action btn-view' }, 'View');
+            const viewBtn = createEl('button', { className: 'btn-action btn-view-paid' }, 'View');
             viewBtn.addEventListener('click', () => viewOrderDetails(doc.id));
             tdActions.appendChild(viewBtn);
 
@@ -2861,7 +2861,7 @@ function updateOrderStatus(orderId, order) {
             console.error('Error updating order:', error);
             showToast('Error updating order.', 'error');
         }
-    }, { confirmText: 'Update', type: 'info' });
+    }, { confirmText: 'Update', type: 'info', modalClass: 'confirm-modal-approve' });
 }
 
 function refundOrder(orderId, order) {
@@ -3089,7 +3089,7 @@ async function loadPayments(direction) {
                 payment.createdAt ? payment.createdAt.toDate().toLocaleDateString() : 'N/A'));
 
             const tdActions = document.createElement('td');
-            const viewBtn = createEl('button', { className: 'btn-action btn-view' }, 'View');
+            const viewBtn = createEl('button', { className: 'btn-action btn-view-paid' }, 'View');
             viewBtn.addEventListener('click', () => {
                 showDetailModal('Payment Details', [
                     { label: 'Payment ID', value: doc.id },
@@ -3160,7 +3160,7 @@ async function loadPayouts(direction) {
     const tbody = document.getElementById('payoutsTableBody');
     if (!tbody) return;
     tbody.innerHTML = '';
-    tbody.appendChild(createSkeletonRows(5, 8));
+    tbody.appendChild(createSkeletonRows(5, 9));
 
     try {
         const statusFilter = document.getElementById('payoutStatusFilter')?.value || '';
@@ -3208,7 +3208,7 @@ async function loadPayouts(direction) {
         const displayDocs = hasMore ? docs.slice(0, PAGE_SIZE) : docs;
 
         if (displayDocs.length === 0) {
-            tbody.appendChild(createEmptyRow(8, 'No payouts found'));
+            tbody.appendChild(createEmptyRow(9, 'No payouts found'));
             updatePaginationUI('payouts', state.page, false);
             return;
         }
@@ -3248,6 +3248,25 @@ async function loadPayouts(direction) {
                 payout.createdAt ? payout.createdAt.toDate().toLocaleDateString() : 'N/A'));
             tr.appendChild(createEl('td', {}, payout.processedBy || 'N/A'));
 
+            const tdActions = document.createElement('td');
+            const viewBtn = createEl('button', { className: 'btn-action btn-view-paid' }, 'View');
+            viewBtn.addEventListener('click', () => {
+                showDetailModal('Payout Details', [
+                    { label: 'Payout ID', value: doc.id },
+                    { label: 'Artist', value: payout.artistName || 'N/A' },
+                    { label: 'Artist Email', value: payout.artistEmail || 'N/A' },
+                    { label: 'Amount', value: '$' + (payout.amount || 0).toFixed(2) },
+                    { label: 'Orders', value: (payout.orderIds || []).length + ' order(s)' },
+                    { label: 'Method', value: payout.paymentMethod || 'N/A' },
+                    { label: 'Status', value: payout.status || 'pending' },
+                    { label: 'Date', value: payout.createdAt ? payout.createdAt.toDate().toLocaleString() : 'N/A' },
+                    { label: 'Processed By', value: payout.processedBy || 'N/A' },
+                    { label: 'Reference', value: payout.referenceId || 'N/A' }
+                ]);
+            });
+            tdActions.appendChild(viewBtn);
+            tr.appendChild(tdActions);
+
             tbody.appendChild(tr);
         });
 
@@ -3255,7 +3274,7 @@ async function loadPayouts(direction) {
     } catch (error) {
         console.error('Error loading payouts:', error);
         tbody.innerHTML = '';
-        tbody.appendChild(createErrorRow(8, 'Error loading payouts'));
+        tbody.appendChild(createErrorRow(9, 'Error loading payouts'));
     }
 }
 
@@ -3462,8 +3481,8 @@ async function loadRevenueTrendChart() {
                     {
                         label: 'Total Revenue',
                         data: revenueData,
-                        borderColor: '#4F46E5',
-                        backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                        borderColor: '#6F8FA3',
+                        backgroundColor: 'rgba(111, 143, 163, 0.12)',
                         tension: 0.4,
                         fill: true
                     },
@@ -3513,7 +3532,7 @@ async function loadPaymentMethodsChart() {
                 labels: ['Virtual Card', 'Virtual Visa'],
                 datasets: [{
                     data: [virtualCardTotal, virtualVisaTotal],
-                    backgroundColor: ['#4F46E5', '#F59E0B'],
+                    backgroundColor: ['#6F8FA3', '#E3A93C'],
                     borderWidth: 2,
                     borderColor: document.body.classList.contains('dark-mode') ? '#1e293b' : '#ffffff'
                 }]
