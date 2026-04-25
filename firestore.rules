@@ -28,18 +28,18 @@ service cloud.firestore {
       allow delete: if isSuperAdmin();
     }
 
-    // Users collection
+    // Users collection - public read so guests can view artist profiles
     match /users/{userId} {
-      allow read: if isAdmin() || isAuthenticated();
+      allow read: if true;
       allow update: if isAdmin() || (isAuthenticated() && request.auth.uid == userId)
                     || (isAuthenticated()
                         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['averageRating']));
       allow create, delete: if isAdmin() || (isAuthenticated() && request.auth.uid == userId);
     }
 
-    // Posts collection
+    // Posts collection - public read so guests can browse the marketplace
     match /posts/{postId} {
-      allow read: if isAuthenticated();
+      allow read: if true;
       allow create: if isAuthenticated();
       allow update, delete: if isAdmin() ||
                               (isAuthenticated() && resource.data.artistId == request.auth.uid);
@@ -52,9 +52,9 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
-    // Ratings collection
+    // Ratings collection - public read so guests can see star averages
     match /ratings/{ratingId} {
-      allow read: if isAuthenticated();
+      allow read: if true;
       allow create: if isAuthenticated();
       allow update, delete: if isAdmin() ||
                               (isAuthenticated() && resource.data.customerId == request.auth.uid);
