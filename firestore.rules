@@ -89,8 +89,12 @@ service cloud.firestore {
         (isAuthenticated() && resource.data.customerId == request.auth.uid) ||
         (isAuthenticated() && resource.data.artistId == request.auth.uid);
       allow create: if isAuthenticated();
+      // Both customer and artist can update their own orders. App-level
+      // logic (OrderPolicy) enforces which fields each side may legitimately
+      // change; rules grant access at the document level.
       allow update: if isAdmin() ||
-        (isAuthenticated() && resource.data.artistId == request.auth.uid);
+        (isAuthenticated() && resource.data.artistId == request.auth.uid) ||
+        (isAuthenticated() && resource.data.customerId == request.auth.uid);
       allow delete: if isSuperAdmin();
     }
 

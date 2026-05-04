@@ -1,0 +1,10 @@
+name = "artisans-push"
+main = "src/worker.js"
+compatibility_date = "2024-09-23"
+account_id = "1cb433ef3a46b9517af650afce9da960"
+
+# Secrets are set via `wrangler secret put`, not in this file:
+#   FIREBASE_CLIENT_EMAIL
+#   FIREBASE_PRIVATE_KEY
+#   FIREBASE_PROJECT_ID
+#   PUSH_AUTH_TOKEN
