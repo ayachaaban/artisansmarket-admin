@@ -82,6 +82,22 @@
                 </svg>
                 Orders
             </li>
+            <li data-page="deadlines">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/>
+                    <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/>
+                </svg>
+                Deadlines
+                <span class="badge-notification" id="deadlinesBadge" style="display:none;">0</span>
+            </li>
+            <li data-page="broadcast">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M11.536 14.01A8.473 8.473 0 0 0 14.026 8a8.473 8.473 0 0 0-2.49-6.01l-.708.707A7.476 7.476 0 0 1 13.025 8c0 2.071-.84 3.946-2.197 5.303l.708.707z"/>
+                    <path d="M10.121 12.596A6.48 6.48 0 0 0 12.025 8a6.48 6.48 0 0 0-1.904-4.596l-.707.707A5.483 5.483 0 0 1 11.025 8a5.483 5.483 0 0 1-1.61 3.89l.706.706z"/>
+                    <path d="M8.707 11.182A4.486 4.486 0 0 0 10.025 8a4.486 4.486 0 0 0-1.318-3.182L8 5.525A3.489 3.489 0 0 1 9.025 8 3.49 3.49 0 0 1 8 10.475l.707.707zM6.717 3.55A.5.5 0 0 1 7 4v8a.5.5 0 0 1-.812.39L3.825 10.5H1.5A.5.5 0 0 1 1 10V6a.5.5 0 0 1 .5-.5h2.325l2.363-1.89a.5.5 0 0 1 .529-.06z"/>
+                </svg>
+                Broadcast
+            </li>
             <li data-page="paymentsPayouts">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
                     <path d="M1 3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1H1zm0 1v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1zm3 3a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7z"/>
@@ -460,6 +476,11 @@
                         <option value="reported">Reported</option>
                         <option value="removed">Removed</option>
                     </select>
+                    <select class="form-select filter-select" id="mediaTypeFilter">
+                        <option value="">All Media</option>
+                        <option value="post">Posts (images)</option>
+                        <option value="reel">Reels (videos)</option>
+                    </select>
                     <input type="text" class="form-control filter-select" id="searchArtist" placeholder="Search by artist name...">
                 </div>
 
@@ -467,7 +488,8 @@
                     <table class="table custom-table">
                         <thead>
                             <tr>
-                                <th>Image</th>
+                                <th>Media</th>
+                                <th>Type</th>
                                 <th>Artist Name</th>
                                 <th>Category</th>
                                 <th>Description</th>
@@ -817,13 +839,17 @@
                     <input type="text" class="form-control filter-select" id="orderSearchInput" placeholder="Search by customer or artist...">
                     <select class="form-select filter-select" id="orderStatusFilter">
                         <option value="">All Status</option>
-                        <option value="pending">Pending</option>
-                        <option value="paid">Paid</option>
-                        <option value="processing">Processing</option>
-                        <option value="shipped">Shipped</option>
+                        <option value="pending">Pending (new)</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="shipping">Shipping</option>
                         <option value="delivered">Delivered</option>
                         <option value="cancelled">Cancelled</option>
                         <option value="refunded">Refunded</option>
+                        <optgroup label="Legacy">
+                            <option value="paid">Paid (legacy)</option>
+                            <option value="processing">Processing (legacy)</option>
+                            <option value="shipped">Shipped (legacy)</option>
+                        </optgroup>
                     </select>
                     <select class="form-select filter-select" id="orderPaymentMethodFilter">
                         <option value="">All Methods</option>
@@ -1163,6 +1189,117 @@
                 </div>
             </div>
 
+            <!-- Deadlines Page -->
+            <div class="page-content" id="deadlinesPage">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h2 class="page-title mb-0">Order Deadlines</h2>
+                    <button class="btn-export" onclick="exportTableToCSV('deadlinesPage', 'deadlines')">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
+                        Export Excel
+                    </button>
+                </div>
+
+                <!-- Stats: overdue / soon / extended -->
+                <div class="row g-3 mb-4">
+                    <div class="col-lg-3 col-md-6">
+                        <div class="kpi-card">
+                            <div class="kpi-icon" style="background:#ED4956;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16"><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zM8 2a6 6 0 1 1 0 12A6 6 0 0 1 8 2zm0 2.5a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .146.354l2 2a.5.5 0 0 0 .708-.708L8.5 7.793V5a.5.5 0 0 0-.5-.5z"/></svg>
+                            </div>
+                            <div class="kpi-details"><h4 id="overdueCount">0</h4><p>Overdue</p></div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="kpi-card">
+                            <div class="kpi-icon" style="background:#F59E0B;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16"><path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/></svg>
+                            </div>
+                            <div class="kpi-details"><h4 id="dueSoonCount">0</h4><p>Due in &lt; 48h</p></div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="kpi-card">
+                            <div class="kpi-icon" style="background:#8B5CF6;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16"><path d="M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41zm-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9z"/><path fill-rule="evenodd" d="M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7H12.9A5.002 5.002 0 0 0 8 3zM3.1 9a5.002 5.002 0 0 0 8.757 2.182.5.5 0 1 1 .771.636A6.002 6.002 0 0 1 2.083 9H3.1z"/></svg>
+                            </div>
+                            <div class="kpi-details"><h4 id="extendedCount">0</h4><p>Extended at least once</p></div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="kpi-card">
+                            <div class="kpi-icon" style="background:#10B981;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16"><path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z"/></svg>
+                            </div>
+                            <div class="kpi-details"><h4 id="onTrackCount">0</h4><p>On track</p></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="filters mb-3">
+                    <input type="text" class="form-control filter-select" id="deadlineSearch" placeholder="Search by customer or artist...">
+                    <select class="form-select filter-select" id="deadlineUrgencyFilter">
+                        <option value="">All urgency</option>
+                        <option value="overdue">Overdue</option>
+                        <option value="soon">Due in &lt; 48h</option>
+                        <option value="ok">On track</option>
+                    </select>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table custom-table">
+                        <thead>
+                            <tr>
+                                <th>Order</th>
+                                <th>Customer</th>
+                                <th>Artist</th>
+                                <th>Deadline</th>
+                                <th>Time Left</th>
+                                <th>Extensions</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="deadlinesTableBody">
+                            <tr><td colspan="8" class="text-center">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Broadcast Page -->
+            <div class="page-content" id="broadcastPage">
+                <h2 class="page-title">Broadcast Notification</h2>
+                <p class="text-muted">Send a notification (in-app + push) to a group of users.</p>
+
+                <div class="chart-card mb-4">
+                    <form id="broadcastForm">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-3">
+                                <label class="form-label">Audience</label>
+                                <select class="form-select" id="broadcastAudience" required>
+                                    <option value="all">All users</option>
+                                    <option value="customer">Customers only</option>
+                                    <option value="artist">Artists only</option>
+                                </select>
+                            </div>
+                            <div class="col-md-9">
+                                <label class="form-label">Title</label>
+                                <input type="text" class="form-control" id="broadcastTitle" placeholder="e.g. Holiday sale starts tomorrow!" required maxlength="80">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Message</label>
+                                <textarea class="form-control" id="broadcastBody" rows="3" placeholder="Body of the notification" required maxlength="250"></textarea>
+                            </div>
+                            <div class="col-12 d-flex gap-2">
+                                <button type="button" class="btn btn-secondary" id="broadcastPreviewBtn">Preview audience</button>
+                                <button type="submit" class="btn btn-primary" id="broadcastSendBtn">Send broadcast</button>
+                            </div>
+                        </div>
+                        <div id="broadcastResult" class="mt-3" style="display:none;"></div>
+                    </form>
+                </div>
+            </div>
+
             <!-- Admin Management Page -->
             <div class="page-content" id="adminManagementPage">
                 <h2 class="page-title">Admin Management</h2>
@@ -1282,6 +1419,10 @@
     <!-- Firebase Config + Dashboard JS -->
     <script src="../js/firebase-config.js"></script>
     <script src="../js/dashboard.js"></script>
+    <script src="../js/admin-extensions.js"></script>
+    <script src="../js/admin-user-detail.js"></script>
+    <script src="../js/admin-content-detail.js"></script>
+    <script src="../js/admin-analytics.js"></script>
 </body>
 
 </html>

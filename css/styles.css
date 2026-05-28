@@ -2827,3 +2827,112 @@ body.dark-mode .btn-export:hover {
     color: #0f172a;
     box-shadow: 0 2px 8px rgba(107, 197, 210, 0.3);
 }
+
+/* ============================================
+   100% ZOOM POLISH
+   Tightens the layout so it looks comfortable at default browser zoom
+   (1366-1920px wide) instead of cramped at 100% / stretched at >1920.
+   ============================================ */
+
+/* Cap the main content width so it doesn't sprawl on wide monitors */
+.main-content > .page-content,
+.main-content > .top-bar {
+    max-width: 1480px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Tighten page padding so tables breathe at 100% */
+.page-content {
+    padding: 1.25rem 1.75rem !important;
+}
+
+/* KPI cards — smaller at 100% zoom so 4 fit comfortably in one row */
+.kpi-card {
+    padding: 1rem 1.1rem !important;
+}
+.kpi-details h4 {
+    font-size: 1.45rem !important;
+    line-height: 1.1 !important;
+}
+.kpi-details p {
+    font-size: 0.78rem !important;
+    margin: 0 !important;
+}
+.kpi-icon {
+    width: 44px !important;
+    height: 44px !important;
+    flex: 0 0 44px !important;
+}
+.kpi-icon svg {
+    width: 20px !important;
+    height: 20px !important;
+}
+
+/* Tables — denser rows but still readable */
+.custom-table th,
+.custom-table td {
+    padding: 0.72rem 0.85rem !important;
+    font-size: 0.875rem !important;
+}
+.custom-table th {
+    font-size: 0.78rem !important;
+    letter-spacing: 0.3px !important;
+}
+
+/* Status pills + action buttons — slightly smaller at 100% zoom */
+.status-badge {
+    font-size: 0.7rem !important;
+    padding: 3px 8px !important;
+}
+.btn-action {
+    font-size: 0.75rem !important;
+    padding: 5px 11px !important;
+}
+
+/* Page titles — slightly smaller so the header doesn't dominate */
+.page-title {
+    font-size: 1.4rem !important;
+    margin-bottom: 0.75rem !important;
+}
+
+/* Filters bar — wrap nicely + uniform height */
+.filters {
+    gap: 0.6rem !important;
+    flex-wrap: wrap !important;
+}
+.filter-select {
+    height: 38px !important;
+    font-size: 0.85rem !important;
+}
+
+/* Sidebar — slightly narrower so content has more room */
+@media (min-width: 992px) {
+    .sidebar { width: 240px !important; }
+    .main-content { margin-left: 240px !important; }
+}
+
+/* Chart cards — less padding for denser dashboards */
+.chart-card {
+    padding: 1rem 1.1rem !important;
+}
+.chart-card h5 {
+    font-size: 0.95rem !important;
+    margin-bottom: 0.6rem !important;
+}
+
+/* User-detail modal — make it big enough on widescreens */
+.user360-modal {
+    width: 96vw !important;
+    max-width: 920px !important;
+}
+.user360-tab {
+    font-size: 0.78rem !important;
+    padding: 12px 16px !important;
+}
+
+/* Subtle row hover for the new clickable user rows */
+.custom-table tbody tr[style*="cursor:pointer"]:hover,
+.custom-table tbody tr[style*="cursor: pointer"]:hover {
+    background: rgba(200, 168, 112, 0.06) !important;
+}

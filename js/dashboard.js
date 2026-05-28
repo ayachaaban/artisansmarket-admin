@@ -150,17 +150,30 @@ function renderPostPopup(postId, post) {
         hour: '2-digit', minute: '2-digit'
     }) : '';
 
+    const isReel = post.mediaType === 'reel';
+    const previewMedia = isReel
+        ? (
+            // Inline HTML5 video for reels — admin gets a real playable preview.
+            '<video src="' + (post.videoUrl || post.imageUrl || '') + '" ' +
+            'poster="' + (post.thumbnailUrl || '') + '" ' +
+            'controls preload="metadata" ' +
+            'style="width:100%;max-height:420px;background:#000;border-radius:8px;object-fit:contain;"></video>'
+        )
+        : (
+            '<img src="' + (post.imageUrl || 'https://via.placeholder.com/400x300?text=No+Image') + '" alt="Post Image" class="post-detail-image"/>'
+        );
+
     const overlay = document.createElement('div');
     overlay.className = 'detail-modal-overlay';
     overlay.innerHTML =
         '<div class="detail-modal post-detail-modal">' +
             '<div class="detail-modal-header">' +
-                '<h3>Post Details</h3>' +
+                '<h3>' + (isReel ? 'Reel Details' : 'Post Details') + '</h3>' +
                 '<button class="detail-modal-close">&times;</button>' +
             '</div>' +
             '<div class="detail-modal-body">' +
                 '<div class="post-detail-image-wrap">' +
-                    '<img src="' + (post.imageUrl || 'https://via.placeholder.com/400x300?text=No+Image') + '" alt="Post Image" class="post-detail-image"/>' +
+                    previewMedia +
                 '</div>' +
                 '<div class="post-detail-info">' +
                     '<div class="post-detail-row">' +
@@ -706,6 +719,12 @@ sidebarMenuItems.forEach(item => {
                 loadOrderStats();
                 loadOrders('first');
                 break;
+            case 'deadlines':
+                loadDeadlines();
+                break;
+            case 'broadcast':
+                // No data fetch — just renders the form. Listeners wired below.
+                break;
             case 'paymentsPayouts':
                 resetPagination('payments');
                 resetPagination('payouts');
@@ -1183,10 +1202,22 @@ async function loadCustomers(direction) {
                 activateBtn.addEventListener('click', () => activateUser(doc.id, user.name || 'Unknown'));
                 tdActions.appendChild(activateBtn);
             }
+            const pushBtn = createEl('button', { className: 'btn-action btn-view' }, 'Push');
+            pushBtn.addEventListener('click', () =>
+                window.sendPushPrompt(doc.id, user.name || 'Unknown'));
+            tdActions.appendChild(pushBtn);
             const deleteBtn = createEl('button', { className: 'btn-action btn-delete' }, 'Delete');
             deleteBtn.addEventListener('click', () => deleteUser(doc.id, user.name || 'Unknown'));
             tdActions.appendChild(deleteBtn);
             tr.appendChild(tdActions);
+            // Click anywhere on the row (except buttons) to open the 360° detail.
+            tr.style.cursor = 'pointer';
+            tr.addEventListener('click', (e) => {
+                if (e.target.closest('button')) return;
+                if (typeof window.showUserDetail === 'function') {
+                    window.showUserDetail(doc.id);
+                }
+            });
 
             tbody.appendChild(tr);
         });
@@ -1306,10 +1337,21 @@ async function loadAllUsers(direction) {
                 activateBtn.addEventListener('click', () => activateUser(doc.id, user.name || 'Unknown'));
                 tdActions.appendChild(activateBtn);
             }
+            const pushBtn = createEl('button', { className: 'btn-action btn-view' }, 'Push');
+            pushBtn.addEventListener('click', () =>
+                window.sendPushPrompt(doc.id, user.name || 'Unknown'));
+            tdActions.appendChild(pushBtn);
             const deleteBtn = createEl('button', { className: 'btn-action btn-delete' }, 'Delete');
             deleteBtn.addEventListener('click', () => deleteUser(doc.id, user.name || 'Unknown'));
             tdActions.appendChild(deleteBtn);
             tr.appendChild(tdActions);
+            tr.style.cursor = 'pointer';
+            tr.addEventListener('click', (e) => {
+                if (e.target.closest('button')) return;
+                if (typeof window.showUserDetail === 'function') {
+                    window.showUserDetail(doc.id);
+                }
+            });
 
             tbody.appendChild(tr);
         });
@@ -1436,10 +1478,21 @@ async function loadArtists(direction) {
                 activateBtn.addEventListener('click', () => activateUser(doc.id, artist.name || 'Unknown'));
                 tdActions.appendChild(activateBtn);
             }
+            const pushBtn = createEl('button', { className: 'btn-action btn-view' }, 'Push');
+            pushBtn.addEventListener('click', () =>
+                window.sendPushPrompt(doc.id, artist.name || 'Unknown'));
+            tdActions.appendChild(pushBtn);
             const deleteBtn = createEl('button', { className: 'btn-action btn-delete' }, 'Delete');
             deleteBtn.addEventListener('click', () => deleteUser(doc.id, artist.name || 'Unknown'));
             tdActions.appendChild(deleteBtn);
             tr.appendChild(tdActions);
+            tr.style.cursor = 'pointer';
+            tr.addEventListener('click', (e) => {
+                if (e.target.closest('button')) return;
+                if (typeof window.showUserDetail === 'function') {
+                    window.showUserDetail(doc.id);
+                }
+            });
 
             tbody.appendChild(tr);
         });
@@ -1509,11 +1562,12 @@ async function loadPosts(direction) {
     const state = paginationState.posts;
     const tbody = document.getElementById('postsTableBody');
     tbody.innerHTML = '';
-    tbody.appendChild(createSkeletonRows(5, 7));
+    tbody.appendChild(createSkeletonRows(5, 8));
 
     try {
         const categoryFilter = document.getElementById('categoryFilter') ? document.getElementById('categoryFilter').value : '';
         const statusFilter = document.getElementById('statusFilter') ? document.getElementById('statusFilter').value : '';
+        const mediaTypeFilter = document.getElementById('mediaTypeFilter') ? document.getElementById('mediaTypeFilter').value : '';
         const searchQuery = document.getElementById('searchArtist') ? document.getElementById('searchArtist').value.toLowerCase() : '';
         const fetchLimit = searchQuery ? PAGE_SIZE * 5 : PAGE_SIZE + 1;
 
@@ -1521,6 +1575,7 @@ async function loadPosts(direction) {
             let q = db.collection('posts');
             if (categoryFilter) q = q.where('category', '==', categoryFilter);
             if (statusFilter) q = q.where('status', '==', statusFilter);
+            if (mediaTypeFilter) q = q.where('mediaType', '==', mediaTypeFilter);
             q = q.orderBy('createdAt', 'desc');
             return q;
         }
@@ -1559,7 +1614,7 @@ async function loadPosts(direction) {
         const displayDocs = hasMore ? docs.slice(0, PAGE_SIZE) : docs;
 
         if (displayDocs.length === 0) {
-            tbody.appendChild(createEmptyRow(7, 'No posts found'));
+            tbody.appendChild(createEmptyRow(8, 'No posts found'));
             updatePaginationUI('posts', state.page, false);
             return;
         }
@@ -1576,11 +1631,49 @@ async function loadPosts(direction) {
             const tr = document.createElement('tr');
             tr.style.cursor = 'pointer';
 
+            // ── Media cell — for reels use the thumbnail + play overlay,
+            //    for posts use the image. Both fall back gracefully.
+            const isReel = post.mediaType === 'reel';
             const tdImg = document.createElement('td');
-            const img = createEl('img', { className: 'post-thumbnail', alt: 'Post' });
-            img.src = post.imageUrl || 'https://via.placeholder.com/60';
-            tdImg.appendChild(img);
+            const wrap = createEl('div', {
+                style:
+                    'position:relative;width:60px;height:60px;border-radius:6px;overflow:hidden;background:#f0f0f0;',
+            });
+            const previewSrc = isReel
+                ? (post.thumbnailUrl || post.imageUrl || 'https://via.placeholder.com/60')
+                : (post.imageUrl || 'https://via.placeholder.com/60');
+            const img = createEl('img', {
+                alt: isReel ? 'Reel' : 'Post',
+                style: 'width:100%;height:100%;object-fit:cover;display:block;',
+            });
+            img.src = previewSrc;
+            wrap.appendChild(img);
+            if (isReel) {
+                const playOverlay = createEl('div', {
+                    style:
+                        'position:absolute;inset:0;background:rgba(0,0,0,0.25);display:flex;align-items:center;justify-content:center;color:white;font-size:22px;',
+                }, '▶');
+                wrap.appendChild(playOverlay);
+                if (typeof post.videoDurationSec === 'number' && post.videoDurationSec > 0) {
+                    const dur = createEl('span', {
+                        style:
+                            'position:absolute;right:4px;bottom:4px;background:rgba(0,0,0,0.7);color:white;font-size:9px;padding:1px 5px;border-radius:6px;',
+                    }, post.videoDurationSec + 's');
+                    wrap.appendChild(dur);
+                }
+            }
+            tdImg.appendChild(wrap);
             tr.appendChild(tdImg);
+
+            // ── Type pill (Post / Reel)
+            const tdType = document.createElement('td');
+            tdType.appendChild(createEl('span', {
+                className: 'status-badge',
+                style: isReel
+                    ? 'background:rgba(139,92,246,0.15);color:#8B5CF6;'
+                    : 'background:rgba(46,134,171,0.15);color:#2E86AB;',
+            }, isReel ? 'Reel' : 'Post'));
+            tr.appendChild(tdType);
 
             tr.appendChild(createEl('td', {}, post.artistName || 'Unknown'));
             tr.appendChild(createEl('td', {}, post.category || 'N/A'));
@@ -1612,7 +1705,7 @@ async function loadPosts(direction) {
     } catch (error) {
         console.error('Error loading posts:', error);
         tbody.innerHTML = '';
-        tbody.appendChild(createErrorRow(7, 'Error loading posts'));
+        tbody.appendChild(createErrorRow(8, 'Error loading posts'));
     }
 }
 
@@ -1623,6 +1716,11 @@ document.getElementById('categoryFilter')?.addEventListener('change', function (
 });
 
 document.getElementById('statusFilter')?.addEventListener('change', function () {
+    resetPagination('posts');
+    loadPosts('first');
+});
+
+document.getElementById('mediaTypeFilter')?.addEventListener('change', function () {
     resetPagination('posts');
     loadPosts('first');
 });
@@ -2653,15 +2751,36 @@ async function loadOrderStats() {
 // =============================================
 function getOrderStatusClass(status) {
     const map = {
-        'pending': 'pending',
-        'paid': 'active',
-        'processing': 'reported',
-        'shipped': 'expired',
-        'delivered': 'reviewed',
-        'cancelled': 'cancelled',
-        'refunded': 'removed'
+        // New lifecycle (mobile uses these by default)
+        'pending':      'pending',   // amber — awaiting artist acceptance
+        'in_progress':  'reported',  // orange — artist working on it
+        'shipping':     'expired',   // blue — money released
+        'delivered':    'reviewed',  // green — terminal
+        // Legacy aliases — kept so historical orders still color correctly
+        'paid':         'active',
+        'processing':   'reported',
+        'shipped':      'expired',
+        // Cancellation paths
+        'cancelled':    'cancelled',
+        'refunded':     'removed',
     };
     return map[status] || 'pending';
+}
+
+/// Returns a user-facing label for an order status (handles legacy aliases).
+function getOrderStatusLabel(status) {
+    const map = {
+        'pending':     'Pending',
+        'in_progress': 'In Progress',
+        'shipping':    'Shipping',
+        'delivered':   'Delivered',
+        'paid':        'Paid',
+        'processing':  'Processing',
+        'shipped':     'Shipped',
+        'cancelled':   'Cancelled',
+        'refunded':    'Refunded',
+    };
+    return map[status] || status || 'Unknown';
 }
 
 async function loadOrders(direction) {
@@ -2749,7 +2868,7 @@ async function loadOrders(direction) {
             const tdStatus = document.createElement('td');
             tdStatus.appendChild(createEl('span', {
                 className: 'status-badge status-' + getOrderStatusClass(order.status)
-            }, order.status || 'pending'));
+            }, getOrderStatusLabel(order.status)));
             tr.appendChild(tdStatus);
 
             const tdPayment = document.createElement('td');
@@ -2768,7 +2887,10 @@ async function loadOrders(direction) {
             viewBtn.addEventListener('click', () => viewOrderDetails(doc.id));
             tdActions.appendChild(viewBtn);
 
-            if (order.status === 'paid' || order.status === 'processing' || order.status === 'shipped') {
+            // Admin can override status while order is in flight.
+            const inFlight = ['pending', 'in_progress', 'shipping',
+                              'paid', 'processing', 'shipped'];
+            if (inFlight.includes(order.status)) {
                 const updateBtn = createEl('button', { className: 'btn-action btn-approve' }, 'Update');
                 updateBtn.addEventListener('click', () => updateOrderStatus(doc.id, order));
                 tdActions.appendChild(updateBtn);
@@ -2809,6 +2931,7 @@ async function viewOrderDetails(orderId) {
         if (!doc.exists) { showToast('Order not found.', 'error'); return; }
         const order = doc.data();
 
+        const fmt = ts => ts ? ts.toDate().toLocaleDateString() : '—';
         const items = [
             { label: 'Order ID', value: orderId },
             { label: 'Customer', value: (order.customerName || 'N/A') + ' (' + (order.customerEmail || '') + ')' },
@@ -2816,15 +2939,104 @@ async function viewOrderDetails(orderId) {
             { label: 'Subtotal', value: '$' + (order.subtotal || 0).toFixed(2) },
             { label: 'Platform Fee', value: '$' + (order.platformFee || 0).toFixed(2) },
             { label: 'Total', value: '$' + (order.total || 0).toFixed(2) },
-            { label: 'Status', value: order.status || 'N/A' },
+            { label: 'Status', value: getOrderStatusLabel(order.status) },
             { label: 'Payment Method', value: order.paymentMethod || 'N/A' },
             { label: 'Payout Status', value: order.payoutStatus || 'N/A' },
-            { label: 'Date', value: order.createdAt ? order.createdAt.toDate().toLocaleString() : 'N/A' }
+            { label: 'Date', value: order.createdAt ? order.createdAt.toDate().toLocaleString() : 'N/A' },
         ];
 
+        // ── Deadline + acceptance (only if the artist has accepted)
+        if (order.acceptedAt || order.estimatedCompletionDate) {
+            items.push({ label: '— Deadline —', value: '' });
+            if (order.acceptedAt) {
+                items.push({ label: 'Accepted At', value: fmt(order.acceptedAt) });
+            }
+            if (order.estimatedCompletionDate) {
+                items.push({ label: 'Estimated Completion', value: fmt(order.estimatedCompletionDate) });
+            }
+            if (order.originalCompletionDate &&
+                order.originalCompletionDate.toMillis &&
+                order.estimatedCompletionDate &&
+                order.originalCompletionDate.toMillis() !== order.estimatedCompletionDate.toMillis()) {
+                items.push({ label: 'Original Promise', value: fmt(order.originalCompletionDate) });
+            }
+            if (Array.isArray(order.extensions) && order.extensions.length > 0) {
+                items.push({
+                    label: 'Extensions Used',
+                    value: order.extensions.length + ' (max 3 before customer cancels free)',
+                });
+            }
+        }
+
+        // ── Cancellation breakdown (only if cancelled)
+        if (order.status === 'cancelled' || order.refundAmount || order.cancellationArtistShare) {
+            items.push({ label: '— Cancellation —', value: '' });
+            if (order.cancelledAt) {
+                items.push({ label: 'Cancelled At', value: fmt(order.cancelledAt) });
+            }
+            items.push({ label: 'Refund to Customer', value: '$' + (order.refundAmount || 0).toFixed(2) });
+            items.push({ label: 'Artist Compensation', value: '$' + (order.cancellationArtistShare || 0).toFixed(2) });
+            if (order.cancellationTier) {
+                items.push({ label: 'Penalty Tier', value: order.cancellationTier });
+            }
+        }
+
+        // ── Delivery address (snapshot taken at checkout)
+        if (order.deliveryAddress && typeof order.deliveryAddress === 'object') {
+            const da = order.deliveryAddress;
+            items.push({ label: '— Delivery —', value: '' });
+            const parts = [];
+            if (da.street) parts.push(da.street);
+            if (da.building) parts.push('Bldg ' + da.building);
+            if (da.apartment) parts.push('Apt ' + da.apartment);
+            const summary = parts.length > 0
+                ? parts.join(', ')
+                : (da.resolvedAddress || '—');
+            items.push({ label: 'Address', value: summary });
+            if (da.nickname) items.push({ label: 'Label', value: da.nickname });
+            if (da.phone) items.push({ label: 'Phone', value: da.phone });
+            if (da.instructions) items.push({ label: 'Instructions', value: da.instructions });
+            if (typeof da.lat === 'number' && typeof da.lng === 'number') {
+                const url = 'https://maps.google.com/?q=' + da.lat + ',' + da.lng;
+                items.push({
+                    label: 'Map',
+                    value: '<a href="' + url + '" target="_blank" rel="noopener" style="color:#2E86AB;text-decoration:underline;">Open in Google Maps (' +
+                        da.lat.toFixed(4) + ', ' + da.lng.toFixed(4) + ')</a>',
+                    html: true,
+                });
+            }
+        }
+
+        // ── Per-side seen state — useful for support to know if user opened
+        if (order.lastViewedByCustomer || order.lastViewedByArtist) {
+            items.push({ label: '— Activity —', value: '' });
+            items.push({
+                label: 'Last Viewed by Customer',
+                value: order.lastViewedByCustomer
+                    ? order.lastViewedByCustomer.toDate().toLocaleString()
+                    : 'Never',
+            });
+            items.push({
+                label: 'Last Viewed by Artist',
+                value: order.lastViewedByArtist
+                    ? order.lastViewedByArtist.toDate().toLocaleString()
+                    : 'Never',
+            });
+        }
+
+        // ── Items list + extension reasons appended
         const listItems = (order.items || []).map(i =>
             i.title + ' x' + i.quantity + ' @ $' + i.price.toFixed(2)
         );
+        if (Array.isArray(order.extensions) && order.extensions.length > 0) {
+            listItems.push('— Extension reasons —');
+            order.extensions.forEach((ext, idx) => {
+                const prev = ext.previousDeadline ? ext.previousDeadline.toDate().toLocaleDateString() : '?';
+                const next = ext.newDeadline ? ext.newDeadline.toDate().toLocaleDateString() : '?';
+                const reason = (ext.reason || '').trim() || '(no reason given)';
+                listItems.push(`#${idx + 1}: ${prev} → ${next} — ${reason}`);
+            });
+        }
 
         showDetailModal('Order Details', items, listItems);
     } catch (error) {
@@ -2833,35 +3045,161 @@ async function viewOrderDetails(orderId) {
     }
 }
 
+// ─────────────────────────────────────────────────────────────────────
+// God-mode order modal — lets admin override any status, set/extend the
+// deadline on the artist's behalf, and ping both parties with a push.
+// ─────────────────────────────────────────────────────────────────────
 function updateOrderStatus(orderId, order) {
-    const nextStatus = {
-        'paid': 'processing',
-        'processing': 'shipped',
-        'shipped': 'delivered'
-    };
-    const newStatus = nextStatus[order.status];
-    if (!newStatus) { showToast('Cannot update this order status.', 'warning'); return; }
+    document.querySelector('.detail-modal-overlay')?.remove();
 
-    showConfirm('Update Order', 'Update order to "' + newStatus + '"?', async () => {
+    const allStatuses = [
+        'pending', 'in_progress', 'shipping', 'delivered',
+        'cancelled', 'refunded',
+        // Legacy — kept selectable so support can fix historical bad data
+        'paid', 'processing', 'shipped',
+    ];
+    const statusOptions = allStatuses.map(s => {
+        const sel = s === order.status ? ' selected' : '';
+        return '<option value="' + s + '"' + sel + '>' + getOrderStatusLabel(s) + '</option>';
+    }).join('');
+
+    const currentDeadline = order.estimatedCompletionDate &&
+        order.estimatedCompletionDate.toDate
+        ? order.estimatedCompletionDate.toDate().toISOString().split('T')[0]
+        : '';
+
+    const overlay = document.createElement('div');
+    overlay.className = 'detail-modal-overlay';
+    overlay.innerHTML =
+        '<div class="detail-modal" style="max-width:520px;">' +
+            '<div class="detail-modal-header">' +
+                '<h3>Admin Actions — Order ' + orderId.substring(0, 8) + '</h3>' +
+                '<button class="detail-modal-close">&times;</button>' +
+            '</div>' +
+            '<div class="detail-modal-body">' +
+                '<div class="mb-3">' +
+                    '<label class="form-label">Override Status</label>' +
+                    '<select class="form-select" id="adminStatusPicker">' + statusOptions + '</select>' +
+                    '<small class="text-muted">Current: ' + getOrderStatusLabel(order.status) + '</small>' +
+                '</div>' +
+                '<div class="mb-3">' +
+                    '<label class="form-label">Set / Override Deadline (optional)</label>' +
+                    '<input type="date" class="form-control" id="adminDeadlinePicker" value="' + currentDeadline + '"/>' +
+                    '<small class="text-muted">Leave blank to keep current.</small>' +
+                '</div>' +
+                '<div class="mb-3">' +
+                    '<label class="form-label">Reason (audit log)</label>' +
+                    '<input type="text" class="form-control" id="adminActionReason" placeholder="e.g. customer disputed shipment"/>' +
+                '</div>' +
+                '<div class="form-check mb-2">' +
+                    '<input class="form-check-input" type="checkbox" id="adminNotifyCustomer" checked/>' +
+                    '<label class="form-check-label" for="adminNotifyCustomer">Notify customer (in-app + push)</label>' +
+                '</div>' +
+                '<div class="form-check mb-3">' +
+                    '<input class="form-check-input" type="checkbox" id="adminNotifyArtist" checked/>' +
+                    '<label class="form-check-label" for="adminNotifyArtist">Notify artist (in-app + push)</label>' +
+                '</div>' +
+                '<div class="d-flex gap-2 justify-content-end">' +
+                    '<button class="btn btn-secondary" id="adminActionsCancel">Cancel</button>' +
+                    '<button class="btn btn-primary" id="adminActionsSave">Apply</button>' +
+                '</div>' +
+            '</div>' +
+        '</div>';
+
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => overlay.classList.add('active'));
+
+    overlay.querySelector('.detail-modal-close')
+        .addEventListener('click', () => overlay.remove());
+    overlay.querySelector('#adminActionsCancel')
+        .addEventListener('click', () => overlay.remove());
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+
+    overlay.querySelector('#adminActionsSave').addEventListener('click', async () => {
+        const btn = overlay.querySelector('#adminActionsSave');
+        btn.disabled = true;
+        btn.textContent = 'Saving...';
+
+        const newStatus = overlay.querySelector('#adminStatusPicker').value;
+        const newDeadlineStr = overlay.querySelector('#adminDeadlinePicker').value;
+        const reason = overlay.querySelector('#adminActionReason').value.trim();
+        const notifyCustomer = overlay.querySelector('#adminNotifyCustomer').checked;
+        const notifyArtist = overlay.querySelector('#adminNotifyArtist').checked;
+
         try {
-            const updateData = {
+            const updates = {
                 status: newStatus,
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
             };
-
-            await db.collection('orders').doc(orderId).update(updateData);
-            await logAuditAction('update_order_status', orderId, 'order', {
-                oldStatus: order.status, newStatus: newStatus
+            if (newDeadlineStr) {
+                const newDeadline = new Date(newDeadlineStr + 'T12:00:00');
+                updates.estimatedCompletionDate =
+                    firebase.firestore.Timestamp.fromDate(newDeadline);
+                // If we're setting a deadline and the order had never been
+                // accepted, also stamp the acceptance.
+                if (!order.acceptedAt) {
+                    updates.acceptedAt = firebase.firestore.FieldValue.serverTimestamp();
+                    if (!order.originalCompletionDate) {
+                        updates.originalCompletionDate = updates.estimatedCompletionDate;
+                    }
+                }
+            }
+            await db.collection('orders').doc(orderId).update(updates);
+            await logAuditAction('admin_order_override', orderId, 'order', {
+                oldStatus: order.status,
+                newStatus: newStatus,
+                newDeadline: newDeadlineStr || null,
+                reason: reason || null,
             });
-            showToast('Order updated to ' + newStatus + '.', 'success');
+
+            // Send notifications + push to each party as configured.
+            const statusLabel = getOrderStatusLabel(newStatus);
+            const shortId = orderId.substring(0, 8).toUpperCase();
+            const sendNotif = async (uid, title, body) => {
+                if (!uid) return;
+                await db.collection('notifications').add({
+                    userId: uid,
+                    title: title,
+                    message: body,
+                    type: 'order_status',
+                    referenceId: orderId,
+                    isRead: false,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                });
+                if (typeof sendPushToUser === 'function') {
+                    try { await sendPushToUser(uid, title, body, orderId); } catch (_) {}
+                }
+            };
+            if (notifyCustomer) {
+                await sendNotif(
+                    order.customerId,
+                    'Order update',
+                    'Your order #' + shortId + ' is now: ' + statusLabel +
+                    (reason ? ' (' + reason + ')' : '')
+                );
+            }
+            if (notifyArtist) {
+                await sendNotif(
+                    order.artistId,
+                    'Admin updated order',
+                    'Order #' + shortId + ' status was set to ' + statusLabel +
+                    (reason ? ' (' + reason + ')' : '')
+                );
+            }
+
+            showToast('Order updated.', 'success');
+            overlay.remove();
             resetPagination('orders');
             loadOrders('first');
             loadOrderStats();
-        } catch (error) {
-            console.error('Error updating order:', error);
-            showToast('Error updating order.', 'error');
+            if (typeof loadDeadlines === 'function') loadDeadlines();
+        } catch (e) {
+            console.error('Admin override error', e);
+            showToast('Failed to update order.', 'error');
+            btn.disabled = false;
+            btn.textContent = 'Apply';
         }
-    }, { confirmText: 'Update', type: 'info', modalClass: 'confirm-modal-approve' });
+    });
 }
 
 function refundOrder(orderId, order) {
