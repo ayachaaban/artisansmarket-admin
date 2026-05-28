@@ -387,3 +387,82 @@ function sendPushPrompt(userId, userName) {
 // Expose globally so dashboard.js inline handlers can call it.
 window.sendPushPrompt = sendPushPrompt;
 
+
+// =============================================
+// SAFE AVATAR HELPERS
+// Patches the user/artist tables so a broken profileImageUrl (e.g. dead
+// Supabase host or a 404'd CDN file) automatically swaps to the generated
+// ui-avatars initial circle — same look as users who never uploaded a photo.
+// =============================================
+
+const _DEAD_AVATAR_HOSTS = [
+    'kkclietlnrumhptdyguj.supabase.co', // old/deleted Supabase project
+];
+
+function _isDeadAvatarUrl(url) {
+    if (!url || typeof url !== 'string') return true;
+    for (const host of _DEAD_AVATAR_HOSTS) {
+        if (url.includes(host)) return true;
+    }
+    return false;
+}
+
+/// Builds the default ui-avatars URL for a given user name.
+function defaultAvatarUrl(name, bg) {
+    const enc = encodeURIComponent(name || '?');
+    const color = bg || '5B9BB5';
+    return `https://ui-avatars.com/api/?name=${enc}&background=${color}&color=fff&size=80`;
+}
+
+/// Computes the best avatar URL for a user. If the stored profileImageUrl
+/// is empty OR points at a known-dead host, returns the generated fallback.
+function safeAvatarSrc(profileImageUrl, name, bg) {
+    return _isDeadAvatarUrl(profileImageUrl) ? defaultAvatarUrl(name, bg) : profileImageUrl;
+}
+
+/// Once the table rows are rendered by dashboard.js, walk every <img.user-avatar>
+/// element and rewrite its src so dead URLs are replaced AND attach an
+/// onerror handler so a 404 at runtime also falls back gracefully.
+function patchUserAvatars() {
+    document.querySelectorAll('img.user-avatar').forEach((img) => {
+        if (img.dataset.patched === '1') return;
+        img.dataset.patched = '1';
+
+        const name = img.getAttribute('alt') || '?';
+        const fallback = defaultAvatarUrl(name);
+
+        // Replace known-dead hosts immediately, before the browser tries them.
+        if (_isDeadAvatarUrl(img.src)) {
+            img.src = fallback;
+        }
+        img.addEventListener('error', () => {
+            if (img.src !== fallback) img.src = fallback;
+        });
+    });
+}
+
+// Run after every table reload. We patch on a MutationObserver against the
+// known table tbodies so newly-rendered rows pick up the fix without us
+// hooking into every loader.
+function _installAvatarObserver() {
+    const targets = ['customersTableBody', 'allUsersTableBody', 'artistsTableBody'];
+    targets.forEach((id) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const obs = new MutationObserver(() => patchUserAvatars());
+        obs.observe(el, { childList: true, subtree: true });
+    });
+    // Initial pass for whatever is already on screen.
+    patchUserAvatars();
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _installAvatarObserver);
+} else {
+    _installAvatarObserver();
+}
+
+window.safeAvatarSrc = safeAvatarSrc;
+window.defaultAvatarUrl = defaultAvatarUrl;
+window.patchUserAvatars = patchUserAvatars;
+

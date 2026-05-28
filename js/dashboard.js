@@ -727,12 +727,11 @@ sidebarMenuItems.forEach(item => {
                 break;
             case 'paymentsPayouts':
                 resetPagination('payments');
-                resetPagination('payouts');
                 loadPaymentStats();
                 loadPayments('first');
                 loadArtistWallets();
-                loadPayouts('first');
-                populatePayoutArtistDropdown();
+                // Payouts tab + dropdown removed: artists no longer request
+                // withdrawals — earnings auto-route to their linked payout card.
                 loadRevenueTrendChart();
                 loadPaymentMethodsChart();
                 break;
@@ -2904,9 +2903,9 @@ async function loadOrders(direction) {
                     withinRefundWindow = daysSince <= PAYMENT_POLICIES.refundDays;
                 }
                 if (withinRefundWindow) {
-                    const refundBtn = createEl('button', { className: 'btn-action btn-delete' }, 'Refund');
-                    refundBtn.addEventListener('click', () => refundOrder(doc.id, order));
-                    tdActions.appendChild(refundBtn);
+                    const cancelBtn = createEl('button', { className: 'btn-action btn-delete' }, 'Cancel order');
+                    cancelBtn.addEventListener('click', () => refundOrder(doc.id, order));
+                    tdActions.appendChild(cancelBtn);
                 }
             }
 
@@ -3213,12 +3212,17 @@ function refundOrder(orderId, order) {
         }
     }
 
-    showConfirm('Refund Order', 'Refund $' + (order.total || 0).toFixed(2) + ' for this order? This will deduct from the artist\'s wallet.', async () => {
+    showConfirm('Cancel order', 'Cancel this order and refund $' + (order.total || 0).toFixed(2) + ' to the customer? This will deduct from the artist\'s wallet.', async () => {
         try {
+            const refundAmount = (order.total || order.totalAmount || 0);
             await db.collection('orders').doc(orderId).update({
-                status: 'refunded',
+                status: 'cancelled',
                 payoutStatus: 'unpaid',
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                cancelledAt: firebase.firestore.FieldValue.serverTimestamp(),
+                refundAmount: refundAmount,
+                cancellationArtistShare: 0,
+                cancellationTier: 'admin_full_refund',
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
             });
 
             if (order.paymentId) {
@@ -3243,19 +3247,19 @@ function refundOrder(orderId, order) {
                 }
             }
 
-            await logAuditAction('refund_order', orderId, 'order', {
+            await logAuditAction('cancel_order', orderId, 'order', {
                 amount: order.total, customerName: order.customerName, artistId: order.artistId
             });
 
-            showToast('Order refunded. Artist wallet updated.', 'success');
+            showToast('Order cancelled. Customer refunded; artist wallet updated.', 'success');
             resetPagination('orders');
             loadOrders('first');
             loadOrderStats();
         } catch (error) {
-            console.error('Error refunding order:', error);
-            showToast('Error refunding order.', 'error');
+            console.error('Error cancelling order:', error);
+            showToast('Error cancelling order.', 'error');
         }
-    }, { confirmText: 'Refund', type: 'danger' });
+    }, { confirmText: 'Cancel order', type: 'danger' });
 }
 
 // Order event listeners
