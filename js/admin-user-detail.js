@@ -270,6 +270,37 @@
             html += `<div class="u360-row"><span class="lbl">${l}</span><span class="val">${v}</span></div>`;
         });
         html += '</div>';
+
+        // ── Payout card status (artists only) ──────────────────────
+        // Highlights whether the artist can actually be paid — a missing
+        // card means they can't accept orders in the mobile app.
+        if (isArtist) {
+            const card = user.payoutCard;
+            const hasCard = card && typeof card === 'object' && card.last4;
+            html += '<div class="u360-card" style="margin-top:10px;border-left:4px solid ' +
+                (hasCard ? '#10B981' : '#ED4956') + ';">';
+            html += '<h5 style="margin:0 0 10px;font-size:14px;color:#262626;">' +
+                (hasCard ? '💳 Payout Card Linked' : '⚠ No Payout Card') + '</h5>';
+            if (hasCard) {
+                const brandLabel = card.brand === 'virtual_visa' ? 'Virtual Visa' : 'Virtual Card';
+                const exp = (String(card.expMonth || '').padStart(2, '0')) + '/' +
+                    String((card.expYear || 0) % 100).padStart(2, '0');
+                html += `<div class="u360-row"><span class="lbl">Brand</span><span class="val">${safe(brandLabel)}</span></div>`;
+                html += `<div class="u360-row"><span class="lbl">Number</span><span class="val">•••• •••• •••• ${safe(card.last4)}</span></div>`;
+                html += `<div class="u360-row"><span class="lbl">Holder</span><span class="val">${safe(card.holderName || '—')}</span></div>`;
+                html += `<div class="u360-row"><span class="lbl">Expiry</span><span class="val">${safe(exp)}</span></div>`;
+                if (card.addedAt) {
+                    html += `<div class="u360-row"><span class="lbl">Linked</span><span class="val">${fmtDateTime(card.addedAt)}</span></div>`;
+                }
+            } else {
+                html += '<div style="font-size:13px;color:#8E8E8E;line-height:1.5;">' +
+                    'This artist <strong>cannot accept orders</strong> until they link a virtual ' +
+                    'payout card in the mobile app. Earnings have nowhere to go without one.' +
+                    '</div>';
+            }
+            html += '</div>';
+        }
+
         return html;
     }
 
