@@ -462,6 +462,47 @@ if (document.readyState === 'loading') {
     _installAvatarObserver();
 }
 
+// =============================================
+// Generic broken-image fallback for all modal content.
+// Watches the document for any modal overlay added by the admin and attaches
+// an onerror handler to every <img> inside — so post images / report previews
+// / 360° modal media gracefully degrade to a placeholder if the source is
+// dead. Cheap: only runs when a modal opens, and only on its descendants.
+// =============================================
+const _GENERIC_IMG_FALLBACK = 'https://via.placeholder.com/240?text=No+Image';
+
+function _patchModalImages(modal) {
+    if (!modal) return;
+    modal.querySelectorAll('img').forEach((img) => {
+        if (img.dataset.imgPatched === '1') return;
+        img.dataset.imgPatched = '1';
+        // Avatars already have their own fallback path — skip them.
+        if (img.classList.contains('user-avatar')) return;
+        // Replace known-dead Supabase host immediately.
+        if (_isDeadAvatarUrl(img.src)) {
+            img.src = _GENERIC_IMG_FALLBACK;
+        }
+        img.addEventListener('error', () => {
+            if (img.src !== _GENERIC_IMG_FALLBACK) img.src = _GENERIC_IMG_FALLBACK;
+        });
+    });
+}
+
+const _modalObserver = new MutationObserver((mutations) => {
+    mutations.forEach((m) => {
+        m.addedNodes.forEach((node) => {
+            if (node.nodeType !== 1) return;
+            if (node.classList && node.classList.contains('detail-modal-overlay')) {
+                _patchModalImages(node);
+                // Also re-patch when the modal's contents change (tab switches).
+                const inner = new MutationObserver(() => _patchModalImages(node));
+                inner.observe(node, { childList: true, subtree: true });
+            }
+        });
+    });
+});
+_modalObserver.observe(document.body, { childList: true });
+
 window.safeAvatarSrc = safeAvatarSrc;
 window.defaultAvatarUrl = defaultAvatarUrl;
 window.patchUserAvatars = patchUserAvatars;

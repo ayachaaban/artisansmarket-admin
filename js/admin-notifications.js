@@ -460,7 +460,9 @@
         try {
             const snap = await db.collection('notifications').orderBy('createdAt', 'desc').limit(500).get()
                 .catch(async () => await db.collection('notifications').limit(500).get());
-            _allNotifs = snap.docs.map(d => d.data());
+            let docs = snap.docs;
+            if (typeof window.filterByDate === 'function') docs = window.filterByDate(docs, 'notifications');
+            _allNotifs = docs.map(d => d.data());
 
             // Batch-fetch the unique users
             const userIds = [...new Set(_allNotifs.map(n => n.userId).filter(Boolean))];
@@ -479,6 +481,8 @@
             showToast('Could not load notifications.', 'error');
         }
     }
+    // Exposed for admin-date-filter.js to call when the date range changes.
+    window._notifReload = runNotifications;
 
     // Override the page enter: when sidebar item "broadcast" is clicked,
     // the existing dashboard.js routing code calls nothing for that case

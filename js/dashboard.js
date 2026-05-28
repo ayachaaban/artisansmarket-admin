@@ -117,8 +117,14 @@ function showDetailModal(title, items, listItems) {
     // Trigger animation on next frame
     requestAnimationFrame(() => overlay.classList.add('active'));
 
-    overlay.querySelector('.detail-modal-close').addEventListener('click', () => overlay.remove());
-    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+    const onEsc = (e) => { if (e.key === 'Escape') close(); };
+    const close = () => {
+        document.removeEventListener('keydown', onEsc);
+        overlay.remove();
+    };
+    document.addEventListener('keydown', onEsc);
+    overlay.querySelector('.detail-modal-close').addEventListener('click', close);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
 }
 
 // =============================================
@@ -211,8 +217,14 @@ function renderPostPopup(postId, post) {
     document.body.appendChild(overlay);
     requestAnimationFrame(() => overlay.classList.add('active'));
 
-    overlay.querySelector('.detail-modal-close').addEventListener('click', () => overlay.remove());
-    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+    const onEsc = (e) => { if (e.key === 'Escape') close(); };
+    const close = () => {
+        document.removeEventListener('keydown', onEsc);
+        overlay.remove();
+    };
+    document.addEventListener('keydown', onEsc);
+    overlay.querySelector('.detail-modal-close').addEventListener('click', close);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
 }
 
 // =============================================
@@ -289,8 +301,14 @@ function showReportDetail(reportId, report, postData, reporterData) {
     document.body.appendChild(overlay);
     requestAnimationFrame(() => overlay.classList.add('active'));
 
-    overlay.querySelector('.detail-modal-close').addEventListener('click', () => overlay.remove());
-    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+    const onEsc = (e) => { if (e.key === 'Escape') close(); };
+    const close = () => {
+        document.removeEventListener('keydown', onEsc);
+        overlay.remove();
+    };
+    document.addEventListener('keydown', onEsc);
+    overlay.querySelector('.detail-modal-close').addEventListener('click', close);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
 }
 
 // =============================================
@@ -1600,6 +1618,7 @@ async function loadPosts(direction) {
         tbody.innerHTML = '';
 
         let docs = snapshot.docs;
+        if (typeof window.filterByDate === 'function') docs = window.filterByDate(docs, 'posts');
 
         // Client-side artist name search
         if (searchQuery) {
@@ -1812,7 +1831,8 @@ async function loadReports(direction) {
         const snapshot = await query.get();
         tbody.innerHTML = '';
 
-        const docs = snapshot.docs;
+        let docs = snapshot.docs;
+        if (typeof window.filterByDate === 'function') docs = window.filterByDate(docs, 'reports');
         const hasMore = docs.length > PAGE_SIZE;
         const displayDocs = hasMore ? docs.slice(0, PAGE_SIZE) : docs;
 
@@ -2434,6 +2454,7 @@ async function loadSubscriptions(direction) {
         tbody.innerHTML = '';
 
         let docs = snapshot.docs;
+        if (typeof window.filterByDate === 'function') docs = window.filterByDate(docs, 'subscriptions');
 
         // Client-side search filter
         if (searchQuery) {
@@ -2824,6 +2845,7 @@ async function loadOrders(direction) {
         tbody.innerHTML = '';
 
         let docs = snapshot.docs;
+        if (typeof window.filterByDate === 'function') docs = window.filterByDate(docs, 'orders');
 
         // Client-side filters
         if (methodFilter) {
@@ -3370,6 +3392,7 @@ async function loadPayments(direction) {
         tbody.innerHTML = '';
 
         let docs = snapshot.docs;
+        if (typeof window.filterByDate === 'function') docs = window.filterByDate(docs, 'payments');
 
         if (methodFilter) {
             docs = docs.filter(doc => doc.data().paymentMethod === methodFilter);

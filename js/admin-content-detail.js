@@ -24,7 +24,10 @@
 
     function tabHeader(id, label, active) {
         return `<button class="user360-tab ${active ? 'active' : ''}" data-tab="${id}"
-            style="background:none;border:none;padding:14px 20px;cursor:pointer;font-size:13px;font-weight:600;color:#8E8E8E;border-bottom:3px solid transparent;white-space:nowrap;">${label}</button>`;
+            style="background:none;border:none;padding:12px 14px;cursor:pointer;font-size:13px;font-weight:600;color:#8E8E8E;border-bottom:3px solid transparent;white-space:nowrap;line-height:1.2;flex:1 1 auto;text-align:center;">${label}</button>`;
+    }
+    function imgFallback(name) {
+        return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || '?')}&background=D4A574&color=fff&size=240`;
     }
     function kpi(label, val, accent) {
         return `<div class="u360-kpi" style="${accent ? 'border-left:3px solid ' + accent + ';' : ''}">
@@ -60,9 +63,12 @@
         overlay.className = 'detail-modal-overlay';
         overlay.innerHTML = `
             <div class="detail-modal user360-modal" style="max-width:920px;width:96%;max-height:92vh;overflow:hidden;display:flex;flex-direction:column;">
-                <div class="detail-modal-header">
+                <div class="detail-modal-header" style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
                     <h3 style="margin:0;">${isReel ? 'Reel' : 'Post'} Details</h3>
-                    <button class="detail-modal-close">&times;</button>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <button id="post360RefreshBtn" title="Reload data" style="background:none;border:1px solid #E5E5E5;border-radius:6px;padding:4px 10px;font-size:12px;color:#555;cursor:pointer;">⟳ Refresh</button>
+                        <button class="detail-modal-close">&times;</button>
+                    </div>
                 </div>
                 <div class="detail-modal-body" style="overflow-y:auto;padding:0;">
                     <!-- Header card -->
@@ -71,10 +77,10 @@
                             <div style="position:relative;width:120px;flex-shrink:0;border-radius:10px;overflow:hidden;background:#000;aspect-ratio:1;">
                                 ${
                                     isReel
-                                        ? `<img src="${safe(post.thumbnailUrl || post.imageUrl || 'https://via.placeholder.com/240')}" style="width:100%;height:100%;object-fit:cover;"/>
+                                        ? `<img src="${safe(post.thumbnailUrl || post.imageUrl || 'https://via.placeholder.com/240')}" onerror="this.onerror=null;this.src='https://via.placeholder.com/240?text=No+Image';" style="width:100%;height:100%;object-fit:cover;"/>
                                            <div style="position:absolute;inset:0;background:rgba(0,0,0,0.25);display:flex;align-items:center;justify-content:center;color:white;font-size:32px;">▶</div>
                                            ${typeof post.videoDurationSec === 'number' ? `<span style="position:absolute;right:6px;bottom:6px;background:rgba(0,0,0,0.7);color:white;font-size:10px;padding:2px 7px;border-radius:8px;">${post.videoDurationSec}s</span>` : ''}`
-                                        : `<img src="${safe(post.imageUrl || 'https://via.placeholder.com/240')}" style="width:100%;height:100%;object-fit:cover;"/>`
+                                        : `<img src="${safe(post.imageUrl || 'https://via.placeholder.com/240')}" onerror="this.onerror=null;this.src='https://via.placeholder.com/240?text=No+Image';" style="width:100%;height:100%;object-fit:cover;"/>`
                                 }
                             </div>
                             <div style="flex:1;min-width:0;">
@@ -100,7 +106,7 @@
                     </div>
 
                     <!-- Tabs -->
-                    <div class="user360-tabs" style="display:flex;border-bottom:1px solid #ECECEC;background:white;position:sticky;top:0;z-index:5;overflow-x:auto;">
+                    <div class="user360-tabs" style="display:flex;gap:2px;background:white;position:sticky;top:0;z-index:5;overflow-x:auto;white-space:nowrap;scrollbar-width:none;-ms-overflow-style:none;padding:0 8px;">
                         ${tabHeader('overview', '📋 Overview', true)}
                         ${tabHeader('media', '🎨 Media')}
                         ${tabHeader('orders', '📦 Orders')}
@@ -113,9 +119,33 @@
         document.body.appendChild(overlay);
         requestAnimationFrame(() => overlay.classList.add('active'));
 
-        const close = () => overlay.remove();
+        const onEsc = (e) => { if (e.key === 'Escape') close(); };
+        const close = () => {
+            document.removeEventListener('keydown', onEsc);
+            overlay.remove();
+        };
+        document.addEventListener('keydown', onEsc);
         overlay.querySelector('.detail-modal-close').addEventListener('click', close);
         overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+
+        overlay.querySelector('#post360RefreshBtn')?.addEventListener('click', async () => {
+            const btn = overlay.querySelector('#post360RefreshBtn');
+            btn.disabled = true;
+            const old = btn.textContent; btn.textContent = '⟳ …';
+            try {
+                Object.keys(cache).forEach(k => delete cache[k]);
+                const fresh = await db.collection('posts').doc(postId).get();
+                if (fresh.exists) post = fresh.data();
+                const activeBtn = overlay.querySelector('.user360-tab.active');
+                const activeTab = activeBtn ? activeBtn.dataset.tab : 'overview';
+                await Promise.all([
+                    renderPostKpis(overlay, postId),
+                    renderPostTab(activeTab, postId, post, overlay, cache),
+                ]);
+            } finally {
+                btn.disabled = false; btn.textContent = old;
+            }
+        });
 
         overlay.querySelector('#post360OpenArtistBtn').addEventListener('click', () => {
             if (typeof window.showUserDetail === 'function') {
@@ -312,9 +342,12 @@
         overlay.className = 'detail-modal-overlay';
         overlay.innerHTML = `
             <div class="detail-modal user360-modal" style="max-width:880px;width:96%;max-height:92vh;overflow:hidden;display:flex;flex-direction:column;">
-                <div class="detail-modal-header">
+                <div class="detail-modal-header" style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
                     <h3 style="margin:0;">Report Details</h3>
-                    <button class="detail-modal-close">&times;</button>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <button id="report360RefreshBtn" title="Reload data" style="background:none;border:1px solid #E5E5E5;border-radius:6px;padding:4px 10px;font-size:12px;color:#555;cursor:pointer;">⟳ Refresh</button>
+                        <button class="detail-modal-close">&times;</button>
+                    </div>
                 </div>
                 <div class="detail-modal-body" style="overflow-y:auto;padding:0;">
                     <!-- Header card -->
@@ -346,7 +379,7 @@
                     </div>
 
                     <!-- Tabs -->
-                    <div class="user360-tabs" style="display:flex;border-bottom:1px solid #ECECEC;background:white;position:sticky;top:0;z-index:5;overflow-x:auto;">
+                    <div class="user360-tabs" style="display:flex;gap:2px;background:white;position:sticky;top:0;z-index:5;overflow-x:auto;white-space:nowrap;scrollbar-width:none;-ms-overflow-style:none;padding:0 8px;">
                         ${tabHeader('overview', '📋 Overview', true)}
                         ${tabHeader('post', '🎨 Reported Post')}
                         ${tabHeader('related', '⚠ Other reports')}
@@ -358,9 +391,33 @@
         document.body.appendChild(overlay);
         requestAnimationFrame(() => overlay.classList.add('active'));
 
-        const close = () => overlay.remove();
+        const onEsc = (e) => { if (e.key === 'Escape') close(); };
+        const close = () => {
+            document.removeEventListener('keydown', onEsc);
+            overlay.remove();
+        };
+        document.addEventListener('keydown', onEsc);
         overlay.querySelector('.detail-modal-close').addEventListener('click', close);
         overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+
+        overlay.querySelector('#report360RefreshBtn')?.addEventListener('click', async () => {
+            const btn = overlay.querySelector('#report360RefreshBtn');
+            btn.disabled = true;
+            const old = btn.textContent; btn.textContent = '⟳ …';
+            try {
+                Object.keys(cache).forEach(k => delete cache[k]);
+                const fresh = await db.collection('reports').doc(reportId).get();
+                if (fresh.exists) report = fresh.data();
+                const activeBtn = overlay.querySelector('.user360-tab.active');
+                const activeTab = activeBtn ? activeBtn.dataset.tab : 'overview';
+                await Promise.all([
+                    renderReportKpis(overlay, report),
+                    renderReportTab(activeTab, reportId, report, overlay, cache),
+                ]);
+            } finally {
+                btn.disabled = false; btn.textContent = old;
+            }
+        });
 
         overlay.querySelector('#report360ResolveBtn')?.addEventListener('click', async () => {
             try {

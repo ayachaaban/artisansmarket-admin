@@ -13,8 +13,20 @@
 //                              X-Push-Auth so randoms can't spam the endpoint.
 //   - GROQ_API_KEY           — Groq Llama key, used by /ai
 
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, X-Push-Auth',
+  'Access-Control-Max-Age': '86400',
+};
+
 export default {
   async fetch(request, env) {
+    // CORS preflight — browser sends this before the real POST from the
+    // admin web app. The mobile app doesn't trigger it (no CORS in Flutter).
+    if (request.method === 'OPTIONS') {
+      return new Response(null, { status: 204, headers: CORS_HEADERS });
+    }
     if (request.method !== 'POST') {
       return json({ error: 'Method not allowed' }, 405);
     }
@@ -77,7 +89,7 @@ async function handleAi(body, env) {
     // bad model names, etc. The response body is already JSON.
     return new Response(text, {
       status: res.status,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
     });
   } catch (e) {
     return json({ error: 'Upstream error', detail: String(e) }, 502);
@@ -153,7 +165,7 @@ function stringifyValues(obj) {
 function json(obj, status = 200) {
   return new Response(JSON.stringify(obj), {
     status,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
   });
 }
 

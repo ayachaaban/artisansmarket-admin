@@ -52,9 +52,12 @@
         overlay.className = 'detail-modal-overlay';
         overlay.innerHTML = `
             <div class="detail-modal user360-modal" style="max-width:920px;width:96%;max-height:92vh;overflow:hidden;display:flex;flex-direction:column;">
-                <div class="detail-modal-header">
+                <div class="detail-modal-header" style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
                     <h3 style="margin:0;">User Profile</h3>
-                    <button class="detail-modal-close">&times;</button>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <button id="u360RefreshBtn" title="Reload data" style="background:none;border:1px solid #E5E5E5;border-radius:6px;padding:4px 10px;font-size:12px;color:#555;cursor:pointer;">⟳ Refresh</button>
+                        <button class="detail-modal-close">&times;</button>
+                    </div>
                 </div>
                 <div class="detail-modal-body" style="overflow-y:auto;padding:0;">
                     <!-- Header card -->
@@ -62,6 +65,7 @@
                         <div style="display:flex;gap:18px;align-items:center;">
                             <div style="position:relative;">
                                 <img id="u360Avatar" src="${user.profileImageUrl || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.name || '?') + '&background=D4A574&color=fff&size=80'}"
+                                    onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || '?')}&background=D4A574&color=fff&size=80';"
                                     style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,0.08);"/>
                                 <span style="position:absolute;bottom:-4px;right:-4px;background:${
                                     (user.status || 'active') === 'active' ? '#10B981' : '#ED4956'
@@ -94,7 +98,7 @@
                     </div>
 
                     <!-- Tabs -->
-                    <div class="user360-tabs" style="display:flex;gap:0;border-bottom:1px solid #ECECEC;background:white;position:sticky;top:0;z-index:5;overflow-x:auto;">
+                    <div class="user360-tabs" style="display:flex;gap:2px;background:white;position:sticky;top:0;z-index:5;overflow-x:auto;white-space:nowrap;scrollbar-width:none;-ms-overflow-style:none;padding:0 8px;">
                         ${tabHeader('overview', '📋 Overview', true)}
                         ${tabHeader('orders', '📦 Orders')}
                         ${isArtist ? tabHeader('posts', '🎨 Posts & Reels') : ''}
@@ -112,9 +116,34 @@
         document.body.appendChild(overlay);
         requestAnimationFrame(() => overlay.classList.add('active'));
 
-        const close = () => overlay.remove();
+        const onEsc = (e) => { if (e.key === 'Escape') close(); };
+        const close = () => {
+            document.removeEventListener('keydown', onEsc);
+            overlay.remove();
+        };
+        document.addEventListener('keydown', onEsc);
         overlay.querySelector('.detail-modal-close').addEventListener('click', close);
         overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+
+        // Refresh: drop cache + re-render currently active tab + KPI strip
+        overlay.querySelector('#u360RefreshBtn')?.addEventListener('click', async () => {
+            const btn = overlay.querySelector('#u360RefreshBtn');
+            btn.disabled = true;
+            const oldText = btn.textContent;
+            btn.textContent = '⟳ …';
+            try {
+                Object.keys(cachedTabs).forEach(k => delete cachedTabs[k]);
+                const activeBtn = overlay.querySelector('.user360-tab.active');
+                const activeTab = activeBtn ? activeBtn.dataset.tab : 'overview';
+                await Promise.all([
+                    renderKpis(overlay, userId, user, isArtist),
+                    renderTab(activeTab, userId, user, isArtist, overlay, cachedTabs),
+                ]);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = oldText;
+            }
+        });
 
         // Header buttons
         overlay.querySelector('#u360PushBtn').addEventListener('click', () => {
@@ -153,7 +182,7 @@
 
     function tabHeader(id, label, active) {
         return `<button class="user360-tab ${active ? 'active' : ''}" data-tab="${id}"
-            style="background:none;border:none;padding:14px 20px;cursor:pointer;font-size:13px;font-weight:600;color:#8E8E8E;border-bottom:3px solid transparent;white-space:nowrap;">${label}</button>`;
+            style="background:none;border:none;padding:12px 14px;cursor:pointer;font-size:13px;font-weight:600;color:#8E8E8E;border-bottom:3px solid transparent;white-space:nowrap;line-height:1.2;flex:1 1 auto;text-align:center;">${label}</button>`;
     }
 
     // CSS tweak via JS so we don't have to edit styles.css
@@ -161,8 +190,11 @@
         const s = document.createElement('style');
         s.id = 'u360StyleInject';
         s.textContent = `
-            .user360-tab.active { color:#262626 !important; border-bottom-color:#C8A870 !important; }
-            .user360-tab:hover { color:#262626 !important; background:#F8F8F8 !important; }
+            .user360-tabs { box-shadow: inset 0 -1px 0 #ECECEC; }
+            .user360-tab { transition:color .15s ease, background .15s ease; position:relative; min-height:42px; }
+            .user360-tab.active { color:#262626 !important; }
+            .user360-tab.active::after { content:''; position:absolute; left:10%; right:10%; bottom:0; height:3px; background:#C8A870; border-radius:2px 2px 0 0; }
+            .user360-tab:hover:not(.active) { color:#262626 !important; background:rgba(200,168,112,0.06); }
             .u360-card { background:white; border:1px solid #ECECEC; border-radius:10px; padding:14px; margin-bottom:10px; }
             .u360-row { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid #F5F5F7; }
             .u360-row:last-child { border-bottom:none; }
@@ -379,23 +411,51 @@
     }
 
     async function renderReports(userId) {
-        // Filed by this user OR against their posts
-        const byMe = await db.collection('reports').where('reporterId', '==', userId).limit(30).get();
-        if (byMe.empty) return '<div class="u360-empty">No reports filed by this user.</div>';
-        let html = '<h5 style="font-size:13px;color:#8E8E8E;margin:0 0 10px;">Reports filed</h5>';
-        byMe.docs.forEach(doc => {
+        // Reports filed by this user AND reports filed against their posts.
+        // We resolve "against" by first finding the user's posts, then querying
+        // reports with those postIds (chunked in groups of 10 for Firestore's
+        // `in` limit).
+        const [byMeSnap, postsSnap] = await Promise.all([
+            db.collection('reports').where('reporterId', '==', userId).limit(30).get(),
+            db.collection('posts').where('artistId', '==', userId).limit(200).get(),
+        ]);
+        const myPostIds = postsSnap.docs.map(d => d.id);
+        const againstDocs = [];
+        for (let i = 0; i < myPostIds.length; i += 10) {
+            const chunk = myPostIds.slice(i, i + 10);
+            if (chunk.length === 0) break;
+            const snap = await db.collection('reports').where('postId', 'in', chunk).get();
+            snap.docs.forEach(d => againstDocs.push(d));
+        }
+
+        if (byMeSnap.empty && againstDocs.length === 0) {
+            return '<div class="u360-empty">No reports involving this user.</div>';
+        }
+
+        const renderCard = (doc, kind) => {
             const r = doc.data();
-            html += `<div class="u360-card">
-                <div style="display:flex;justify-content:space-between;">
+            const statusClass = r.status === 'pending' ? 'pending' : 'reviewed';
+            return `<div class="u360-card">
+                <div style="display:flex;justify-content:space-between;align-items:start;gap:8px;">
                     <strong style="font-size:13px;">${safe(r.reason || 'Report')}</strong>
-                    <span class="status-badge status-${r.status === 'pending' ? 'pending' : 'reviewed'}">${safe(r.status || 'pending')}</span>
+                    <span class="status-badge status-${statusClass}">${safe(r.status || 'pending')}</span>
                 </div>
                 <div style="margin-top:6px;font-size:12px;color:#8E8E8E;">
-                    Post: ${safe(r.postId || '—')} · ${fmtDate(r.createdAt)}
+                    ${kind === 'against' ? 'On their post' : 'Filed by user'} · ${safe((r.postId || '—').slice(0, 10))}… · ${fmtDate(r.createdAt)}
                 </div>
                 ${r.description ? `<div style="margin-top:6px;font-size:12px;color:#555;">${safe(r.description)}</div>` : ''}
             </div>`;
-        });
+        };
+
+        let html = '';
+        if (!byMeSnap.empty) {
+            html += '<h5 style="font-size:12px;color:#8E8E8E;margin:0 0 10px;text-transform:uppercase;letter-spacing:0.5px;">Filed by this user</h5>';
+            byMeSnap.docs.forEach(d => html += renderCard(d, 'by'));
+        }
+        if (againstDocs.length > 0) {
+            html += '<h5 style="font-size:12px;color:#8E8E8E;margin:18px 0 10px;text-transform:uppercase;letter-spacing:0.5px;">Filed against this user</h5>';
+            againstDocs.forEach(d => html += renderCard(d, 'against'));
+        }
         return html;
     }
 
