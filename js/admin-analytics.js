@@ -97,7 +97,7 @@
                         <span style="font-size:0.78rem;color:#8E8E8E;">To</span>
                         <input type="date" id="analyticsCustomTo" class="form-control filter-select" style="width:155px;"/>
                     </span>
-                    <button id="analyticsRefresh" class="btn btn-primary" style="padding:6px 16px;font-size:0.85rem;">Refresh</button>
+                    <button id="analyticsRefresh" title="Reload data" style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.45rem 1rem;font-size:0.82rem;font-weight:600;color:#2E86AB;background:transparent;border:1.5px solid #2E86AB;border-radius:8px;cursor:pointer;line-height:1;">Refresh</button>
                 </div>
             </div>
 
@@ -260,13 +260,13 @@
             const newReports = reports.length;
 
             renderKpis([
-                { label: 'New users', value: newUsers, accent: '#2E86AB' },
-                { label: 'New artists', value: newArtists, accent: '#8B5CF6' },
+                { label: 'New users', value: newUsers, accent: '#84CC16' },
+                { label: 'New artists', value: newArtists, accent: '#B85C38' },
                 { label: 'New posts', value: newPosts, accent: '#1B998B' },
                 { label: 'New reels', value: newReels, accent: '#F59E0B' },
-                { label: 'Orders', value: orderCount, accent: '#0EA5E9' },
+                { label: 'Orders', value: orderCount, accent: '#2E86AB' },
                 { label: 'Revenue', value: money(revenue), accent: '#10B981' },
-                { label: 'Reports', value: newReports, accent: '#ED4956' },
+                { label: 'Reports', value: newReports, accent: '#A53A33' },
             ]);
 
             // Charts: daily buckets within the range
@@ -287,6 +287,7 @@
             const statusCounts = {};
             orders.forEach(d => {
                 const s = d.data().status || 'unknown';
+                if (s === 'refunded') return; // refunded slices are excluded from the chart
                 statusCounts[s] = (statusCounts[s] || 0) + 1;
             });
             const categoryCounts = {};
@@ -295,15 +296,39 @@
                 categoryCounts[c] = (categoryCounts[c] || 0) + 1;
             });
 
-            drawLineChart('analyticsUserChart', days, Object.values(usersByDay), 'New users', '#2E86AB',
+            drawLineChart('analyticsUserChart', days, Object.values(usersByDay), 'New users', '#6F8FA3',
                 (c) => analyticsChartUsers = c, () => analyticsChartUsers);
-            drawLineChart('analyticsRevenueChart', days, Object.values(revenueByDay), 'Revenue $', '#10B981',
+            drawLineChart('analyticsRevenueChart', days, Object.values(revenueByDay), 'Revenue $', '#7A9B5C',
                 (c) => analyticsChartRevenue = c, () => analyticsChartRevenue);
-            drawDoughnut('analyticsStatusChart', Object.keys(statusCounts).map(s => (typeof getOrderStatusLabel === 'function' ? getOrderStatusLabel(s) : s)),
+            // Colours sampled directly from the Artisans Market logo — the
+            // mustard letters, sage olive, rust red, slate-teal blue,
+            // terracotta orange and warm brown that appear in the artwork.
+            const STATUS_COLORS = {
+                pending:     '#E8B547',   // logo mustard yellow
+                in_progress: '#5B8FA8',   // logo slate-blue
+                paid:        '#5B8FA8',   // legacy → in_progress
+                processing:  '#5B8FA8',   // legacy → in_progress
+                shipping:    '#D67847',   // logo terracotta orange
+                shipped:     '#D67847',   // legacy → shipping
+                delivered:   '#7A9B5C',   // logo sage green
+                cancelled:   '#B5413B',   // logo brick / rust red
+            };
+            const statusKeys = Object.keys(statusCounts);
+            const statusColors = statusKeys.map(k => STATUS_COLORS[k] || '#B85C38');
+            drawDoughnut('analyticsStatusChart',
+                statusKeys.map(s => (typeof getOrderStatusLabel === 'function' ? getOrderStatusLabel(s) : s)),
                 Object.values(statusCounts),
-                (c) => analyticsChartStatus = c, () => analyticsChartStatus);
-            drawBarChart('analyticsCategoriesChart', Object.keys(categoryCounts), Object.values(categoryCounts),
-                (c) => analyticsChartCategories = c, () => analyticsChartCategories);
+                (c) => analyticsChartStatus = c, () => analyticsChartStatus,
+                statusColors);
+            // Same six-color palette used by the Dashboard Overview's
+            // "Posts by Category" chart so each category bar matches its
+            // colour on the overview page; cycles when categories > 6.
+            const CATEGORY_PALETTE = ['#6F8FA3', '#C96A3D', '#E3A93C', '#7A9A7A', '#A44A3F', '#C98A5B'];
+            const categoryKeys = Object.keys(categoryCounts);
+            const categoryColors = categoryKeys.map((_, i) => CATEGORY_PALETTE[i % CATEGORY_PALETTE.length]);
+            drawBarChart('analyticsCategoriesChart', categoryKeys, Object.values(categoryCounts),
+                (c) => analyticsChartCategories = c, () => analyticsChartCategories,
+                categoryColors);
 
             // Top Artists table — aggregate over ALL orders (not just range) for
             // the rating column, but use range for earnings/orders count.
@@ -367,10 +392,7 @@
         if (!container) return;
         container.innerHTML = kpis.map(k => `
             <div class="col-lg-3 col-md-4 col-sm-6">
-                <div class="kpi-card">
-                    <div class="kpi-icon" style="background:${k.accent};">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16"><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0z"/></svg>
-                    </div>
+                <div class="kpi-card" style="border-left:3px solid ${k.accent};">
                     <div class="kpi-details">
                         <h4>${safe(k.value)}</h4>
                         <p>${safe(k.label)}</p>
@@ -438,26 +460,53 @@
             },
         }));
     }
-    function drawDoughnut(id, labels, values, setRef, getRef) {
+    function drawDoughnut(id, labels, values, setRef, getRef, colors) {
         const ctx = document.getElementById(id);
         if (!ctx) return;
         if (getRef()) getRef().destroy();
+        const palette = colors || ['#5B8FA8', '#E8B547', '#7A9B5C', '#B5413B', '#D67847', '#A47A56'];
         setRef(new Chart(ctx, {
             type: 'doughnut',
             data: {
                 labels,
                 datasets: [{
                     data: values,
-                    backgroundColor: ['#6366F1', '#F59E0B', '#0EA5E9', '#10B981', '#ED4956', '#8B5CF6', '#6F8FA3'],
+                    backgroundColor: palette,
+                    borderColor: '#fff',
+                    borderWidth: 2,
                 }],
             },
             options: {
                 responsive: true, maintainAspectRatio: true,
-                plugins: { legend: { position: 'bottom' } },
+                cutout: '62%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            pointStyle: 'circle',
+                            generateLabels(chart) {
+                                const ds = chart.data.datasets[0];
+                                const bg = ds.backgroundColor;
+                                return chart.data.labels.map((label, i) => {
+                                    const c = Array.isArray(bg) ? bg[i] : bg;
+                                    return {
+                                        text: label,
+                                        fillStyle: c,
+                                        strokeStyle: c,
+                                        lineWidth: 0,
+                                        hidden: false,
+                                        index: i,
+                                    };
+                                });
+                            },
+                        },
+                    },
+                },
             },
         }));
     }
-    function drawBarChart(id, labels, values, setRef, getRef) {
+    function drawBarChart(id, labels, values, setRef, getRef, colors) {
         const ctx = document.getElementById(id);
         if (!ctx) return;
         if (getRef()) getRef().destroy();
@@ -466,7 +515,7 @@
             data: {
                 labels,
                 datasets: [{
-                    label: 'Posts', data: values, backgroundColor: '#C8A870',
+                    label: 'Posts', data: values, backgroundColor: colors || '#C8A870',
                     borderRadius: 6,
                 }],
             },

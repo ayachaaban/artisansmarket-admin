@@ -537,6 +537,12 @@ body.dark-mode .theme-toggle {
     font-size: 0.9rem;
 }
 
+.top-bar-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
 .theme-toggle-dash {
     background: var(--bg-light);
     border: 1px solid var(--border-color);
@@ -611,17 +617,21 @@ body.dark-mode .theme-toggle {
     position: absolute;
     top: -5px;
     right: -8px;
-    background: linear-gradient(135deg, #EF4444, #DC2626);
+    background: #C8602F;
     color: white;
     border-radius: 50%;
     width: 18px;
     height: 18px;
+    padding: 0;
     font-size: 10px;
     font-weight: 700;
-    display: flex;
+    line-height: 1;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
+    text-align: center;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    box-shadow: 0 2px 6px rgba(200, 96, 47, 0.4);
 }
 
 .sidebar-menu li {
@@ -665,7 +675,7 @@ body.dark-mode .theme-toggle {
 }
 
 .notification-count {
-    background: linear-gradient(135deg, #EF4444, #DC2626);
+    background: #C8602F;
     color: #fff;
     border-radius: 10px;
     padding: 2px 8px;
@@ -769,27 +779,13 @@ body.dark-mode .theme-toggle {
     overflow: hidden;
 }
 
-.kpi-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 4px;
-    height: 100%;
-    border-radius: 4px 0 0 4px;
-    background: var(--primary-color);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
+/* Hover-stripe pseudo-element removed — cards no longer grow a second
+   coloured bar beside the accent on hover. */
 
 .kpi-card:hover {
     border-color: transparent;
     box-shadow: var(--shadow-lg), var(--shadow-glow);
     transform: translateY(-4px);
-}
-
-.kpi-card:hover::before {
-    opacity: 1;
 }
 
 .kpi-icon {
@@ -878,13 +874,25 @@ body.dark-mode .theme-toggle {
 }
 
 /* User Profile Avatar */
+/* Mirrors the dashboard overview's avatarHtml: with profile picture →
+   cropped circle; without → first letter in primary-blue on a 12%-alpha
+   slate-blue tinted circle. */
 .user-avatar {
     width: 40px;
     height: 40px;
     object-fit: cover;
     border-radius: 50%;
-    border: 2px solid #B5D4E0;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    flex-shrink: 0;
+    background: rgba(111, 143, 163, 0.12);
+}
+.user-avatar.user-avatar-initial {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #6F8FA3;
+    font-weight: 700;
+    font-family: inherit;
+    line-height: 1;
 }
 
 /* Statistics Cards */
@@ -1069,24 +1077,30 @@ body.dark-mode .plan-change-select {
     box-shadow: var(--shadow-sm);
 }
 
+/* Soft brick-red pill — same construction as the Suspend gold pill:
+   10%-alpha brick-red fill + solid brick-red border + solid brick-red text. */
 .btn-delete {
-    background: #F7E4DA;
-    color: #B85C38;
+    background: rgba(165, 58, 51, 0.10);
+    color: #A53A33;
+    border: 1.5px solid rgba(165, 58, 51, 0.45);
     box-shadow: none;
 }
 
 .btn-delete:hover {
-    background: #F0CFBE;
+    background: rgba(165, 58, 51, 0.18);
+    color: #A53A33;
 }
 
 .btn-approve {
-    background: #D1FAE5;
-    color: #065F46;
+    background: rgba(27, 153, 139, 0.10);
+    color: #1B998B;
+    border: 1.5px solid rgba(27, 153, 139, 0.45);
     box-shadow: none;
 }
 
 .btn-approve:hover {
-    background: #A7F3D0;
+    background: rgba(27, 153, 139, 0.18);
+    border-color: rgba(27, 153, 139, 0.65);
 }
 
 .btn-reject {
@@ -1099,13 +1113,18 @@ body.dark-mode .plan-change-select {
     background: #F0CFBE;
 }
 
+/* Soft peach pill — same construction as the Delete/Suspend buttons:
+   tinted background + 1.5px 45%-alpha brown border + solid brown text. */
 .btn-view {
-    background: linear-gradient(135deg, #C65D2E 0%, #A03E2B 100%);
-    color: white;
+    background: #F7E4DA;
+    color: #B85C38;
+    border: 1.5px solid rgba(184, 92, 56, 0.45);
+    box-shadow: none;
 }
 
 .btn-view:hover {
-    background: linear-gradient(135deg, #D97044 0%, #C65D2E 100%);
+    background: #F0CFBE;
+    color: #B85C38;
 }
 
 .btn-view-paid {
@@ -1118,23 +1137,29 @@ body.dark-mode .plan-change-select {
     background: #D6E7EF;
 }
 
+/* Soft gold pill — matches the Reviews tile on the dashboard overview:
+   10%-alpha gold fill + solid gold border + solid gold text. */
 .btn-suspend {
-    background: #FEF3C7;
-    color: #92400E;
+    background: rgba(227, 169, 60, 0.10);
+    color: #E3A93C;
+    border: 1.5px solid rgba(227, 169, 60, 0.45);
     box-shadow: none;
 }
 
 .btn-suspend:hover {
-    background: #FDE68A;
+    background: rgba(227, 169, 60, 0.18);
+    color: #E3A93C;
 }
 
 .btn-activate {
-    background: linear-gradient(135deg, #10B981 0%, #059669 100%);
-    color: white;
+    background: rgba(27, 153, 139, 0.10);
+    color: #1B998B;
+    border: 1.5px solid rgba(27, 153, 139, 0.45);
 }
 
 .btn-activate:hover {
-    background: linear-gradient(135deg, #34D399 0%, #10B981 100%);
+    background: rgba(27, 153, 139, 0.18);
+    border-color: rgba(27, 153, 139, 0.65);
 }
 
 /* Status Badges */
@@ -1148,34 +1173,47 @@ body.dark-mode .plan-change-select {
     white-space: nowrap;
 }
 
+/* Same soft teal-green pill as .status-reviewed and the Deadlines tile
+   so the "active / OK" state reads as part of the same family. */
 .status-active {
-    background: #EAF3F7;
-    color: #5B9BB5;
+    background: rgba(27, 153, 139, 0.10);
+    color: #1B998B;
+    border: 1.5px solid rgba(27, 153, 139, 0.45);
 }
 
 .status-reported {
-    background: #FEF3C7;
-    color: #92400E;
+    background: rgba(46, 134, 171, 0.10);
+    color: #2E86AB;
+    border: 1.5px solid rgba(46, 134, 171, 0.45);
 }
 
 .status-removed {
-    background: #FEE2E2;
-    color: #991B1B;
+    background: rgba(165, 58, 51, 0.10);
+    color: #A53A33;
+    border: 1.5px solid rgba(165, 58, 51, 0.45);
 }
 
+/* Same soft gold pill as the .btn-suspend button so pending statuses
+   read as the same family of "needs attention" controls. */
 .status-pending {
-    background: #FEF3C7;
-    color: #92400E;
+    background: rgba(227, 169, 60, 0.10);
+    color: #E3A93C;
+    border: 1.5px solid rgba(227, 169, 60, 0.45);
 }
 
+/* Soft teal-green pill — same colour as the Deadlines tile on the
+   dashboard overview. Pairs with the gold .status-pending so resolved
+   work reads as the "all clear" counterpart. */
 .status-reviewed {
-    background: #ECFDF5;
-    color: #065F46;
+    background: rgba(27, 153, 139, 0.10);
+    color: #1B998B;
+    border: 1.5px solid rgba(27, 153, 139, 0.45);
 }
 
 .status-active-user {
-    background: #EAF3F7;
-    color: #5B9BB5;
+    background: rgba(27, 153, 139, 0.10);
+    color: #1B998B;
+    border: 1.5px solid rgba(27, 153, 139, 0.45);
 }
 
 .status-suspended {
@@ -1184,13 +1222,15 @@ body.dark-mode .plan-change-select {
 }
 
 .status-expired {
-    background: #FEF3C7;
-    color: #92400E;
+    background: rgba(184, 92, 56, 0.10);
+    color: #B85C38;
+    border: 1.5px solid rgba(184, 92, 56, 0.45);
 }
 
 .status-cancelled {
-    background: #F1F5F9;
-    color: #64748B;
+    background: rgba(111, 143, 163, 0.10);
+    color: #6F8FA3;
+    border: 1.5px solid rgba(111, 143, 163, 0.45);
 }
 
 /* Plan Badges */
@@ -1204,18 +1244,21 @@ body.dark-mode .plan-change-select {
 }
 
 .plan-free {
-    background: #F1F5F9;
-    color: #64748B;
+    background: rgba(111, 143, 163, 0.10);
+    color: #6F8FA3;
+    border: 1.5px solid rgba(111, 143, 163, 0.45);
 }
 
 .plan-basic {
-    background: #FBE9DD;
-    color: #A03E2B;
+    background: rgba(46, 134, 171, 0.10);
+    color: #2E86AB;
+    border: 1.5px solid rgba(46, 134, 171, 0.45);
 }
 
 .plan-premium {
-    background: linear-gradient(135deg, #FEF3C7, #FDE68A);
-    color: #92400E;
+    background: rgba(184, 92, 56, 0.10);
+    color: #B85C38;
+    border: 1.5px solid rgba(184, 92, 56, 0.45);
 }
 
 /* Role Badges */
@@ -2145,10 +2188,9 @@ body.dark-mode .confirm-modal .btn-cancel:hover {
     background: #475569;
 }
 
-/* Suspend confirmation variant */
-.confirm-modal.confirm-modal-suspend .confirm-modal-icon svg,
-.confirm-modal.confirm-modal-suspend .confirm-modal-icon svg path {
-    fill: #FDE68A !important;
+/* Suspend confirmation variant — no icon + transparent gold pill buttons. */
+.confirm-modal.confirm-modal-suspend .confirm-modal-icon {
+    display: none;
 }
 
 .confirm-modal.confirm-modal-suspend .confirm-modal-actions {
@@ -2161,26 +2203,27 @@ body.dark-mode .confirm-modal .btn-cancel:hover {
 .confirm-modal.confirm-modal-suspend .confirm-modal-btn {
     padding: 0.6rem 1.5rem;
     border-radius: 8px;
-    border: none;
     font-size: 0.875rem;
     font-weight: 600;
     cursor: pointer;
-    background: #FEF3C7;
-    color: #92400E;
+    background: transparent;
+    color: #E3A93C;
+    border: 1.5px solid rgba(227, 169, 60, 0.45);
     transition: background 0.2s, transform 0.15s;
 }
 
 .confirm-modal.confirm-modal-suspend .confirm-modal-btn:hover {
-    background: #FDE68A;
+    background: rgba(227, 169, 60, 0.10);
+    border-color: rgba(227, 169, 60, 0.65);
 }
 
 .confirm-modal.confirm-modal-suspend .confirm-modal-btn:active {
     transform: scale(0.97);
 }
 
-/* Delete confirmation variant */
-.confirm-modal.confirm-modal-delete .confirm-modal-icon svg {
-    fill: #B85C38;
+/* Delete confirmation variant — no icon + transparent peach pill buttons. */
+.confirm-modal.confirm-modal-delete .confirm-modal-icon {
+    display: none;
 }
 
 .confirm-modal.confirm-modal-delete .confirm-modal-actions {
@@ -2193,17 +2236,18 @@ body.dark-mode .confirm-modal .btn-cancel:hover {
 .confirm-modal.confirm-modal-delete .confirm-modal-btn {
     padding: 0.6rem 1.5rem;
     border-radius: 8px;
-    border: none;
     font-size: 0.875rem;
     font-weight: 600;
     cursor: pointer;
-    background: #F7E4DA;
+    background: transparent;
     color: #B85C38;
+    border: 1.5px solid rgba(184, 92, 56, 0.45);
     transition: background 0.2s, transform 0.15s;
 }
 
 .confirm-modal.confirm-modal-delete .confirm-modal-btn:hover {
-    background: #F0CFBE;
+    background: rgba(184, 92, 56, 0.10);
+    border-color: rgba(184, 92, 56, 0.65);
 }
 
 .confirm-modal.confirm-modal-delete .confirm-modal-btn:active {
@@ -2211,9 +2255,8 @@ body.dark-mode .confirm-modal .btn-cancel:hover {
 }
 
 /* Approve/Update confirmation variant */
-.confirm-modal.confirm-modal-approve .confirm-modal-icon svg,
-.confirm-modal.confirm-modal-approve .confirm-modal-icon svg path {
-    fill: #A7F3D0 !important;
+.confirm-modal.confirm-modal-approve .confirm-modal-icon {
+    display: none;
 }
 
 .confirm-modal.confirm-modal-approve .confirm-modal-actions {
@@ -2226,27 +2269,107 @@ body.dark-mode .confirm-modal .btn-cancel:hover {
 .confirm-modal.confirm-modal-approve .confirm-modal-btn {
     padding: 0.6rem 1.5rem;
     border-radius: 8px;
-    border: none;
     font-size: 0.875rem;
     font-weight: 600;
     cursor: pointer;
-    background: #D1FAE5;
-    color: #065F46;
+    background: transparent;
     transition: background 0.2s, transform 0.15s;
 }
 
-.confirm-modal.confirm-modal-approve .confirm-modal-btn:hover {
-    background: #A7F3D0;
+.confirm-modal.confirm-modal-approve .confirm-modal-btn.confirm-modal-cancel {
+    color: #1B998B;
+    border: 1.5px solid rgba(27, 153, 139, 0.45);
+}
+
+.confirm-modal.confirm-modal-approve .confirm-modal-btn.confirm-modal-confirm {
+    color: #1B998B;
+    border: 1.5px solid rgba(27, 153, 139, 0.45);
+}
+
+.confirm-modal.confirm-modal-approve .confirm-modal-btn.confirm-modal-cancel:hover {
+    background: rgba(27, 153, 139, 0.10);
+    border-color: rgba(27, 153, 139, 0.65);
+}
+
+.confirm-modal.confirm-modal-approve .confirm-modal-btn.confirm-modal-confirm:hover {
+    background: rgba(27, 153, 139, 0.10);
+    border-color: rgba(27, 153, 139, 0.65);
 }
 
 .confirm-modal.confirm-modal-approve .confirm-modal-btn:active {
     transform: scale(0.97);
 }
 
-/* Reset password confirmation variant */
-.confirm-modal.confirm-modal-reset .confirm-modal-icon svg,
-.confirm-modal.confirm-modal-reset .confirm-modal-icon svg path {
-    fill: #FDE68A !important;
+/* Reject confirmation variant — matches Approve dialog: no icon, transparent
+   buttons with teal-green text + border. */
+.confirm-modal.confirm-modal-reject .confirm-modal-icon {
+    display: none;
+}
+
+.confirm-modal.confirm-modal-reject .confirm-modal-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 1rem;
+}
+
+.confirm-modal.confirm-modal-reject .confirm-modal-btn {
+    padding: 0.6rem 1.5rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    background: transparent;
+    color: #B85C38;
+    border: 1.5px solid rgba(184, 92, 56, 0.45);
+    transition: background 0.2s, transform 0.15s;
+}
+
+.confirm-modal.confirm-modal-reject .confirm-modal-btn:hover {
+    background: rgba(184, 92, 56, 0.10);
+    border-color: rgba(184, 92, 56, 0.65);
+}
+
+.confirm-modal.confirm-modal-reject .confirm-modal-btn:active {
+    transform: scale(0.97);
+}
+
+/* Cancel-order confirmation variant — no icon + transparent brick-red pills. */
+.confirm-modal.confirm-modal-cancel-order .confirm-modal-icon {
+    display: none;
+}
+
+.confirm-modal.confirm-modal-cancel-order .confirm-modal-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 1rem;
+}
+
+.confirm-modal.confirm-modal-cancel-order .confirm-modal-btn {
+    padding: 0.6rem 1.5rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    background: transparent;
+    color: #A53A33;
+    border: 1.5px solid rgba(165, 58, 51, 0.45);
+    transition: background 0.2s, transform 0.15s;
+}
+
+.confirm-modal.confirm-modal-cancel-order .confirm-modal-btn:hover {
+    background: rgba(165, 58, 51, 0.10);
+    border-color: rgba(165, 58, 51, 0.65);
+}
+
+.confirm-modal.confirm-modal-cancel-order .confirm-modal-btn:active {
+    transform: scale(0.97);
+}
+
+/* Reset password confirmation variant — no icon + transparent gold pills. */
+.confirm-modal.confirm-modal-reset .confirm-modal-icon {
+    display: none;
 }
 
 .confirm-modal.confirm-modal-reset .confirm-modal-actions {
@@ -2259,17 +2382,18 @@ body.dark-mode .confirm-modal .btn-cancel:hover {
 .confirm-modal.confirm-modal-reset .confirm-modal-btn {
     padding: 0.6rem 1.5rem;
     border-radius: 8px;
-    border: none;
     font-size: 0.875rem;
     font-weight: 600;
     cursor: pointer;
-    background: #FEF3C7;
-    color: #92400E;
+    background: transparent;
+    color: #E3A93C;
+    border: 1.5px solid rgba(227, 169, 60, 0.45);
     transition: background 0.2s, transform 0.15s;
 }
 
 .confirm-modal.confirm-modal-reset .confirm-modal-btn:hover {
-    background: #FDE68A;
+    background: rgba(227, 169, 60, 0.10);
+    border-color: rgba(227, 169, 60, 0.65);
 }
 
 .confirm-modal.confirm-modal-reset .confirm-modal-btn:active {
@@ -2816,6 +2940,41 @@ body.dark-mode .skeleton-row {
     transform: scale(0.97);
 }
 
+/* Dashboard Overview's refresh button uses the default .btn-export look —
+   transparent teal-blue outline that fills on hover, same as Export Excel. */
+
+/* User Profile (User 360°) Refresh button — same hover lift + darker
+   teal fill + amplified drop shadow as the dashboard overview refresh. */
+#u360RefreshBtn,
+#post360RefreshBtn,
+#report360RefreshBtn,
+#analyticsRefresh,
+#notifRefresh,
+#broadcastPreviewBtn,
+#broadcastSendBtn {
+    transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+}
+#u360RefreshBtn:hover,
+#post360RefreshBtn:hover,
+#report360RefreshBtn:hover,
+#analyticsRefresh:hover,
+#notifRefresh:hover,
+#broadcastPreviewBtn:hover,
+#broadcastSendBtn:hover {
+    background: #2E86AB !important;
+    color: #fff !important;
+    box-shadow: 0 2px 8px rgba(46, 134, 171, 0.25) !important;
+}
+#u360RefreshBtn:active,
+#post360RefreshBtn:active,
+#report360RefreshBtn:active,
+#analyticsRefresh:active,
+#notifRefresh:active,
+#broadcastPreviewBtn:active,
+#broadcastSendBtn:active {
+    transform: scale(0.97);
+}
+
 /* Export button dark mode */
 body.dark-mode .btn-export {
     color: #6BC5D2;
@@ -2940,31 +3099,98 @@ body.dark-mode .btn-export:hover {
 /* Hide scrollbar on the User 360 tab strip (still scrollable by drag/wheel) */
 .user360-tabs::-webkit-scrollbar { display: none; height: 0; width: 0; }
 .user360-tabs { scrollbar-width: none; -ms-overflow-style: none; }
+
+/* Global slim scrollbars — a very pale neutral rail that fades into the
+   page; never reads as a dark vertical bar. Targets html/body/* so the
+   browser's main viewport scrollbar gets re-styled too. */
+html,
+body,
+* {
+    scrollbar-width: thin !important;
+    scrollbar-color: rgba(148, 163, 184, 0.35) transparent !important;
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+*::-webkit-scrollbar {
+    width: 8px !important;
+    height: 8px !important;
+}
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track,
+*::-webkit-scrollbar-track {
+    background: transparent !important;
+}
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb,
+*::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.35) !important;
+    border-radius: 4px !important;
+    border: 2px solid transparent !important;
+    background-clip: padding-box !important;
+}
+html::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover,
+*::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.55) !important;
+    background-clip: padding-box !important;
+}
+html::-webkit-scrollbar-thumb:active,
+body::-webkit-scrollbar-thumb:active,
+*::-webkit-scrollbar-thumb:active {
+    background: rgba(148, 163, 184, 0.70) !important;
+    background-clip: padding-box !important;
+}
+html::-webkit-scrollbar-corner,
+body::-webkit-scrollbar-corner,
+*::-webkit-scrollbar-corner {
+    background: transparent !important;
+}
 .user360-tabs > * { flex-shrink: 0; }
 
 /* =============================================
    AI ASSISTANT — header button + side panel
    ============================================= */
+/* AI toggle — mirrors the night-mode toggle button: 40x40 circle with
+   the light page background, 1px slate border, text-light icon. Hover
+   swaps to the primary-tint background and primary-blue border + icon. */
 .ai-assistant-toggle {
-    background: linear-gradient(135deg, #a855f7 0%, #3b82f6 100%);
-    border: none;
-    color: #fff;
-    width: 38px;
-    height: 38px;
-    border-radius: 10px;
+    background: var(--bg-light);
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    margin-right: 8px;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-    box-shadow: 0 2px 8px rgba(168, 85, 247, 0.25);
+    box-sizing: border-box;
+    color: var(--text-light);
+    transition: all 0.3s ease;
+}
+.ai-assistant-toggle-inner {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: transparent;
+    padding: 0;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.ai-assistant-toggle-inner svg {
+    width: 22px;
+    height: 22px;
+    color: inherit;
+    background: transparent;
+    padding: 0;
 }
 .ai-assistant-toggle:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 14px rgba(168, 85, 247, 0.4);
+    background: var(--primary-light);
+    color: var(--primary-color);
+    border-color: var(--primary-color);
 }
-.ai-assistant-toggle:active { transform: translateY(0); }
+.ai-assistant-toggle:active { transform: scale(0.97); }
 
 .admin-ai-backdrop {
     position: fixed; inset: 0;
@@ -2991,33 +3217,54 @@ body.dark-mode .btn-export:hover {
 .admin-ai-panel.open { transform: translateX(0); }
 
 .admin-ai-header {
-    padding: 16px 18px;
-    border-bottom: 1px solid #ECECEC;
+    padding: 14px 18px;
+    border-bottom: 1px solid #EFEFEF;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    background: linear-gradient(135deg, rgba(168,85,247,0.05), rgba(59,130,246,0.05));
+    background: #fff;
 }
 .admin-ai-title { display: flex; align-items: center; gap: 12px; }
-.admin-ai-spark {
-    font-size: 22px;
-    filter: drop-shadow(0 0 8px rgba(168,85,247,0.5));
+/* Matches the dashboard-header AI toggle: 40x40 light circle with a
+   1px slate border and a slate-grey sparkles glyph in the centre. */
+.admin-ai-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: var(--bg-light);
+    border: 1px solid var(--border-color);
+    box-sizing: border-box;
+    color: var(--text-light);
 }
-.admin-ai-title-main { font-weight: 700; font-size: 15px; color: #1a1a1a; }
-.admin-ai-title-sub { font-size: 11px; color: #888; }
+.admin-ai-avatar-inner {
+    width: 100%; height: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.admin-ai-avatar-inner > svg {
+    width: 22px; height: 22px;
+    color: inherit;
+    background: transparent;
+    padding: 0;
+}
+.admin-ai-title-main { font-weight: 700; font-size: 15px; color: #2C3E50; letter-spacing: -0.2px; }
+.admin-ai-title-sub { font-size: 11px; color: #94A3B8; }
 .admin-ai-header-actions { display: flex; gap: 4px; }
 .admin-ai-icon-btn {
     background: none; border: none;
-    width: 30px; height: 30px;
+    width: 32px; height: 32px;
     border-radius: 8px;
     cursor: pointer;
-    font-size: 18px;
-    color: #666;
+    color: #2C3E50;
     display: inline-flex; align-items: center; justify-content: center;
     transition: background 0.15s ease;
 }
-.admin-ai-icon-btn:hover { background: rgba(0,0,0,0.05); color: #222; }
+.admin-ai-icon-btn:hover { background: rgba(111, 143, 163, 0.08); }
+.admin-ai-icon-btn svg { display: block; }
 
 .admin-ai-messages {
     flex: 1;
@@ -3033,9 +3280,18 @@ body.dark-mode .btn-export:hover {
     padding: 32px 16px;
     color: #555;
 }
-.admin-ai-welcome-spark { font-size: 36px; margin-bottom: 8px; }
-.admin-ai-welcome-title { font-size: 18px; font-weight: 700; color: #1a1a1a; }
-.admin-ai-welcome-sub { font-size: 13px; color: #888; margin-top: 4px; line-height: 1.5; }
+.admin-ai-welcome-spark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 68px; height: 68px;
+    border-radius: 50%;
+    background: rgba(111, 143, 163, 0.12);
+    color: #6F8FA3;
+    margin-bottom: 10px;
+}
+.admin-ai-welcome-title { font-size: 18px; font-weight: 800; color: #2C3E50; letter-spacing: -0.3px; }
+.admin-ai-welcome-sub { font-size: 13px; color: #94A3B8; margin-top: 4px; line-height: 1.5; }
 
 .admin-ai-msg { display: flex; }
 .admin-ai-msg.msg-user { justify-content: flex-end; }
@@ -3046,16 +3302,21 @@ body.dark-mode .btn-export:hover {
     border-radius: 14px;
     font-size: 13.5px;
     line-height: 1.55;
-    color: #1a1a1a;
+    color: #2C3E50;
     word-wrap: break-word;
 }
+/* User bubbles → solid primary blue, white text, asymmetric tail.
+   AI bubbles → soft white with thin slate border + tiny shadow, matches
+   the mobile app's incoming message look. */
 .msg-user .admin-ai-msg-body {
-    background: linear-gradient(135deg, #a855f7, #3b82f6);
+    background: #6F8FA3;
     color: #fff;
     border-bottom-right-radius: 4px;
 }
 .msg-assistant .admin-ai-msg-body {
-    background: #F4F4F6;
+    background: #fff;
+    border: 1px solid #EFEFEF;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
     border-bottom-left-radius: 4px;
 }
 .admin-ai-msg-body p { margin: 0 0 6px; }
@@ -3085,23 +3346,23 @@ body.dark-mode .btn-export:hover {
 }
 .admin-ai-chip {
     background: #fff;
-    border: 1px solid #E5E5E5;
+    border: 1px solid #E6ECF1;
     padding: 6px 12px;
     border-radius: 16px;
     font-size: 12px;
-    color: #555;
+    color: #2C3E50;
     cursor: pointer;
     transition: all 0.15s ease;
 }
 .admin-ai-chip:hover {
-    background: linear-gradient(135deg, rgba(168,85,247,0.08), rgba(59,130,246,0.08));
-    border-color: rgba(168,85,247,0.3);
-    color: #6d28d9;
+    background: rgba(111, 143, 163, 0.08);
+    border-color: #6F8FA3;
+    color: #6F8FA3;
 }
 
 .admin-ai-input-row {
     padding: 12px 18px 16px;
-    border-top: 1px solid #ECECEC;
+    border-top: 1px solid #EFEFEF;
     display: flex;
     gap: 8px;
     align-items: flex-end;
@@ -3109,11 +3370,12 @@ body.dark-mode .btn-export:hover {
 }
 #adminAiInput {
     flex: 1;
-    border: 1px solid #E5E5E5;
+    border: 1px solid #E6E6E6;
     border-radius: 12px;
     padding: 10px 14px;
     font-size: 13.5px;
     font-family: inherit;
+    color: #2C3E50;
     resize: none;
     outline: none;
     min-height: 40px;
@@ -3121,16 +3383,22 @@ body.dark-mode .btn-export:hover {
     line-height: 1.4;
     transition: border-color 0.15s ease;
 }
-#adminAiInput:focus { border-color: #a855f7; }
+#adminAiInput::placeholder { color: #94A3B8; }
+#adminAiInput:focus { border-color: #6F8FA3; }
+/* Circular send button — primary blue, white icon, matches the mobile
+   AI screen's send affordance. */
 #adminAiSend {
-    background: linear-gradient(135deg, #a855f7, #3b82f6);
+    background: #6F8FA3;
     color: #fff;
     border: none;
     width: 40px; height: 40px;
-    border-radius: 12px;
+    border-radius: 50%;
     cursor: pointer;
-    font-size: 15px;
     display: inline-flex; align-items: center; justify-content: center;
-    transition: transform 0.15s ease;
+    transition: transform 0.15s ease, background 0.15s ease;
+    flex-shrink: 0;
 }
-#adminAiSend:hover { transform: scale(1.05); }
+#adminAiSend svg { display: block; }
+#adminAiSend:hover { transform: scale(1.05); background: #5F7E91; }
+#adminAiSend:disabled,
+#adminAiSend[disabled] { background: #C4C4C4; cursor: not-allowed; transform: none; }

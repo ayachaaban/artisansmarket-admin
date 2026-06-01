@@ -120,18 +120,34 @@ STYLE
     const panel = document.createElement('div');
     panel.id = 'adminAiPanel';
     panel.className = 'admin-ai-panel';
+    // Mirrors the mobile AI screen: nested-circles avatar (primary outer
+    // ring → white spacer → tinted-primary fill) with a sparkles glyph, a
+    // slate-grey subtitle, and a primary-blue circular send button. All
+    // unicode chars (✨/⟳/×/➤) swapped for inline SVGs so they look the
+    // same on every OS / font.
     panel.innerHTML = `
       <div class="admin-ai-header">
         <div class="admin-ai-title">
-          <span class="admin-ai-spark">✨</span>
+          <span class="admin-ai-avatar">
+            <span class="admin-ai-avatar-inner">
+              <!-- Material auto_awesome_rounded — same as mobile -->
+              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9l1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zM11.5 9.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5zM19 15l-1.25 2.75L15 19l2.75 1.25L19 23l1.25-2.75L23 19l-2.75-1.25z"/></svg>
+              <!-- 22x22 inline width matches the .admin-ai-avatar-inner > svg rule above -->
+
+            </span>
+          </span>
           <div>
             <div class="admin-ai-title-main">AI Assistant</div>
             <div class="admin-ai-title-sub">Llama 3.3 · for admins</div>
           </div>
         </div>
         <div class="admin-ai-header-actions">
-          <button id="adminAiClear" title="Clear conversation" class="admin-ai-icon-btn">⟳</button>
-          <button id="adminAiClose" title="Close" class="admin-ai-icon-btn">×</button>
+          <button id="adminAiClear" title="Clear conversation" class="admin-ai-icon-btn" aria-label="Clear conversation">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          </button>
+          <button id="adminAiClose" title="Close" class="admin-ai-icon-btn" aria-label="Close">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
         </div>
       </div>
       <div class="admin-ai-messages" id="adminAiMessages"></div>
@@ -142,8 +158,10 @@ STYLE
         <button class="admin-ai-chip" data-prompt="When can an artist be suspended automatically?">When to suspend?</button>
       </div>
       <form class="admin-ai-input-row" id="adminAiForm">
-        <textarea id="adminAiInput" placeholder="Ask anything about the platform…" rows="1"></textarea>
-        <button type="submit" id="adminAiSend" title="Send">➤</button>
+        <textarea id="adminAiInput" placeholder="Ask about artwork, artists, orders…" rows="1"></textarea>
+        <button type="submit" id="adminAiSend" title="Send" aria-label="Send">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
       </form>
     `;
     document.body.appendChild(panel);
@@ -222,7 +240,10 @@ STYLE
     if (history.length === 0) {
       container.innerHTML = `
         <div class="admin-ai-welcome">
-          <div class="admin-ai-welcome-spark">✨</div>
+          <div class="admin-ai-welcome-spark" aria-hidden="true">
+            <!-- Material auto_awesome_rounded — same as mobile -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9l1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zM11.5 9.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5zM19 15l-1.25 2.75L15 19l2.75 1.25L19 23l1.25-2.75L23 19l-2.75-1.25z"/></svg>
+          </div>
           <div class="admin-ai-welcome-title">How can I help?</div>
           <div class="admin-ai-welcome-sub">Ask about policies, refunds, moderation, or paste an order/report and I'll explain it.</div>
         </div>`;

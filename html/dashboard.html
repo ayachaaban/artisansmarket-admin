@@ -159,17 +159,21 @@
                     </div>
                 </div>
             </div>
-            <button class="ai-assistant-toggle" id="aiAssistantToggle" title="Ask AI assistant" aria-label="Ask AI assistant">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 2 L13.5 8.5 L20 10 L13.5 11.5 L12 18 L10.5 11.5 L4 10 L10.5 8.5 Z"/>
-                    <path d="M18 18 L18.7 20.3 L21 21 L18.7 21.7 L18 24 L17.3 21.7 L15 21 L17.3 20.3 Z" transform="translate(-1 -3) scale(0.6)"/>
-                </svg>
-            </button>
-            <button class="theme-toggle-dash" id="themeToggleDash">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-                    <path d="M6 .278a.768.768 0 0 1 .08.858 7.208 7.208 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277.527 0 1.04-.055 1.533-.16a.787.787 0 0 1 .81.316.733.733 0 0 1-.031.893A8.349 8.349 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.752.752 0 0 1 6 .278z"/>
-                </svg>
-            </button>
+            <div class="top-bar-actions">
+                <button class="theme-toggle-dash" id="themeToggleDash">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M6 .278a.768.768 0 0 1 .08.858 7.208 7.208 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277.527 0 1.04-.055 1.533-.16a.787.787 0 0 1 .81.316.733.733 0 0 1-.031.893A8.349 8.349 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.752.752 0 0 1 6 .278z"/>
+                    </svg>
+                </button>
+                <button class="ai-assistant-toggle" id="aiAssistantToggle" title="Ask AI assistant" aria-label="Ask AI assistant">
+                    <span class="ai-assistant-toggle-inner">
+                        <!-- Material auto_awesome_rounded — same glyph used in the mobile AppBar AI avatar -->
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M19 9l1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zM11.5 9.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5zM19 15l-1.25 2.75L15 19l2.75 1.25L19 23l1.25-2.75L23 19l-2.75-1.25z"/>
+                        </svg>
+                    </span>
+                </button>
+            </div>
         </div>
 
         <!-- Dashboard Content -->
@@ -182,11 +186,6 @@
                 <div class="row g-3 mb-4">
                     <div class="col-lg-2 col-md-4 col-sm-6">
                         <div class="kpi-card">
-                            <div class="kpi-icon" style="background: #B85C38;">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
-                                    <path d="M15 14s1 0 1-1-1-4-5-4-5 3-5 4 1 1 1 1h8Zm-7.978-1A.261.261 0 0 1 7 12.996c.001-.264.167-1.03.76-1.72C8.312 10.629 9.282 10 11 10c1.717 0 2.687.63 3.24 1.276.593.69.758 1.457.76 1.72l-.008.002a.274.274 0 0 1-.014.002H7.022ZM11 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm3-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM6.936 9.28a5.88 5.88 0 0 0-1.23-.247A7.35 7.35 0 0 0 5 9c-4 0-5 3-5 4 0 .667.333 1 1 1h4.216A2.238 2.238 0 0 1 5 13c0-1.01.377-2.042 1.09-2.904.243-.294.526-.569.846-.816ZM4.92 10A5.493 5.493 0 0 0 4 13H1c0-.26.164-1.03.76-1.724.545-.636 1.492-1.256 3.16-1.275ZM1.5 5.5a3 3 0 1 1 6 0 3 3 0 0 1-6 0Zm3-2a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z"/>
-                                </svg>
-                            </div>
                             <div class="kpi-details">
                                 <h4 id="totalUsers">0</h4>
                                 <p>Total Users</p>
@@ -195,11 +194,6 @@
                     </div>
                     <div class="col-lg-2 col-md-4 col-sm-6">
                         <div class="kpi-card">
-                            <div class="kpi-icon" style="background: #5B9BB5;">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
-                                    <path d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311c.446.82.023 1.841-.872 2.105l-.34.1c-1.4.413-1.4 2.397 0 2.81l.34.1a1.464 1.464 0 0 1 .872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 0 1 2.105.872l.1.34c.413 1.4 2.397 1.4 2.81 0l.1-.34a1.464 1.464 0 0 1 2.105-.872l.31.17c1.283.698 2.686-.705 1.987-1.987l-.169-.311a1.464 1.464 0 0 1 .872-2.105l.34-.1c1.4-.413 1.4-2.397 0-2.81l-.34-.1a1.464 1.464 0 0 1-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 0 1-2.105-.872l-.1-.34zM8 10.93a2.929 2.929 0 1 1 0-5.86 2.929 2.929 0 0 1 0 5.858z"/>
-                                </svg>
-                            </div>
                             <div class="kpi-details">
                                 <h4 id="totalArtists">0</h4>
                                 <p>Total Artists</p>
@@ -208,12 +202,6 @@
                     </div>
                     <div class="col-lg-2 col-md-4 col-sm-6">
                         <div class="kpi-card">
-                            <div class="kpi-icon" style="background: #F4C96B;">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
-                                    <path d="M5.5 7a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1h-5zM5 9.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5z"/>
-                                    <path d="M9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.5L9.5 0zm0 1v2A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5z"/>
-                                </svg>
-                            </div>
                             <div class="kpi-details">
                                 <h4 id="totalPosts">0</h4>
                                 <p>Total Posts</p>
@@ -222,11 +210,6 @@
                     </div>
                     <div class="col-lg-2 col-md-4 col-sm-6">
                         <div class="kpi-card">
-                            <div class="kpi-icon" style="background: #3A6B5C;">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
-                                    <path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z"/>
-                                </svg>
-                            </div>
                             <div class="kpi-details">
                                 <h4 id="activePosts">0</h4>
                                 <p>Active Posts</p>
@@ -235,12 +218,6 @@
                     </div>
                     <div class="col-lg-2 col-md-4 col-sm-6">
                         <div class="kpi-card">
-                            <div class="kpi-icon" style="background: linear-gradient(135deg, #F59E0B, #FBBF24);">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
-                                    <path d="M7.938 2.016A.13.13 0 0 1 8.002 2a.13.13 0 0 1 .063.016.146.146 0 0 1 .054.057l6.857 11.667c.036.06.035.124.002.183a.163.163 0 0 1-.054.06.116.116 0 0 1-.066.017H1.146a.115.115 0 0 1-.066-.017.163.163 0 0 1-.054-.06.176.176 0 0 1 .002-.183L7.884 2.073a.147.147 0 0 1 .054-.057zm1.044-.45a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566z"/>
-                                    <path d="M7.002 12a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 5.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995z"/>
-                                </svg>
-                            </div>
                             <div class="kpi-details">
                                 <h4 id="pendingReports">0</h4>
                                 <p>Pending Reports</p>
@@ -249,11 +226,6 @@
                     </div>
                     <div class="col-lg-2 col-md-4 col-sm-6">
                         <div class="kpi-card">
-                            <div class="kpi-icon" style="background: #B85C38;">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
-                                    <path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"/>
-                                </svg>
-                            </div>
                             <div class="kpi-details">
                                 <h4 id="avgRating">0.0</h4>
                                 <p>Avg Rating</p>
@@ -283,7 +255,7 @@
             <div class="page-content" id="usersPage">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <h2 class="page-title mb-0">Users Management</h2>
-                    <button class="btn-export" onclick="exportTableToCSV('customersTab', 'users')">
+                    <button class="btn-export" onclick="exportActiveUsersTab()">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
                         Export Excel
                     </button>
@@ -622,13 +594,7 @@
                 <!-- KPI Cards -->
                 <div class="row g-3 mb-4">
                     <div class="col-lg-3 col-md-6">
-                        <div class="kpi-card">
-                            <div class="kpi-icon" style="background: #B85C38;">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
-                                    <path d="M5.5 9.511c.076.954.83 1.697 2.182 1.785V12h.6v-.709c1.4-.098 2.218-.846 2.218-1.932 0-.987-.626-1.496-1.745-1.76l-.473-.112V5.57c.6.068.982.396 1.074.85h1.052c-.076-.919-.864-1.638-2.126-1.716V4h-.6v.719c-1.195.117-2.01.836-2.01 1.853 0 .9.606 1.472 1.613 1.707l.397.098v2.034c-.615-.093-1.022-.43-1.114-.9H5.5zm2.177-2.166c-.59-.137-.91-.416-.91-.836 0-.47.345-.822.915-.925v1.76h-.005zm.692 1.193c.717.166 1.048.435 1.048.91 0 .542-.412.914-1.135.982V8.518l.087.02z"/>
-                                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-                                </svg>
-                            </div>
+                        <div class="kpi-card" style="border-left:3px solid #B85C38;">
                             <div class="kpi-details">
                                 <h4 id="totalSubscriptions">0</h4>
                                 <p>Total Subscriptions</p>
@@ -636,12 +602,7 @@
                         </div>
                     </div>
                     <div class="col-lg-3 col-md-6">
-                        <div class="kpi-card">
-                            <div class="kpi-icon" style="background: #3A6B5C;">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
-                                    <path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z"/>
-                                </svg>
-                            </div>
+                        <div class="kpi-card" style="border-left:3px solid #3A6B5C;">
                             <div class="kpi-details">
                                 <h4 id="activeSubscriptions">0</h4>
                                 <p>Active</p>
@@ -649,14 +610,7 @@
                         </div>
                     </div>
                     <div class="col-lg-3 col-md-6">
-                        <div class="kpi-card">
-                            <div class="kpi-icon" style="background: linear-gradient(135deg, #F59E0B, #FBBF24);">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
-                                    <path d="M8.515 1.019A7 7 0 0 0 8 1V0a8 8 0 0 1 .589.022l-.074.997zm2.004.45a7.003 7.003 0 0 0-.985-.299l.219-.976c.383.086.76.2 1.126.342l-.36.933zm1.37.71a7.01 7.01 0 0 0-.439-.27l.493-.87a8.025 8.025 0 0 1 .979.654l-.615.789a6.996 6.996 0 0 0-.418-.302zm1.834 1.79a6.99 6.99 0 0 0-.653-.796l.724-.69c.27.285.52.59.747.91l-.818.576zm.744 1.352a7.08 7.08 0 0 0-.214-.468l.893-.45a7.976 7.976 0 0 1 .45 1.088l-.95.313a7.023 7.023 0 0 0-.179-.483zm.53 2.507a6.991 6.991 0 0 0-.1-1.025l.985-.17c.067.386.106.778.116 1.17l-1 .025zm-.131 1.538c.033-.17.06-.339.081-.51l.993.123a7.957 7.957 0 0 1-.23 1.155l-.964-.267c.046-.165.086-.332.12-.501zm-.952 2.379c.184-.29.346-.594.486-.908l.914.405c-.16.36-.345.706-.555 1.038l-.845-.535zm-.964 1.205c.122-.122.239-.248.35-.378l.758.653a8.073 8.073 0 0 1-.401.432l-.707-.707z"/>
-                                    <path d="M8 1a7 7 0 1 0 4.95 11.95l.707.707A8.001 8.001 0 1 1 8 0v1z"/>
-                                    <path d="M7.5 3a.5.5 0 0 1 .5.5v5.21l3.248 1.856a.5.5 0 0 1-.496.868l-3.5-2A.5.5 0 0 1 7 9V3.5a.5.5 0 0 1 .5-.5z"/>
-                                </svg>
-                            </div>
+                        <div class="kpi-card" style="border-left:3px solid #F59E0B;">
                             <div class="kpi-details">
                                 <h4 id="expiredSubscriptions">0</h4>
                                 <p>Expired</p>
@@ -664,12 +618,7 @@
                         </div>
                     </div>
                     <div class="col-lg-3 col-md-6">
-                        <div class="kpi-card">
-                            <div class="kpi-icon" style="background: #5B9BB5;">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
-                                    <path d="M4 10.781c.148 1.667 1.513 2.85 3.591 3.003V15h1.043v-1.216c2.27-.179 3.678-1.438 3.678-3.3 0-1.59-.947-2.51-2.956-3.028l-.722-.187V3.467c1.122.11 1.879.714 2.07 1.616h1.47c-.166-1.6-1.54-2.748-3.54-2.875V1H7.591v1.233c-1.939.23-3.27 1.472-3.27 3.156 0 1.454.966 2.483 2.661 2.917l.61.162v4.031c-1.149-.17-1.94-.8-2.131-1.718H4zm3.391-3.836c-1.043-.263-1.6-.825-1.6-1.616 0-.944.704-1.641 1.8-1.828v3.495l-.2-.05zm1.591 1.872c1.287.323 1.852.859 1.852 1.769 0 1.097-.826 1.828-2.2 1.939V8.73l.348.086z"/>
-                                </svg>
-                            </div>
+                        <div class="kpi-card" style="border-left:3px solid #5B9BB5;">
                             <div class="kpi-details">
                                 <h4 id="monthlyRevenue">$0</h4>
                                 <p>Monthly Revenue</p>
@@ -690,14 +639,14 @@
                     <div class="col-lg-4">
                         <div class="chart-card text-center">
                             <h5><span class="plan-badge plan-basic">Basic</span></h5>
-                            <h3 class="mt-2">$9.99<small class="text-muted">/mo</small></h3>
+                            <h3 class="mt-2">$3.99<small class="text-muted">/mo</small></h3>
                             <p class="text-muted">25 posts limit</p>
                         </div>
                     </div>
                     <div class="col-lg-4">
                         <div class="chart-card text-center">
                             <h5><span class="plan-badge plan-premium">Premium</span></h5>
-                            <h3 class="mt-2">$24.99<small class="text-muted">/mo</small></h3>
+                            <h3 class="mt-2">$9.99<small class="text-muted">/mo</small></h3>
                             <p class="text-muted">Unlimited posts</p>
                         </div>
                     </div>
@@ -718,12 +667,12 @@
                                 <label for="planSelect" class="form-label">Select Plan</label>
                                 <select class="form-select filter-select" id="planSelect" required>
                                     <option value="free">Free ($0/mo)</option>
-                                    <option value="basic">Basic ($9.99/mo)</option>
-                                    <option value="premium">Premium ($24.99/mo)</option>
+                                    <option value="basic">Basic ($3.99/mo)</option>
+                                    <option value="premium">Premium ($9.99/mo)</option>
                                 </select>
                             </div>
                             <div class="col-md-3">
-                                <button type="submit" class="btn-action btn-approve w-100">Assign Plan</button>
+                                <button type="submit" class="btn-export w-100" style="justify-content:center;">Assign Plan</button>
                             </div>
                         </div>
                     </form>
@@ -787,12 +736,7 @@
                 <!-- KPI Cards -->
                 <div class="row g-3 mb-4">
                     <div class="col-lg-3 col-md-6">
-                        <div class="kpi-card">
-                            <div class="kpi-icon" style="background: #B85C38;">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
-                                    <path d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .491.592l-1.5 8A.5.5 0 0 1 13 12H4a.5.5 0 0 1-.491-.408L2.01 3.607 1.61 2H.5a.5.5 0 0 1-.5-.5z"/>
-                                </svg>
-                            </div>
+                        <div class="kpi-card" style="border-left:3px solid #B85C38;">
                             <div class="kpi-details">
                                 <h4 id="totalOrders">0</h4>
                                 <p>Total Orders</p>
@@ -800,12 +744,7 @@
                         </div>
                     </div>
                     <div class="col-lg-3 col-md-6">
-                        <div class="kpi-card">
-                            <div class="kpi-icon" style="background: linear-gradient(135deg, #F59E0B, #FBBF24);">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
-                                    <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.399l-.395.004.088-.416.913-.204c.484-.12.757-.17 1.048-.17.566 0 .83.33.687 1.166zM8.5 5.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
-                                </svg>
-                            </div>
+                        <div class="kpi-card" style="border-left:3px solid #F59E0B;">
                             <div class="kpi-details">
                                 <h4 id="pendingOrders">0</h4>
                                 <p>Pending</p>
@@ -813,12 +752,7 @@
                         </div>
                     </div>
                     <div class="col-lg-3 col-md-6">
-                        <div class="kpi-card">
-                            <div class="kpi-icon" style="background: #3A6B5C;">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
-                                    <path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z"/>
-                                </svg>
-                            </div>
+                        <div class="kpi-card" style="border-left:3px solid #3A6B5C;">
                             <div class="kpi-details">
                                 <h4 id="deliveredOrders">0</h4>
                                 <p>Delivered</p>
@@ -826,12 +760,7 @@
                         </div>
                     </div>
                     <div class="col-lg-3 col-md-6">
-                        <div class="kpi-card">
-                            <div class="kpi-icon" style="background: #5B9BB5;">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
-                                    <path d="M4 10.781c.148 1.667 1.513 2.85 3.591 3.003V15h1.043v-1.216c2.27-.179 3.678-1.438 3.678-3.3 0-1.59-.947-2.51-2.956-3.028l-.722-.187V3.467c1.122.11 1.879.714 2.07 1.616h1.47c-.166-1.6-1.54-2.748-3.54-2.875V1H7.591v1.233c-1.939.23-3.27 1.472-3.27 3.156 0 1.454.966 2.483 2.661 2.917l.61.162v4.031c-1.149-.17-1.94-.8-2.131-1.718H4zm3.391-3.836c-1.043-.263-1.6-.825-1.6-1.616 0-.944.704-1.641 1.8-1.828v3.495l-.2-.05zm1.591 1.872c1.287.323 1.852.859 1.852 1.769 0 1.097-.826 1.828-2.2 1.939V8.73l.348.086z"/>
-                                </svg>
-                            </div>
+                        <div class="kpi-card" style="border-left:3px solid #5B9BB5;">
                             <div class="kpi-details">
                                 <h4 id="orderRevenue">$0.00</h4>
                                 <p>Total Revenue</p>
@@ -859,8 +788,11 @@
                     </select>
                     <select class="form-select filter-select" id="orderPaymentMethodFilter">
                         <option value="">All Methods</option>
-                        <option value="virtual_card">Virtual Card</option>
-                        <option value="virtual_visa">Virtual Visa</option>
+                        <option value="visa">Visa</option>
+                        <option value="mastercard">Mastercard</option>
+                        <option value="amex">Amex</option>
+                        <option value="card">Other card</option>
+                        <option value="credit_card">Credit card (legacy)</option>
                     </select>
                 </div>
 
@@ -896,7 +828,13 @@
 
             <!-- Payments & Payouts Page -->
             <div class="page-content" id="paymentsPayoutsPage">
-                <h2 class="page-title">Payments & Payouts</h2>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h2 class="page-title mb-0">Payments & Payouts</h2>
+                    <button class="btn-export" onclick="exportActivePaymentsTab()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
+                        Export Excel
+                    </button>
+                </div>
 
                 <!-- Payment Policies -->
                 <div class="row g-3 mb-4">
@@ -906,15 +844,11 @@
                             <div class="d-flex flex-wrap gap-4">
                                 <div class="policy-item">
                                     <span class="policy-label">Platform Commission</span>
-                                    <span class="policy-value" id="policyCommission">10%</span>
+                                    <span class="policy-value" id="policyCommission">0%</span>
                                 </div>
                                 <div class="policy-item">
-                                    <span class="policy-label">Refund Window</span>
-                                    <span class="policy-value" id="policyRefundDays">7 days</span>
-                                </div>
-                                <div class="policy-item">
-                                    <span class="policy-label">Min. Withdrawal</span>
-                                    <span class="policy-value" id="policyMinWithdrawal">$20.00</span>
+                                    <span class="policy-label">Payout Method</span>
+                                    <span class="policy-value">Auto to Visa</span>
                                 </div>
                                 <div class="policy-item">
                                     <span class="policy-label">Currency</span>
@@ -928,13 +862,7 @@
                 <!-- KPI Cards -->
                 <div class="row g-3 mb-4">
                     <div class="col-lg-2 col-md-4 col-sm-6">
-                        <div class="kpi-card">
-                            <div class="kpi-icon" style="background: #B85C38;">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
-                                    <path d="M5.5 9.511c.076.954.83 1.697 2.182 1.785V12h.6v-.709c1.4-.098 2.218-.846 2.218-1.932 0-.987-.626-1.496-1.745-1.76l-.473-.112V5.57c.6.068.982.396 1.074.85h1.052c-.076-.919-.864-1.638-2.126-1.716V4h-.6v.719c-1.195.117-2.01.836-2.01 1.853 0 .9.606 1.472 1.613 1.707l.397.098v2.034c-.615-.093-1.022-.43-1.114-.9H5.5zm2.177-2.166c-.59-.137-.91-.416-.91-.836 0-.47.345-.822.915-.925v1.76h-.005zm.692 1.193c.717.166 1.048.435 1.048.91 0 .542-.412.914-1.135.982V8.518l.087.02z"/>
-                                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-                                </svg>
-                            </div>
+                        <div class="kpi-card" style="border-left:3px solid #B85C38;">
                             <div class="kpi-details">
                                 <h4 id="totalPayments">0</h4>
                                 <p>Total Payments</p>
@@ -942,12 +870,7 @@
                         </div>
                     </div>
                     <div class="col-lg-2 col-md-4 col-sm-6">
-                        <div class="kpi-card">
-                            <div class="kpi-icon" style="background: #3A6B5C;">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
-                                    <path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z"/>
-                                </svg>
-                            </div>
+                        <div class="kpi-card" style="border-left:3px solid #3A6B5C;">
                             <div class="kpi-details">
                                 <h4 id="completedPayments">$0.00</h4>
                                 <p>Completed</p>
@@ -955,25 +878,15 @@
                         </div>
                     </div>
                     <div class="col-lg-2 col-md-4 col-sm-6">
-                        <div class="kpi-card">
-                            <div class="kpi-icon" style="background: linear-gradient(135deg, #F59E0B, #FBBF24);">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
-                                    <path d="M4 11H2v3h2v-3zm5-4H7v7h2V7zm5-5v12h-2V2h2zm-2-1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1h-2zM6 7a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7zm-5 4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1v-3z"/>
-                                </svg>
-                            </div>
+                        <div class="kpi-card" style="border-left:3px solid #F59E0B;">
                             <div class="kpi-details">
                                 <h4 id="platformRevenue">$0.00</h4>
-                                <p>Platform Revenue</p>
+                                <p>Subscription Revenue</p>
                             </div>
                         </div>
                     </div>
                     <div class="col-lg-2 col-md-4 col-sm-6">
-                        <div class="kpi-card">
-                            <div class="kpi-icon" style="background: #5B9BB5;">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
-                                    <path d="M1 3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1H1zm0 1v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"/>
-                                </svg>
-                            </div>
+                        <div class="kpi-card" style="border-left:3px solid #5B9BB5;">
                             <div class="kpi-details">
                                 <h4 id="totalPayoutsAmount">$0.00</h4>
                                 <p>Total Payouts</p>
@@ -981,29 +894,10 @@
                         </div>
                     </div>
                     <div class="col-lg-2 col-md-4 col-sm-6">
-                        <div class="kpi-card">
-                            <div class="kpi-icon" style="background: #B85C38;">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
-                                    <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.399l-.395.004.088-.416.913-.204c.484-.12.757-.17 1.048-.17.566 0 .83.33.687 1.166zM8.5 5.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
-                                </svg>
-                            </div>
+                        <div class="kpi-card" style="border-left:3px solid #B85C38;">
                             <div class="kpi-details">
                                 <h4 id="pendingPayouts">$0.00</h4>
-                                <p>Pending Payouts</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-2 col-md-4 col-sm-6">
-                        <div class="kpi-card">
-                            <div class="kpi-icon" style="background: #5B9BB5;">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16">
-                                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
-                                    <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1z"/>
-                                </svg>
-                            </div>
-                            <div class="kpi-details">
-                                <h4 id="refundedAmount">$0.00</h4>
-                                <p>Refunded</p>
+                                <p>In Wallets</p>
                             </div>
                         </div>
                     </div>
@@ -1041,8 +935,11 @@
                             </select>
                             <select class="form-select filter-select" id="paymentMethodFilter">
                                 <option value="">All Methods</option>
-                                <option value="virtual_card">Virtual Card</option>
-                                <option value="virtual_visa">Virtual Visa</option>
+                                <option value="visa">Visa</option>
+                                <option value="mastercard">Mastercard</option>
+                                <option value="amex">Amex</option>
+                                <option value="card">Other card</option>
+                                <option value="credit_card">Credit card (legacy)</option>
                             </select>
                         </div>
 
@@ -1054,8 +951,6 @@
                                         <th>Type</th>
                                         <th>User</th>
                                         <th>Amount</th>
-                                        <th>Fee</th>
-                                        <th>Net</th>
                                         <th>Method</th>
                                         <th>Status</th>
                                         <th>Date</th>
@@ -1063,7 +958,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="paymentsTableBody">
-                                    <tr><td colspan="10" class="text-center">Loading...</td></tr>
+                                    <tr><td colspan="8" class="text-center">Loading...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -1091,12 +986,11 @@
                                         <th>Email</th>
                                         <th>Balance</th>
                                         <th>Total Earnings</th>
-                                        <th>Total Withdrawn</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="walletsTableBody">
-                                    <tr><td colspan="6" class="text-center">Loading...</td></tr>
+                                    <tr><td colspan="5" class="text-center">Loading...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -1205,34 +1099,22 @@
                 <!-- Stats: overdue / soon / extended -->
                 <div class="row g-3 mb-4">
                     <div class="col-lg-3 col-md-6">
-                        <div class="kpi-card">
-                            <div class="kpi-icon" style="background:#ED4956;">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16"><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zM8 2a6 6 0 1 1 0 12A6 6 0 0 1 8 2zm0 2.5a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .146.354l2 2a.5.5 0 0 0 .708-.708L8.5 7.793V5a.5.5 0 0 0-.5-.5z"/></svg>
-                            </div>
+                        <div class="kpi-card" style="border-left:3px solid #A53A33;">
                             <div class="kpi-details"><h4 id="overdueCount">0</h4><p>Overdue</p></div>
                         </div>
                     </div>
                     <div class="col-lg-3 col-md-6">
-                        <div class="kpi-card">
-                            <div class="kpi-icon" style="background:#F59E0B;">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16"><path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/></svg>
-                            </div>
+                        <div class="kpi-card" style="border-left:3px solid #F59E0B;">
                             <div class="kpi-details"><h4 id="dueSoonCount">0</h4><p>Due in &lt; 48h</p></div>
                         </div>
                     </div>
                     <div class="col-lg-3 col-md-6">
-                        <div class="kpi-card">
-                            <div class="kpi-icon" style="background:#8B5CF6;">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16"><path d="M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41zm-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9z"/><path fill-rule="evenodd" d="M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7H12.9A5.002 5.002 0 0 0 8 3zM3.1 9a5.002 5.002 0 0 0 8.757 2.182.5.5 0 1 1 .771.636A6.002 6.002 0 0 1 2.083 9H3.1z"/></svg>
-                            </div>
+                        <div class="kpi-card" style="border-left:3px solid #6F8FA3;">
                             <div class="kpi-details"><h4 id="extendedCount">0</h4><p>Extended at least once</p></div>
                         </div>
                     </div>
                     <div class="col-lg-3 col-md-6">
-                        <div class="kpi-card">
-                            <div class="kpi-icon" style="background:#10B981;">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 16 16"><path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z"/></svg>
-                            </div>
+                        <div class="kpi-card" style="border-left:3px solid #1B998B;">
                             <div class="kpi-details"><h4 id="onTrackCount">0</h4><p>On track</p></div>
                         </div>
                     </div>
@@ -1320,7 +1202,7 @@
                                 <input type="password" class="form-control filter-select" id="newAdminPassword" placeholder="Min 6 characters" required minlength="6">
                             </div>
                             <div class="col-md-4">
-                                <button type="submit" class="btn-action btn-approve w-100">Add Admin</button>
+                                <button type="submit" class="btn-export w-100" style="justify-content:center;">Add Admin</button>
                             </div>
                         </div>
                     </form>

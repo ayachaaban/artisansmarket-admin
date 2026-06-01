@@ -27,6 +27,8 @@
         { pageId: 'postsPage',          key: 'posts',          reload: 'loadPosts',         dateField: 'createdAt' },
         { pageId: 'subscriptionsPage',  key: 'subscriptions',  reload: 'loadSubscriptions', dateField: 'createdAt' },
         { pageId: 'notificationsPage',  key: 'notifications',  reload: '_notifReload',      dateField: 'createdAt' },
+        { pageId: 'deadlinesPage',      key: 'deadlines',      reload: 'loadDeadlines',     dateField: 'estimatedCompletionDate' },
+        { pageId: 'ratingsPage',        key: 'ratings',        reload: 'loadRatings',       dateField: 'createdAt' },
     ];
 
     function injectInto(page) {
@@ -51,7 +53,7 @@
         wrap.style.cssText = 'display:inline-flex;gap:6px;align-items:center;flex-wrap:wrap;';
         wrap.innerHTML = `
             <label style="font-size:12px;color:#666;font-weight:500;display:inline-flex;align-items:center;gap:4px;">
-                <span>📅 From</span>
+                <span>From</span>
                 <input type="date" data-page="${page.key}" data-role="from" class="form-control filter-select date-range-input" style="width:auto;">
             </label>
             <label style="font-size:12px;color:#666;font-weight:500;display:inline-flex;align-items:center;gap:4px;">

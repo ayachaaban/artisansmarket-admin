@@ -55,37 +55,44 @@
                 <div class="detail-modal-header" style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
                     <h3 style="margin:0;">User Profile</h3>
                     <div style="display:flex;align-items:center;gap:8px;">
-                        <button id="u360RefreshBtn" title="Reload data" style="background:none;border:1px solid #E5E5E5;border-radius:6px;padding:4px 10px;font-size:12px;color:#555;cursor:pointer;">⟳ Refresh</button>
+                        <button id="u360RefreshBtn" title="Reload data" style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.45rem 1rem;font-size:0.82rem;font-weight:600;color:#2E86AB;background:transparent;border:1.5px solid #2E86AB;border-radius:8px;cursor:pointer;line-height:1;">Refresh</button>
                         <button class="detail-modal-close">&times;</button>
                     </div>
                 </div>
-                <div class="detail-modal-body" style="overflow-y:auto;padding:0;">
-                    <!-- Header card -->
-                    <div style="padding:24px;border-bottom:1px solid #ECECEC;background:linear-gradient(135deg,#FAFAFC 0%, #F5F5F7 100%);">
+                <!-- Header card (static, outside scroll area so the avatar,
+                     name and KPI strip stay visible while the tab content
+                     scrolls underneath). -->
+                <div style="padding:24px;border-bottom:1px solid #ECECEC;background:linear-gradient(135deg,#FAFAFC 0%, #F5F5F7 100%);flex-shrink:0;">
                         <div style="display:flex;gap:18px;align-items:center;">
                             <div style="position:relative;">
-                                <img id="u360Avatar" src="${user.profileImageUrl || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.name || '?') + '&background=D4A574&color=fff&size=80'}"
-                                    onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || '?')}&background=D4A574&color=fff&size=80';"
-                                    style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,0.08);"/>
-                                <span style="position:absolute;bottom:-4px;right:-4px;background:${
-                                    (user.status || 'active') === 'active' ? '#10B981' : '#ED4956'
-                                };color:white;border:2px solid white;border-radius:10px;padding:2px 8px;font-size:10px;font-weight:700;text-transform:uppercase;">
-                                    ${safe(user.status || 'active')}
-                                </span>
+                                ${user.profileImageUrl ? `
+                                  <img id="u360Avatar" src="${safe(user.profileImageUrl)}"
+                                      style="width:80px;height:80px;border-radius:50%;object-fit:cover;background:rgba(111,143,163,0.12);"/>
+                                ` : `
+                                  <div id="u360Avatar"
+                                      style="width:80px;height:80px;border-radius:50%;background:rgba(111,143,163,0.12);display:inline-flex;align-items:center;justify-content:center;color:#6F8FA3;font-weight:700;font-size:34px;line-height:1;">
+                                    ${safe(((user.name || '?').trim().charAt(0) || '?').toUpperCase())}
+                                  </div>
+                                `}
                             </div>
                             <div style="flex:1;min-width:0;">
-                                <h4 style="margin:0 0 4px 0;font-size:20px;font-weight:700;color:#262626;">${safe(user.name || 'Unnamed')}</h4>
+                                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px;">
+                                    <h4 style="margin:0;font-size:20px;font-weight:700;color:#262626;">${safe(user.name || 'Unnamed')}</h4>
+                                    <span class="status-badge" style="${
+                                        (user.status || 'active') === 'active'
+                                            ? 'background:rgba(27,153,139,0.10);color:#1B998B;border:1.5px solid rgba(27,153,139,0.45);'
+                                            : 'background:rgba(165,58,51,0.10);color:#A53A33;border:1.5px solid rgba(165,58,51,0.45);'
+                                    }text-transform:uppercase;">${safe(user.status || 'active')}</span>
+                                </div>
                                 <div style="color:#8E8E8E;font-size:13px;margin-bottom:6px;">${safe(user.email || 'no email')}</div>
-                                <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                                    <span class="status-badge" style="background:${
-                                        isArtist ? 'rgba(170,59,255,0.12);color:#8B5CF6' : 'rgba(46,134,171,0.12);color:#2E86AB'
-                                    };">${isArtist ? 'Artist' : 'Customer'}</span>
+                                <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+                                    <span class="status-badge" style="background:rgba(46,134,171,0.12);color:#2E86AB;">${isArtist ? 'Artist' : 'Customer'}</span>
                                     ${user.category ? `<span class="status-badge" style="background:rgba(245,158,11,0.12);color:#F59E0B;">${safe(user.category)}</span>` : ''}
-                                    ${typeof user.averageRating === 'number' ? `<span class="status-badge" style="background:rgba(245,158,11,0.12);color:#F59E0B;">★ ${user.averageRating.toFixed(1)}</span>` : ''}
+                                    ${typeof user.averageRating === 'number' ? `<span class="status-badge" style="background:rgba(227,169,60,0.10);color:#E3A93C;border:1.5px solid rgba(227,169,60,0.45);">★ ${user.averageRating.toFixed(1)}</span>` : ''}
                                 </div>
                             </div>
                             <div style="display:flex;flex-direction:column;gap:6px;">
-                                <button class="btn-action btn-view" id="u360PushBtn" title="Send push to this user">📤 Push</button>
+                                <button class="btn-action btn-view" id="u360PushBtn" title="Send push to this user">Push</button>
                                 ${
                                     (user.status || 'active') === 'active'
                                         ? '<button class="btn-action btn-suspend" id="u360SuspendBtn">Suspend</button>'
@@ -97,19 +104,19 @@
                         <div id="u360Kpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:18px;"></div>
                     </div>
 
-                    <!-- Tabs -->
-                    <div class="user360-tabs" style="display:flex;gap:2px;background:white;position:sticky;top:0;z-index:5;overflow-x:auto;white-space:nowrap;scrollbar-width:none;-ms-overflow-style:none;padding:0 8px;">
-                        ${tabHeader('overview', '📋 Overview', true)}
-                        ${tabHeader('orders', '📦 Orders')}
-                        ${isArtist ? tabHeader('posts', '🎨 Posts & Reels') : ''}
-                        ${tabHeader('ratings', '★ Ratings')}
-                        ${tabHeader('reports', '⚠ Reports')}
-                        ${tabHeader('notifications', '🔔 Notifications')}
-                        ${tabHeader('wallet', '💰 Wallet')}
-                    </div>
-
-                    <div id="u360TabBody" style="padding:20px;min-height:260px;"></div>
+                <!-- Tabs (static, fixed below the header). -->
+                <div class="user360-tabs" style="display:flex;gap:2px;background:white;overflow-x:auto;white-space:nowrap;scrollbar-width:none;-ms-overflow-style:none;padding:0 8px;flex-shrink:0;">
+                    ${tabHeader('overview', 'Overview', true)}
+                    ${tabHeader('orders', 'Orders')}
+                    ${isArtist ? tabHeader('posts', 'Posts & Reels') : ''}
+                    ${tabHeader('ratings', 'Ratings')}
+                    ${tabHeader('reports', 'Reports')}
+                    ${tabHeader('notifications', 'Notifications')}
+                    ${tabHeader('wallet', 'Wallet')}
                 </div>
+
+                <!-- Tab body — the ONLY scrollable region inside the modal. -->
+                <div id="u360TabBody" style="padding:20px;min-height:260px;overflow-y:auto;flex:1;"></div>
             </div>
         `;
 
@@ -154,13 +161,11 @@
         overlay.querySelector('#u360SuspendBtn')?.addEventListener('click', () => {
             if (typeof suspendUser === 'function') {
                 suspendUser(userId, user.name || 'Unknown');
-                close();
             }
         });
         overlay.querySelector('#u360ActivateBtn')?.addEventListener('click', () => {
             if (typeof activateUser === 'function') {
                 activateUser(userId, user.name || 'Unknown');
-                close();
             }
         });
 
@@ -193,8 +198,8 @@
             .user360-tabs { box-shadow: inset 0 -1px 0 #ECECEC; }
             .user360-tab { transition:color .15s ease, background .15s ease; position:relative; min-height:42px; }
             .user360-tab.active { color:#262626 !important; }
-            .user360-tab.active::after { content:''; position:absolute; left:10%; right:10%; bottom:0; height:3px; background:#C8A870; border-radius:2px 2px 0 0; }
-            .user360-tab:hover:not(.active) { color:#262626 !important; background:rgba(200,168,112,0.06); }
+            .user360-tab.active::after { content:''; position:absolute; left:10%; right:10%; bottom:0; height:3px; background:#6F8FA3; border-radius:2px 2px 0 0; }
+            .user360-tab:hover:not(.active) { color:#262626 !important; background:rgba(111,143,163,0.06); }
             .u360-card { background:white; border:1px solid #ECECEC; border-radius:10px; padding:14px; margin-bottom:10px; }
             .u360-row { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid #F5F5F7; }
             .u360-row:last-child { border-bottom:none; }
@@ -398,7 +403,7 @@
             const stars = '★'.repeat(r.stars || 0) + '☆'.repeat(5 - (r.stars || 0));
             html += `<div class="u360-card">
                 <div style="display:flex;justify-content:space-between;">
-                    <span style="color:#F59E0B;font-size:16px;">${stars}</span>
+                    <span style="color:#E3A93C;font-size:16px;">${stars}</span>
                     <span style="color:#8E8E8E;font-size:11px;">${fmtDate(r.createdAt)}</span>
                 </div>
                 <div style="margin-top:6px;font-size:13px;color:#262626;">${safe(r.comment || '(no comment)')}</div>

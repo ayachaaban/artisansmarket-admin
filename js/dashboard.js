@@ -1,4 +1,32 @@
 // =============================================
+// USER AVATAR — matches the mobile UserAvatar widget and the dashboard
+// overview avatars. With a profile picture → cached image cropped to a
+// circle. Without → first initial of the name in primary slate-blue on a
+// 12%-alpha slate-blue tinted circle.
+// =============================================
+function buildUserAvatar(user, size) {
+    const s = size || 40;
+    const url = user && user.profileImageUrl ? String(user.profileImageUrl) : '';
+    if (url) {
+        const img = document.createElement('img');
+        img.className = 'user-avatar';
+        img.alt = (user && user.name) || '';
+        img.src = url;
+        img.style.width = s + 'px';
+        img.style.height = s + 'px';
+        return img;
+    }
+    const div = document.createElement('div');
+    div.className = 'user-avatar user-avatar-initial';
+    div.style.width = s + 'px';
+    div.style.height = s + 'px';
+    div.style.fontSize = Math.round(s * 0.42) + 'px';
+    const name = (user && user.name) ? String(user.name).trim() : '';
+    div.textContent = name ? name.charAt(0).toUpperCase() : '?';
+    return div;
+}
+
+// =============================================
 // TOAST NOTIFICATION SYSTEM
 // =============================================
 function showToast(message, type = 'info', duration = 4000) {
@@ -86,7 +114,10 @@ function showConfirm(title, message, onConfirm, options = {}) {
 // DETAIL MODAL (for orders, payments, etc.)
 // =============================================
 function showDetailModal(title, items, listItems) {
-    document.querySelector('.detail-modal-overlay')?.remove();
+    // Only remove sibling detail modals — leave the User Profile (User 360°)
+    // alone so that opening + closing an inner Order/Post modal returns to
+    // the user profile instead of dumping the admin back on the users page.
+    document.querySelector('.detail-modal-overlay:not(#user360-overlay)')?.remove();
 
     let bodyHtml = '';
     items.forEach(item => {
@@ -146,7 +177,10 @@ function showPostDetail(postId, postData) {
 }
 
 function renderPostPopup(postId, post) {
-    document.querySelector('.detail-modal-overlay')?.remove();
+    // Only remove sibling detail modals — leave the User Profile (User 360°)
+    // alone so that opening + closing an inner Order/Post modal returns to
+    // the user profile instead of dumping the admin back on the users page.
+    document.querySelector('.detail-modal-overlay:not(#user360-overlay)')?.remove();
 
     const statusClass = 'status-' + (post.status || 'active');
     const date = post.createdAt ? post.createdAt.toDate().toLocaleDateString('en-US', {
@@ -231,7 +265,10 @@ function renderPostPopup(postId, post) {
 // REPORT DETAIL POPUP
 // =============================================
 function showReportDetail(reportId, report, postData, reporterData) {
-    document.querySelector('.detail-modal-overlay')?.remove();
+    // Only remove sibling detail modals — leave the User Profile (User 360°)
+    // alone so that opening + closing an inner Order/Post modal returns to
+    // the user profile instead of dumping the admin back on the users page.
+    document.querySelector('.detail-modal-overlay:not(#user360-overlay)')?.remove();
 
     const statusClass = 'status-' + (report.status || 'pending');
     const date = report.createdAt ? report.createdAt.toDate().toLocaleDateString('en-US', {
@@ -367,6 +404,34 @@ function createSkeletonRows(count, cols) {
 // =============================================
 // EXCEL EXPORT
 // =============================================
+// Exports whichever tab is currently active on the Users page so the
+// button works for both Customers and All Users without the reviewer
+// having to switch tabs and click a different button.
+function exportActiveUsersTab() {
+    const allUsersPane = document.getElementById('allUsersTab');
+    const onAllUsers = allUsersPane && allUsersPane.classList.contains('active');
+    if (onAllUsers) {
+        exportTableToCSV('allUsersTab', 'all-users');
+    } else {
+        exportTableToCSV('customersTab', 'customers');
+    }
+}
+
+// Same idea on the Payments & Payouts page — pick the visible tab's
+// table so the button is a one-click action no matter which list the
+// admin is currently browsing.
+function exportActivePaymentsTab() {
+    const wallets = document.getElementById('artistWalletsTab');
+    const revenue = document.getElementById('revenueChartTab');
+    if (wallets && wallets.classList.contains('active')) {
+        exportTableToCSV('artistWalletsTab', 'artist-wallets');
+    } else if (revenue && revenue.classList.contains('active')) {
+        exportTableToCSV('revenueChartTab', 'revenue');
+    } else {
+        exportTableToCSV('paymentsTab', 'payments');
+    }
+}
+
 function exportTableToCSV(tableId, filename) {
     const container = document.getElementById(tableId);
     if (!container) { showToast('Table not found.', 'error'); return; }
@@ -466,8 +531,8 @@ function getChartScaleOptions() {
 // Plan definitions
 const PLANS = {
     free: { name: 'Free', amount: 0, postLimit: 5 },
-    basic: { name: 'Basic', amount: 9.99, postLimit: 25 },
-    premium: { name: 'Premium', amount: 24.99, postLimit: -1 }
+    basic: { name: 'Basic', amount: 3.99, postLimit: 25 },
+    premium: { name: 'Premium', amount: 9.99, postLimit: -1 }
 };
 
 // Pagination state for each table
@@ -841,6 +906,14 @@ function loadDashboard() {
 // =============================================
 // REALTIME LISTENERS
 // =============================================
+// Time the admin panel was opened — used to distinguish "new" reports
+// that arrived during this session from reports already in the queue.
+const _panelOpenedAt = Date.now();
+// Base browser tab title — preserved so we can restore it when the
+// pending-reports count drops back to 0.
+const _baseTitle = document.title || 'Artisans Market · Admin';
+let _firstSnapshot = true;
+
 function setupRealtimeListeners() {
     // Clean up previous listener if exists
     if (reportsUnsubscribe) {
@@ -849,6 +922,28 @@ function setupRealtimeListeners() {
     reportsUnsubscribe = db.collection('reports').where('status', '==', 'pending')
         .onSnapshot((snapshot) => {
             updateReportsBadge(snapshot.size);
+
+            // Fire a live toast for any report that ARRIVED while the admin
+            // is on the panel (skipping the initial snapshot, which is the
+            // backlog the admin already knew about).
+            if (!_firstSnapshot) {
+                snapshot.docChanges().forEach((change) => {
+                    if (change.type !== 'added') return;
+                    const data = change.doc.data() || {};
+                    const ts = data.createdAt;
+                    const createdMs = ts && typeof ts.toMillis === 'function'
+                        ? ts.toMillis()
+                        : 0;
+                    // Only toast for reports created after the panel opened.
+                    if (createdMs < _panelOpenedAt) return;
+                    const reason = (data.reason || 'No reason given').toString();
+                    const preview = reason.length > 80
+                        ? reason.substring(0, 80) + '...'
+                        : reason;
+                    showToast('New report: ' + preview, 'info');
+                });
+            }
+            _firstSnapshot = false;
         }, (error) => {
             console.warn('Reports listener error (will retry automatically):', error.code);
         });
@@ -874,6 +969,13 @@ function updateReportsBadge(count) {
         if (notificationBadge) notificationBadge.style.display = 'none';
         if (notifCount) notifCount.textContent = '0';
     }
+
+    // Mirror the count in the browser tab title so the admin notices
+    // activity even when this tab isn't focused. Restores the original
+    // title when there are no pending reports.
+    document.title = count > 0
+        ? '(' + count + ') ' + _baseTitle
+        : _baseTitle;
 }
 
 // =============================================
@@ -1188,9 +1290,7 @@ async function loadCustomers(direction) {
             const tr = document.createElement('tr');
 
             const tdAvatar = document.createElement('td');
-            const avatar = createEl('img', { className: 'user-avatar', alt: user.name || '' });
-            avatar.src = user.profileImageUrl || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.name || '?') + '&background=5B9BB5&color=fff&size=40';
-            tdAvatar.appendChild(avatar);
+            tdAvatar.appendChild(buildUserAvatar(user, 40));
             tr.appendChild(tdAvatar);
 
             tr.appendChild(createEl('td', {}, user.name || 'N/A'));
@@ -1323,9 +1423,7 @@ async function loadAllUsers(direction) {
             const tr = document.createElement('tr');
 
             const tdAvatar = document.createElement('td');
-            const avatar = createEl('img', { className: 'user-avatar', alt: user.name || '' });
-            avatar.src = user.profileImageUrl || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.name || '?') + '&background=5B9BB5&color=fff&size=40';
-            tdAvatar.appendChild(avatar);
+            tdAvatar.appendChild(buildUserAvatar(user, 40));
             tr.appendChild(tdAvatar);
 
             tr.appendChild(createEl('td', {}, user.name || 'N/A'));
@@ -1466,9 +1564,7 @@ async function loadArtists(direction) {
             const tr = document.createElement('tr');
 
             const tdAvatar = document.createElement('td');
-            const avatar = createEl('img', { className: 'user-avatar', alt: artist.name || '' });
-            avatar.src = artist.profileImageUrl || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(artist.name || '?') + '&background=5B9BB5&color=fff&size=40';
-            tdAvatar.appendChild(avatar);
+            tdAvatar.appendChild(buildUserAvatar(artist, 40));
             tr.appendChild(tdAvatar);
 
             tr.appendChild(createEl('td', {}, artist.name || 'N/A'));
@@ -1982,7 +2078,7 @@ function rejectReport(reportId) {
             console.error('Error rejecting report:', error);
             showToast('Error rejecting report.', 'error');
         }
-    }, { confirmText: 'Reject', type: 'warning', modalClass: 'confirm-modal-delete' });
+    }, { confirmText: 'Reject', type: 'warning', modalClass: 'confirm-modal-reject' });
 }
 
 // =============================================
@@ -2849,7 +2945,13 @@ async function loadOrders(direction) {
 
         // Client-side filters
         if (methodFilter) {
-            docs = docs.filter(doc => doc.data().paymentMethod === methodFilter);
+            // Tolerate both keys — older payment docs only have `method`,
+            // newer ones mirror under `paymentMethod`. Either match counts
+            // so the filter works against old + new data uniformly.
+            docs = docs.filter(doc => {
+                const d = doc.data();
+                return d.paymentMethod === methodFilter || d.method === methodFilter;
+            });
         }
         if (searchQuery) {
             docs = docs.filter(doc => {
@@ -2953,15 +3055,31 @@ async function viewOrderDetails(orderId) {
         const order = doc.data();
 
         const fmt = ts => ts ? ts.toDate().toLocaleDateString() : '—';
+
+        // Human-readable labels for the cancellation policy tiers — keeps
+        // the modal honest with examiners ("free_window" alone reads like
+        // unexplained jargon; the second line explains why the split
+        // landed the way it did).
+        const TIER_LABEL = {
+            pre_accept:    'Pre-acceptance (full refund)',
+            free_window:   'Free-cancel window (full refund)',
+            over_extended: 'Artist over-extended (full refund)',
+            post_ship:     'Already shipped (no refund)',
+            early:         'Early in build (10% artist share)',
+            mid_early:     'Mid-early build (25% artist share)',
+            mid_late:      'Mid-late build (50% artist share)',
+            late:          'Late in build (75% artist share)',
+            unknown:       'Unknown state (50/50 fallback)',
+        };
+
         const items = [
             { label: 'Order ID', value: orderId },
             { label: 'Customer', value: (order.customerName || 'N/A') + ' (' + (order.customerEmail || '') + ')' },
             { label: 'Artist', value: order.artistName || 'N/A' },
             { label: 'Subtotal', value: '$' + (order.subtotal || 0).toFixed(2) },
-            { label: 'Platform Fee', value: '$' + (order.platformFee || 0).toFixed(2) },
             { label: 'Total', value: '$' + (order.total || 0).toFixed(2) },
             { label: 'Status', value: getOrderStatusLabel(order.status) },
-            { label: 'Payment Method', value: order.paymentMethod || 'N/A' },
+            { label: 'Payment Method', value: formatPaymentMethod(order.paymentMethod) },
             { label: 'Payout Status', value: order.payoutStatus || 'N/A' },
             { label: 'Date', value: order.createdAt ? order.createdAt.toDate().toLocaleString() : 'N/A' },
         ];
@@ -2998,7 +3116,10 @@ async function viewOrderDetails(orderId) {
             items.push({ label: 'Refund to Customer', value: '$' + (order.refundAmount || 0).toFixed(2) });
             items.push({ label: 'Artist Compensation', value: '$' + (order.cancellationArtistShare || 0).toFixed(2) });
             if (order.cancellationTier) {
-                items.push({ label: 'Penalty Tier', value: order.cancellationTier });
+                items.push({
+                    label: 'Penalty Tier',
+                    value: TIER_LABEL[order.cancellationTier] || order.cancellationTier,
+                });
             }
         }
 
@@ -3071,13 +3192,14 @@ async function viewOrderDetails(orderId) {
 // deadline on the artist's behalf, and ping both parties with a push.
 // ─────────────────────────────────────────────────────────────────────
 function updateOrderStatus(orderId, order) {
-    document.querySelector('.detail-modal-overlay')?.remove();
+    // Only remove sibling detail modals — leave the User Profile (User 360°)
+    // alone so that opening + closing an inner Order/Post modal returns to
+    // the user profile instead of dumping the admin back on the users page.
+    document.querySelector('.detail-modal-overlay:not(#user360-overlay)')?.remove();
 
     const allStatuses = [
         'pending', 'in_progress', 'shipping', 'delivered',
-        'cancelled', 'refunded',
-        // Legacy — kept selectable so support can fix historical bad data
-        'paid', 'processing', 'shipped',
+        'cancelled',
     ];
     const statusOptions = allStatuses.map(s => {
         const sel = s === order.status ? ' selected' : '';
@@ -3121,8 +3243,8 @@ function updateOrderStatus(orderId, order) {
                     '<label class="form-check-label" for="adminNotifyArtist">Notify artist (in-app + push)</label>' +
                 '</div>' +
                 '<div class="d-flex gap-2 justify-content-end">' +
-                    '<button class="btn btn-secondary" id="adminActionsCancel">Cancel</button>' +
-                    '<button class="btn btn-primary" id="adminActionsSave">Apply</button>' +
+                    '<button id="adminActionsCancel" style="padding:8px 18px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;background:transparent;color:#1B998B;border:1.5px solid rgba(27,153,139,0.45);transition:background 0.2s,border-color 0.2s;" onmouseover="this.style.background=\'rgba(27,153,139,0.10)\';this.style.borderColor=\'rgba(27,153,139,0.65)\';" onmouseout="this.style.background=\'transparent\';this.style.borderColor=\'rgba(27,153,139,0.45)\';">Cancel</button>' +
+                    '<button id="adminActionsSave" style="padding:8px 18px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;background:transparent;color:#1B998B;border:1.5px solid rgba(27,153,139,0.45);transition:background 0.2s,border-color 0.2s;" onmouseover="this.style.background=\'rgba(27,153,139,0.10)\';this.style.borderColor=\'rgba(27,153,139,0.65)\';" onmouseout="this.style.background=\'transparent\';this.style.borderColor=\'rgba(27,153,139,0.45)\';">Apply</button>' +
                 '</div>' +
             '</div>' +
         '</div>';
@@ -3223,57 +3345,176 @@ function updateOrderStatus(orderId, order) {
     });
 }
 
-function refundOrder(orderId, order) {
-    if (order.createdAt) {
-        const orderDate = order.createdAt.toDate();
-        const now = new Date();
-        const daysSinceOrder = Math.floor((now - orderDate) / (1000 * 60 * 60 * 24));
-        if (daysSinceOrder > PAYMENT_POLICIES.refundDays) {
-            showToast('Refund denied: This order is ' + daysSinceOrder + ' days old. Refund window is ' + PAYMENT_POLICIES.refundDays + ' days.', 'error');
-            return;
+// Mirrors lib/services/order_policy.dart in the mobile app so admin and
+// mobile cancellations produce the same refund / artist-share split. Keep
+// the two implementations in sync — if you change one, change the other.
+const ORDER_POLICY = {
+    maxExtensions: 3,
+    maxExtensionDaysTotal: 14,
+    freeCancelWindowHours: 24,
+};
+function computeAdminCancellation(order) {
+    const total = order.total || order.totalAmount || 0;
+    const tsToDate = (ts) => (ts && typeof ts.toDate === 'function' ? ts.toDate() : null);
+    const now = new Date();
+
+    // 1. Pre-accept → full refund.
+    if (order.status === 'pending') {
+        return { refund: total, artistShare: 0, tier: 'pre_accept' };
+    }
+    // 2. Free-cancel window after creation → full refund.
+    const created = tsToDate(order.createdAt);
+    if (created) {
+        const hours = (now - created) / 3600000;
+        if (hours <= ORDER_POLICY.freeCancelWindowHours) {
+            return { refund: total, artistShare: 0, tier: 'free_window' };
         }
     }
+    // 3. Artist over-extended → no-penalty cancel right.
+    const extCount = Array.isArray(order.extensions) ? order.extensions.length : 0;
+    const extDays = (order.extensions || []).reduce((acc, e) => {
+        const prev = tsToDate(e.previousDeadline);
+        const next = tsToDate(e.newDeadline);
+        if (!prev || !next) return acc;
+        return acc + Math.max(0, Math.round((next - prev) / 86400000));
+    }, 0);
+    if (extCount >= ORDER_POLICY.maxExtensions || extDays > ORDER_POLICY.maxExtensionDaysTotal) {
+        return { refund: total, artistShare: 0, tier: 'over_extended' };
+    }
+    // 4. Post-ship → artist keeps everything, no refund.
+    if (order.status === 'shipping' || order.status === 'delivered') {
+        return { refund: 0, artistShare: total, tier: 'post_ship' };
+    }
+    // 5. In-progress curve: scales with elapsed time vs deadline.
+    const accepted = tsToDate(order.acceptedAt);
+    const deadline = tsToDate(order.estimatedCompletionDate);
+    if (!accepted || !deadline) {
+        return { refund: total / 2, artistShare: total / 2, tier: 'unknown' };
+    }
+    const totalWindow = (deadline - accepted) / 1000;
+    const elapsed = (now - accepted) / 1000;
+    const timeRemainingPct = totalWindow <= 0
+        ? 0
+        : Math.max(0, Math.min(1, (totalWindow - elapsed) / totalWindow));
+    let penaltyPct, tier;
+    if (timeRemainingPct > 0.75)      { penaltyPct = 0.10; tier = 'early'; }
+    else if (timeRemainingPct > 0.50) { penaltyPct = 0.25; tier = 'mid_early'; }
+    else if (timeRemainingPct > 0.25) { penaltyPct = 0.50; tier = 'mid_late'; }
+    else                              { penaltyPct = 0.75; tier = 'late'; }
+    const artistShare = total * penaltyPct;
+    return { refund: total - artistShare, artistShare, tier };
+}
 
-    showConfirm('Cancel order', 'Cancel this order and refund $' + (order.total || 0).toFixed(2) + ' to the customer? This will deduct from the artist\'s wallet.', async () => {
+function refundOrder(orderId, order) {
+    const outcome = computeAdminCancellation(order);
+    const refund = +outcome.refund.toFixed(2);
+    const artistShare = +outcome.artistShare.toFixed(2);
+
+    const msg =
+        'Tier: ' + outcome.tier + '\n' +
+        'Refund to customer: $' + refund.toFixed(2) + '\n' +
+        'Artist keeps: $' + artistShare.toFixed(2) + '\n\n' +
+        'Continue?';
+
+    showConfirm('Cancel order', msg, async () => {
         try {
-            const refundAmount = (order.total || order.totalAmount || 0);
-            await db.collection('orders').doc(orderId).update({
-                status: 'cancelled',
-                payoutStatus: 'unpaid',
-                cancelledAt: firebase.firestore.FieldValue.serverTimestamp(),
-                refundAmount: refundAmount,
-                cancellationArtistShare: 0,
-                cancellationTier: 'admin_full_refund',
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-            });
+            // Wrap order + customer credit + artist reconcile in one
+            // Firestore transaction. Either every wallet move and the
+            // order flip succeed, or none of them do — so the visible
+            // state ("refunded") can never disappear without the actual
+            // money having moved.
+            const orderRef = db.collection('orders').doc(orderId);
+            const custWalletRef = order.customerId
+                ? db.collection('wallets').doc(order.customerId)
+                : null;
+            const artistWalletRef = order.artistId
+                ? db.collection('wallets').doc(order.artistId)
+                : null;
+            const paymentRef = order.paymentId
+                ? db.collection('payments').doc(order.paymentId)
+                : null;
 
-            if (order.paymentId) {
-                await db.collection('payments').doc(order.paymentId).update({
-                    status: 'refunded',
-                    refundedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            await db.runTransaction(async (tx) => {
+                // Reads first — transactions disallow reads after writes.
+                const custDoc = custWalletRef ? await tx.get(custWalletRef) : null;
+                const artistDoc = artistWalletRef ? await tx.get(artistWalletRef) : null;
+
+                tx.update(orderRef, {
+                    status: 'cancelled',
+                    payoutStatus: 'unpaid',
+                    cancelledAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    refundAmount: refund,
+                    cancellationArtistShare: artistShare,
+                    cancellationTier: outcome.tier,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
                 });
-            }
 
-            if (order.artistId && order.artistEarnings) {
-                const walletRef = db.collection('wallets').doc(order.artistId);
-                const walletDoc = await walletRef.get();
-                if (walletDoc.exists) {
-                    const wallet = walletDoc.data();
-                    const newBalance = Math.max(0, (wallet.balance || 0) - (order.artistEarnings || 0));
-                    await walletRef.update({
-                        balance: newBalance,
-                        totalEarnings: Math.max(0, (wallet.totalEarnings || 0) - (order.artistEarnings || 0)),
-                        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                if (paymentRef) {
+                    tx.update(paymentRef, {
+                        status: 'refunded',
+                        refundedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
                     });
                 }
-            }
 
-            await logAuditAction('cancel_order', orderId, 'order', {
-                amount: order.total, customerName: order.customerName, artistId: order.artistId
+                // Credit the customer's wallet with the computed refund.
+                if (refund > 0 && custWalletRef && custDoc) {
+                    if (custDoc.exists) {
+                        tx.update(custWalletRef, {
+                            balance: firebase.firestore.FieldValue.increment(refund),
+                            totalEarnings: firebase.firestore.FieldValue.increment(refund),
+                            lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+                        });
+                    } else {
+                        tx.set(custWalletRef, {
+                            balance: refund,
+                            totalEarnings: refund,
+                            totalWithdrawn: 0,
+                            lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+                        });
+                    }
+                }
+
+                // Reconcile artist wallet so it ends up holding `artistShare`
+                // (not the full original earnings). Adjust by the delta so we
+                // don't double-credit if the artist was already paid at
+                // shipping, and we don't strand them with zero if they weren't.
+                if (artistWalletRef && artistDoc) {
+                    const earned = order.artistEarnings || 0;
+                    const delta = artistShare - earned;
+                    if (artistDoc.exists) {
+                        if (delta !== 0) {
+                            tx.update(artistWalletRef, {
+                                balance: firebase.firestore.FieldValue.increment(delta),
+                                totalEarnings: firebase.firestore.FieldValue.increment(delta),
+                                lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+                            });
+                        }
+                    } else if (artistShare > 0) {
+                        tx.set(artistWalletRef, {
+                            balance: artistShare,
+                            totalEarnings: artistShare,
+                            totalWithdrawn: 0,
+                            lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+                        });
+                    }
+                }
             });
 
-            showToast('Order cancelled. Customer refunded; artist wallet updated.', 'success');
+            await logAuditAction('cancel_order', orderId, 'order', {
+                amount: order.total,
+                customerName: order.customerName,
+                artistId: order.artistId,
+                tier: outcome.tier,
+                refund: refund,
+                artistShare: artistShare,
+            });
+
+            showToast(
+                'Order cancelled (' + outcome.tier + '). ' +
+                'Refund $' + refund.toFixed(2) + ' / artist keeps $' + artistShare.toFixed(2) + '.',
+                'success'
+            );
             resetPagination('orders');
             loadOrders('first');
             loadOrderStats();
@@ -3281,7 +3522,7 @@ function refundOrder(orderId, order) {
             console.error('Error cancelling order:', error);
             showToast('Error cancelling order.', 'error');
         }
-    }, { confirmText: 'Cancel order', type: 'danger' });
+    }, { confirmText: 'Cancel order', type: 'danger', modalClass: 'confirm-modal-cancel-order' });
 }
 
 // Order event listeners
@@ -3308,19 +3549,18 @@ document.getElementById('orderPaymentMethodFilter')?.addEventListener('change', 
 // =============================================
 async function loadPaymentStats() {
     try {
-        const [paymentsSnap, payoutsSnap, unpaidOrdersSnap] = await Promise.all([
+        const [paymentsSnap, payoutsSnap, unpaidOrdersSnap, subscriptionsSnap] = await Promise.all([
             db.collection('payments').get(),
             db.collection('payouts').get(),
-            db.collection('orders').where('payoutStatus', '==', 'unpaid').where('status', '==', 'delivered').get()
+            db.collection('orders').where('payoutStatus', '==', 'unpaid').where('status', '==', 'delivered').get(),
+            db.collection('subscriptions').get(),
         ]);
 
-        let totalPayments = 0, completedAmount = 0, platformRevenue = 0, refundedAmount = 0;
+        let totalPayments = 0, completedAmount = 0;
         paymentsSnap.forEach(doc => {
             const p = doc.data();
             totalPayments++;
             if (p.status === 'completed') completedAmount += p.amount || 0;
-            if (p.status === 'completed') platformRevenue += p.platformFee || 0;
-            if (p.status === 'refunded') refundedAmount += p.amount || 0;
         });
 
         let totalPayoutsAmount = 0;
@@ -3334,15 +3574,70 @@ async function loadPaymentStats() {
             pendingPayoutsAmount += doc.data().artistEarnings || 0;
         });
 
+        // Subscription revenue — the *real* platform income source now
+        // that sales commission is 0%. Sums every active or completed
+        // subscription's monthly amount, which mirrors the mobile concept
+        // ("revenue comes from the Free / Basic / Premium tiers").
+        let subscriptionRevenue = 0;
+        subscriptionsSnap.forEach(doc => {
+            const s = doc.data();
+            const status = (s.status || '').toLowerCase();
+            if (status === 'active' || status === 'completed' || status === 'paid') {
+                subscriptionRevenue += s.amount || 0;
+            }
+        });
+
         animateCounter('totalPayments', totalPayments);
         animateCounter('completedPayments', completedAmount, '$');
-        animateCounter('platformRevenue', platformRevenue, '$');
+        animateCounter('platformRevenue', subscriptionRevenue, '$');
         animateCounter('totalPayoutsAmount', totalPayoutsAmount, '$');
         animateCounter('pendingPayouts', pendingPayoutsAmount, '$');
-        animateCounter('refundedAmount', refundedAmount, '$');
     } catch (error) {
         console.error('Error loading payment stats:', error);
     }
+}
+
+// =============================================
+// PAYMENTS - Display formatters
+// =============================================
+// Mirror the labels the mobile app shows so admin reviewers see the same
+// wording: payment types are humanised ("order_payment" → "Order payment")
+// and methods map to the two virtual-card variants ("Virtual Visa" /
+// "Virtual Card") with Virtual Visa as the default since that's what
+// customers and artists both use now.
+function formatPaymentType(raw) {
+    if (!raw) return 'Order payment';
+    const map = {
+        order_payment: 'Order payment',
+        payout: 'Payout',
+        refund: 'Refund',
+        platform_fee: 'Platform fee',
+    };
+    if (map[raw]) return map[raw];
+    return raw
+        .split('_')
+        .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(' ');
+}
+function formatPaymentMethod(raw) {
+    if (!raw) return 'N/A';
+    // Matches what the mobile app actually writes to Firestore — the
+    // auto-detected card brand from the customer's checkout form. Older
+    // payout / wallet flows still use the virtual_* and wallet_* aliases.
+    const map = {
+        visa: 'Visa',
+        mastercard: 'Mastercard',
+        amex: 'Amex',
+        card: 'Card',
+        credit_card: 'Credit card',
+        virtual_visa: 'Virtual Visa',
+        virtual_card: 'Virtual Card',
+        wallet_withdrawal: 'Auto payout',
+    };
+    return map[raw] || raw
+        .split('_')
+        .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(' ');
 }
 
 // =============================================
@@ -3395,7 +3690,13 @@ async function loadPayments(direction) {
         if (typeof window.filterByDate === 'function') docs = window.filterByDate(docs, 'payments');
 
         if (methodFilter) {
-            docs = docs.filter(doc => doc.data().paymentMethod === methodFilter);
+            // Tolerate both keys — older payment docs only have `method`,
+            // newer ones mirror under `paymentMethod`. Either match counts
+            // so the filter works against old + new data uniformly.
+            docs = docs.filter(doc => {
+                const d = doc.data();
+                return d.paymentMethod === methodFilter || d.method === methodFilter;
+            });
         }
         if (searchQuery) {
             docs = docs.filter(doc => {
@@ -3430,18 +3731,28 @@ async function loadPayments(direction) {
             const tdType = document.createElement('td');
             tdType.appendChild(createEl('span', {
                 className: 'type-badge type-' + (payment.type || 'order')
-            }, payment.type || 'order'));
+            }, formatPaymentType(payment.type)));
             tr.appendChild(tdType);
 
-            tr.appendChild(createEl('td', {}, (payment.userName || 'N/A') + '\n' + (payment.userEmail || '')));
+            // User column — prefer denormalised fields on the payment
+            // doc, then fall back to a known buyer/customer key for older
+            // records, then to a truncated userId so the cell is never
+            // an opaque "N/A".
+            const userLabel = payment.userName
+                || payment.customerName
+                || (payment.userId ? payment.userId.substring(0, 8) + '…' : 'N/A');
+            const userSub = payment.userEmail || payment.customerEmail || '';
+            tr.appendChild(createEl('td', {}, userLabel + (userSub ? '\n' + userSub : '')));
             tr.appendChild(createEl('td', {}, '$' + (payment.amount || 0).toFixed(2)));
-            tr.appendChild(createEl('td', {}, '$' + (payment.platformFee || 0).toFixed(2)));
-            tr.appendChild(createEl('td', {}, '$' + (payment.netAmount || 0).toFixed(2)));
 
+            // Method column — mobile payment docs use `method`, older /
+            // mirrored records use `paymentMethod`. Read both so the cell
+            // doesn't depend on which key happens to exist.
+            const methodRaw = payment.paymentMethod || payment.method;
             const tdMethod = document.createElement('td');
             tdMethod.appendChild(createEl('span', {
-                className: 'payment-method-badge payment-' + (payment.paymentMethod || 'stripe')
-            }, payment.paymentMethod || 'N/A'));
+                className: 'payment-method-badge payment-' + (methodRaw || 'unknown')
+            }, formatPaymentMethod(methodRaw)));
             tr.appendChild(tdMethod);
 
             const tdStatus = document.createElement('td');
@@ -3456,14 +3767,16 @@ async function loadPayments(direction) {
             const tdActions = document.createElement('td');
             const viewBtn = createEl('button', { className: 'btn-action btn-view-paid' }, 'View');
             viewBtn.addEventListener('click', () => {
+                const detailUser = payment.userName
+                    || payment.customerName
+                    || (payment.userId ? payment.userId.substring(0, 8) + '…' : 'N/A');
+                const detailMethod = payment.paymentMethod || payment.method;
                 showDetailModal('Payment Details', [
                     { label: 'Payment ID', value: doc.id },
-                    { label: 'Type', value: payment.type || 'N/A' },
-                    { label: 'User', value: payment.userName || 'N/A' },
+                    { label: 'Type', value: formatPaymentType(payment.type) },
+                    { label: 'User', value: detailUser },
                     { label: 'Amount', value: '$' + (payment.amount || 0).toFixed(2) },
-                    { label: 'Platform Fee', value: '$' + (payment.platformFee || 0).toFixed(2) },
-                    { label: 'Net Amount', value: '$' + (payment.netAmount || 0).toFixed(2) },
-                    { label: 'Method', value: payment.paymentMethod || 'N/A' },
+                    { label: 'Method', value: formatPaymentMethod(detailMethod) },
                     { label: 'Status', value: payment.status || 'N/A' },
                     { label: 'Gateway ID', value: payment.gatewayTransactionId || 'N/A' },
                     { label: 'Reference', value: payment.referenceId || 'N/A' }
@@ -3809,28 +4122,44 @@ async function loadRevenueTrendChart() {
         const now = new Date();
         const monthlyData = {};
 
-        const paymentsSnap = await db.collection('payments')
-            .where('status', '==', 'completed')
-            .get();
+        // Two parallel reads — completed order payments give the
+        // marketplace-volume curve, subscriptions give the real platform
+        // revenue curve. Previously the second line tracked `platformFee`
+        // which is permanently $0 under the no-commission model.
+        const [paymentsSnap, subscriptionsSnap] = await Promise.all([
+            db.collection('payments').where('status', '==', 'completed').get(),
+            db.collection('subscriptions').get(),
+        ]);
 
         paymentsSnap.forEach(doc => {
             const p = doc.data();
             if (p.createdAt) {
                 const date = p.createdAt.toDate();
                 const key = date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0');
-                if (!monthlyData[key]) monthlyData[key] = { revenue: 0, fees: 0 };
-                monthlyData[key].revenue += p.amount || 0;
-                monthlyData[key].fees += p.platformFee || 0;
+                if (!monthlyData[key]) monthlyData[key] = { volume: 0, subs: 0 };
+                monthlyData[key].volume += p.amount || 0;
             }
         });
 
-        const labels = [], revenueData = [], feeData = [];
+        subscriptionsSnap.forEach(doc => {
+            const s = doc.data();
+            const status = (s.status || '').toLowerCase();
+            if (!['active', 'completed', 'paid'].includes(status)) return;
+            const ts = s.createdAt || s.startDate;
+            if (!ts || !ts.toDate) return;
+            const date = ts.toDate();
+            const key = date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0');
+            if (!monthlyData[key]) monthlyData[key] = { volume: 0, subs: 0 };
+            monthlyData[key].subs += s.amount || 0;
+        });
+
+        const labels = [], volumeData = [], subsData = [];
         for (let i = 5; i >= 0; i--) {
             const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
             const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
             labels.push(d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }));
-            revenueData.push((monthlyData[key] || {}).revenue || 0);
-            feeData.push((monthlyData[key] || {}).fees || 0);
+            volumeData.push((monthlyData[key] || {}).volume || 0);
+            subsData.push((monthlyData[key] || {}).subs || 0);
         }
 
         const ctx = document.getElementById('revenueTrendChart');
@@ -3844,18 +4173,18 @@ async function loadRevenueTrendChart() {
                 labels: labels,
                 datasets: [
                     {
-                        label: 'Total Revenue',
-                        data: revenueData,
+                        label: 'Marketplace Volume',
+                        data: volumeData,
                         borderColor: '#6F8FA3',
                         backgroundColor: 'rgba(111, 143, 163, 0.12)',
                         tension: 0.4,
                         fill: true
                     },
                     {
-                        label: 'Platform Fees',
-                        data: feeData,
+                        label: 'Subscription Revenue',
+                        data: subsData,
                         borderColor: '#F59E0B',
-                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                        backgroundColor: 'rgba(245, 158, 11, 0.10)',
                         tension: 0.4,
                         fill: true
                     }
@@ -3875,15 +4204,74 @@ async function loadRevenueTrendChart() {
 
 async function loadPaymentMethodsChart() {
     try {
-        const paymentsSnap = await db.collection('payments')
-            .where('status', '==', 'completed')
-            .get();
+        // Pull both collections so the chart reflects the full money
+        // flow: payments are money IN (customers paying with cards) and
+        // payouts are money OUT (auto-payouts landing on artists' Visas).
+        const [paymentsSnap, payoutsSnap] = await Promise.all([
+            db.collection('payments').where('status', '==', 'completed').get(),
+            db.collection('payouts').where('status', '==', 'completed').get(),
+        ]);
 
-        let virtualCardTotal = 0, virtualVisaTotal = 0;
+        // Customer payments in the mobile app are stored under the auto-
+        // detected card brand (visa / mastercard / amex / card /
+        // credit_card). Payouts always use virtual_visa post-fix. Each
+        // slice maps to a distinct, observable money flow.
+        const totals = {
+            visa:        0,
+            mastercard:  0,
+            amex:        0,
+            credit_card: 0,
+            other_card:  0,
+            auto_payout: 0,
+        };
         paymentsSnap.forEach(doc => {
             const p = doc.data();
-            if (p.paymentMethod === 'virtual_card') virtualCardTotal += p.amount || 0;
-            else if (p.paymentMethod === 'virtual_visa') virtualVisaTotal += p.amount || 0;
+            // Read both keys — older docs only set `method`, newer ones
+            // mirror under `paymentMethod`. Without this fallback the
+            // chart silently drops every legacy payment into the
+            // "Other card" catch-all bucket.
+            const m = (p.paymentMethod || p.method || '').toLowerCase();
+            const amt = p.amount || 0;
+            if (m === 'visa') totals.visa += amt;
+            else if (m === 'mastercard') totals.mastercard += amt;
+            else if (m === 'amex') totals.amex += amt;
+            else if (m === 'virtual_visa' || m === 'virtual_card' || m === 'wallet_withdrawal') {
+                totals.auto_payout += amt;
+            } else if (m === 'credit_card') {
+                totals.credit_card += amt;
+            } else {
+                // 'card' or anything unrecognised
+                totals.other_card += amt;
+            }
+        });
+
+        // Fold every completed payout into the auto_payout slice so the
+        // chart honestly shows how much money has reached artists' Visas.
+        payoutsSnap.forEach(doc => {
+            const p = doc.data();
+            totals.auto_payout += p.amount || 0;
+        });
+
+        // Same logo-derived palette used by the Orders by Status doughnut
+        // and the Categories Breakdown bars, so all three charts on the
+        // page share one visual vocabulary instead of competing palettes.
+        const palette = {
+            visa:        { label: 'Visa',        color: '#5B8FA8' }, // slate-blue (logo letters)
+            mastercard:  { label: 'Mastercard',  color: '#E8B547' }, // mustard yellow (logo letters)
+            amex:        { label: 'Amex',        color: '#7A9B5C' }, // sage green (logo letters)
+            credit_card: { label: 'Credit card', color: '#C96A3D' }, // terracotta (logo triangle)
+            other_card:  { label: 'Other card',  color: '#4A8B8B' }, // deep teal (logo pottery spirals)
+            auto_payout: { label: 'Auto payout', color: '#B5413B' }, // brick red (logo letters)
+        };
+        const labels = [];
+        const data = [];
+        const backgroundColor = [];
+        Object.keys(palette).forEach(k => {
+            if (totals[k] > 0) {
+                labels.push(palette[k].label);
+                data.push(totals[k]);
+                backgroundColor.push(palette[k].color);
+            }
         });
 
         const ctx = document.getElementById('paymentMethodsChart');
@@ -3894,10 +4282,10 @@ async function loadPaymentMethodsChart() {
         paymentMethodsPieChart = new Chart(ctx, {
             type: 'pie',
             data: {
-                labels: ['Virtual Card', 'Virtual Visa'],
+                labels,
                 datasets: [{
-                    data: [virtualCardTotal, virtualVisaTotal],
-                    backgroundColor: ['#6F8FA3', '#E3A93C'],
+                    data,
+                    backgroundColor,
                     borderWidth: 2,
                     borderColor: document.body.classList.contains('dark-mode') ? '#1e293b' : '#ffffff'
                 }]
@@ -3976,7 +4364,6 @@ async function loadArtistWallets() {
             tr.appendChild(createEl('td', {}, artist.email));
             tr.appendChild(createEl('td', {}, '$' + (w.balance || 0).toFixed(2)));
             tr.appendChild(createEl('td', {}, '$' + (w.totalEarnings || 0).toFixed(2)));
-            tr.appendChild(createEl('td', {}, '$' + (w.totalWithdrawn || 0).toFixed(2)));
 
             const tdActions = document.createElement('td');
             const addCreditBtn = createEl('button', { className: 'btn-action btn-approve' }, 'Add Credit');
@@ -3993,8 +4380,24 @@ async function loadArtistWallets() {
     }
 }
 
+// Admin credit → wallet → auto-payout to the artist's Visa.
+//
+// Mirrors the mobile app's `markShipping → creditWallet →
+// _autoPayoutIfCardLinked` flow so any money that enters the system
+// behaves the same way regardless of where it came from: it touches the
+// wallet briefly, then drains to the artist's linked Virtual Visa via a
+// real payout record. If no card is linked the money stays in the
+// wallet until the artist links one.
+//
+// Wrapped in a Firestore transaction so the wallet credit + debit and
+// the payout record either all succeed or none do — balances can never
+// drift if a step fails.
 async function addWalletCredit(artistId, artistName) {
-    const amountStr = prompt('Enter credit amount to add to ' + artistName + '\'s wallet:');
+    const amountStr = prompt(
+        'Enter credit amount to add to ' + artistName + '\'s wallet.\n\n' +
+        'If a Virtual Visa is linked, it will be paid out immediately. ' +
+        'Otherwise the amount waits in the wallet until a card is linked.'
+    );
     if (!amountStr) return;
     const amount = parseFloat(amountStr);
     if (isNaN(amount) || amount <= 0) {
@@ -4003,30 +4406,88 @@ async function addWalletCredit(artistId, artistName) {
     }
 
     try {
+        // Pre-fetch the artist's payout card (outside the transaction —
+        // user docs aren't part of the financial atomic set, just used
+        // to decide whether to pay out).
+        const userDoc = await db.collection('users').doc(artistId).get();
+        const card = userDoc.exists ? userDoc.data().payoutCard : null;
+
         const walletRef = db.collection('wallets').doc(artistId);
-        const walletDoc = await walletRef.get();
+        const payoutRef = db.collection('payouts').doc();
 
-        if (walletDoc.exists) {
-            const wallet = walletDoc.data();
-            await walletRef.update({
-                balance: (wallet.balance || 0) + amount,
-                totalEarnings: (wallet.totalEarnings || 0) + amount,
-                lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-            });
-        } else {
-            await walletRef.set({
-                balance: amount,
-                totalEarnings: amount,
-                totalWithdrawn: 0,
-                lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-            });
-        }
+        await db.runTransaction(async (tx) => {
+            const walletSnap = await tx.get(walletRef);
 
-        await logAuditAction('add_wallet_credit', artistId, 'wallet', {
-            artistName: artistName, amount: amount
+            if (walletSnap.exists) {
+                tx.update(walletRef, {
+                    balance: firebase.firestore.FieldValue.increment(amount),
+                    totalEarnings: firebase.firestore.FieldValue.increment(amount),
+                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+                });
+            } else {
+                tx.set(walletRef, {
+                    balance: amount,
+                    totalEarnings: amount,
+                    totalWithdrawn: 0,
+                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+                });
+            }
+
+            // If the artist has a card, drain the credit straight back
+            // out into a payout record so the money reaches their Visa.
+            if (card) {
+                tx.update(walletRef, {
+                    balance: firebase.firestore.FieldValue.increment(-amount),
+                    totalWithdrawn: firebase.firestore.FieldValue.increment(amount),
+                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+                });
+                tx.set(payoutRef, {
+                    artistId: artistId,
+                    artistName: artistName,
+                    amount: amount,
+                    currency: 'USD',
+                    orderIds: [],
+                    paymentMethod: card.brand || 'virtual_visa',
+                    cardLast4: card.last4 || '',
+                    status: 'completed',
+                    source: 'admin_credit',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    processedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                });
+            }
         });
 
-        showToast('$' + amount.toFixed(2) + ' added to ' + artistName + '\'s wallet.', 'success');
+        // Notification + audit log — outside the transaction because
+        // they don't need atomic consistency with the money moves.
+        const brandLabel = card && card.brand === 'virtual_visa' ? 'Virtual Visa' : 'Virtual Card';
+        await db.collection('notifications').add({
+            userId: artistId,
+            title: card ? 'Admin credit sent to your Visa' : 'Admin credit added to wallet',
+            message: card
+                ? '$' + amount.toFixed(2) + ' was sent to your ' + brandLabel +
+                  ' •••• ' + (card.last4 || '').toString() + '.'
+                : '$' + amount.toFixed(2) + ' was added to your wallet. ' +
+                  'Link a payout card from Earnings to receive it on your Visa.',
+            type: card ? 'payout' : 'wallet_credit',
+            referenceId: '',
+            isRead: false,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+
+        await logAuditAction('add_wallet_credit', artistId, 'wallet', {
+            artistName: artistName,
+            amount: amount,
+            paidOutImmediately: !!card,
+            card: card ? (card.brand + ' ' + card.last4) : null,
+        });
+
+        showToast(
+            card
+                ? '$' + amount.toFixed(2) + ' sent to ' + artistName + '\'s ' + brandLabel + '.'
+                : '$' + amount.toFixed(2) + ' added to ' + artistName + '\'s wallet (no card linked).',
+            'success'
+        );
         loadArtistWallets();
         loadPaymentStats();
     } catch (error) {

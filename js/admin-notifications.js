@@ -27,32 +27,32 @@
     function avatarHtml(name, imgUrl, size) {
         const s = size || 36;
         if (imgUrl) {
-            return `<img src="${safe(imgUrl)}" style="width:${s}px;height:${s}px;border-radius:50%;object-fit:cover;flex-shrink:0;"/>`;
+            return `<img src="${safe(imgUrl)}" style="width:${s}px;height:${s}px;border-radius:50%;object-fit:cover;background:rgba(111,143,163,0.12);flex-shrink:0;"/>`;
         }
         const initial = (name || '?').trim().substring(0, 1).toUpperCase();
-        return `<div style="width:${s}px;height:${s}px;border-radius:50%;background:linear-gradient(135deg,#D4A574,#C8602F);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:${Math.round(s * 0.4)}px;flex-shrink:0;">${safe(initial)}</div>`;
+        return `<div style="width:${s}px;height:${s}px;border-radius:50%;background:rgba(111,143,163,0.12);display:inline-flex;align-items:center;justify-content:center;color:#6F8FA3;font-weight:700;font-size:${Math.round(s * 0.4)}px;line-height:1;flex-shrink:0;">${safe(initial)}</div>`;
     }
 
-    // ─── Notification type metadata (icon + colour + label) ─────
+    // ─── Notification type metadata (initial letter + brand colour + label) ─
     const TYPE_META = {
-        order_placed:      { icon: '🛍', color: '#2E86AB', label: 'Order placed' },
-        order_accepted:    { icon: '✓',  color: '#10B981', label: 'Order accepted' },
-        order_extended:    { icon: '⏰', color: '#F59E0B', label: 'Deadline extended' },
-        order_shipped:     { icon: '📦', color: '#1B998B', label: 'Order shipped' },
-        order_cancelled:   { icon: '✕',  color: '#ED4956', label: 'Order cancelled' },
-        order_status:      { icon: '🚚', color: '#1B998B', label: 'Order update' },
-        refund_issued:     { icon: '↩',  color: '#6366F1', label: 'Refund' },
-        earnings_released: { icon: '$',  color: '#10B981', label: 'Earnings released' },
-        payment_received:  { icon: '💳', color: '#10B981', label: 'Payment' },
-        payout:            { icon: '🏦', color: '#C8A870', label: 'Payout' },
-        post_removed:      { icon: '🗑',  color: '#ED4956', label: 'Post removed' },
-        rating:            { icon: '★',  color: '#F59E0B', label: 'Rating' },
-        message:           { icon: '💬', color: '#0EA5E9', label: 'Chat' },
-        subscription:      { icon: '🎟',  color: '#8B5CF6', label: 'Subscription' },
-        wallet_credit:     { icon: '＋', color: '#10B981', label: 'Wallet credit' },
+        order_placed:      { icon: 'O', color: '#2E86AB', label: 'Order placed' },
+        order_accepted:    { icon: '✓', color: '#1B998B', label: 'Order accepted' },
+        order_extended:    { icon: 'E', color: '#E3A93C', label: 'Deadline extended' },
+        order_shipped:     { icon: 'S', color: '#1B998B', label: 'Order shipped' },
+        order_cancelled:   { icon: '✕', color: '#A53A33', label: 'Order cancelled' },
+        order_status:      { icon: 'U', color: '#1B998B', label: 'Order update' },
+        refund_issued:     { icon: 'R', color: '#6F8FA3', label: 'Refund' },
+        earnings_released: { icon: '$', color: '#1B998B', label: 'Earnings released' },
+        payment_received:  { icon: 'P', color: '#1B998B', label: 'Payment' },
+        payout:            { icon: 'P', color: '#B85C38', label: 'Payout' },
+        post_removed:      { icon: 'R', color: '#A53A33', label: 'Post removed' },
+        rating:            { icon: '★', color: '#E3A93C', label: 'Rating' },
+        message:           { icon: 'M', color: '#2E86AB', label: 'Chat' },
+        subscription:      { icon: 'S', color: '#6F8FA3', label: 'Subscription' },
+        wallet_credit:     { icon: '+', color: '#1B998B', label: 'Wallet credit' },
     };
     function typeMeta(t) {
-        return TYPE_META[t] || { icon: '🔔', color: '#8E8E8E', label: t || 'Other' };
+        return TYPE_META[t] || { icon: '•', color: '#8E8E8E', label: t || 'Other' };
     }
 
     let _allNotifs = [];
@@ -72,7 +72,7 @@
                         <option value="recent">Most recent</option>
                         <option value="oldest">Oldest first</option>
                     </select>
-                    <button id="notifRefresh" class="btn btn-primary" style="padding:6px 16px;font-size:0.85rem;">Refresh</button>
+                    <button id="notifRefresh" title="Reload data" style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.45rem 1rem;font-size:0.82rem;font-weight:600;color:#2E86AB;background:transparent;border:1.5px solid #2E86AB;border-radius:8px;cursor:pointer;line-height:1;">Refresh</button>
                 </div>
             </div>
 
@@ -85,7 +85,7 @@
                     <!-- Compose card (collapsible) -->
                     <div class="chart-card mb-3" id="composeCard">
                         <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;" id="composeToggle">
-                            <h5 style="margin:0;font-size:14px;color:#262626;">📢 Send broadcast notification</h5>
+                            <h5 style="margin:0;font-size:14px;color:#262626;">Send broadcast notification</h5>
                             <span id="composeChevron" style="font-size:18px;color:#8E8E8E;">▾</span>
                         </div>
                         <div id="composeBody" style="margin-top:14px;">
@@ -108,13 +108,22 @@
                                         <textarea class="form-control" id="broadcastBody" rows="3" placeholder="Body of the notification" required maxlength="250"></textarea>
                                     </div>
                                     <div class="col-12 d-flex gap-2">
-                                        <button type="button" class="btn btn-secondary" id="broadcastPreviewBtn">Preview audience</button>
-                                        <button type="submit" class="btn btn-primary" id="broadcastSendBtn">📤 Send broadcast</button>
+                                        <button type="button" id="broadcastPreviewBtn" style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.45rem 1rem;font-size:0.82rem;font-weight:600;color:#2E86AB;background:transparent;border:1.5px solid #2E86AB;border-radius:8px;cursor:pointer;line-height:1;">Preview audience</button>
+                                        <button type="submit" id="broadcastSendBtn" style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.45rem 1rem;font-size:0.82rem;font-weight:600;color:#2E86AB;background:transparent;border:1.5px solid #2E86AB;border-radius:8px;cursor:pointer;line-height:1;">Send broadcast</button>
                                     </div>
                                 </div>
                                 <div id="broadcastResult" class="mt-3" style="display:none;"></div>
                             </form>
                         </div>
+                    </div>
+
+                    <!-- Broadcast history (last 10) -->
+                    <div class="chart-card mb-3">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                            <h5 style="margin:0;font-size:14px;color:#262626;">Sent broadcasts</h5>
+                            <span id="broadcastsCount" style="font-size:11px;color:#8E8E8E;"></span>
+                        </div>
+                        <div id="broadcastsHistory" style="display:flex;flex-direction:column;gap:8px;"></div>
                     </div>
 
                     <!-- Filter chips -->
@@ -127,11 +136,11 @@
                 <!-- RIGHT: Top recipients + Type breakdown -->
                 <div class="col-lg-4">
                     <div class="chart-card mb-3">
-                        <h5 style="margin:0 0 10px;font-size:14px;color:#262626;">📊 By type (this batch)</h5>
+                        <h5 style="margin:0 0 10px;font-size:14px;color:#262626;">By type (this batch)</h5>
                         <div id="notifTypeBreakdown" style="display:flex;flex-direction:column;gap:6px;"></div>
                     </div>
                     <div class="chart-card">
-                        <h5 style="margin:0 0 10px;font-size:14px;color:#262626;">👥 Top recipients</h5>
+                        <h5 style="margin:0 0 10px;font-size:14px;color:#262626;">Top recipients</h5>
                         <div id="notifTopRecipients" style="display:flex;flex-direction:column;gap:8px;"></div>
                     </div>
                 </div>
@@ -170,7 +179,7 @@
                 const result = page.querySelector('#broadcastResult');
                 result.style.display = 'block';
                 result.innerHTML =
-                    '<div class="alert alert-info mb-0">' +
+                    '<div class="mb-0" style="background:rgba(46,134,171,0.10);color:#2E86AB;border:1.5px solid rgba(46,134,171,0.45);border-radius:8px;padding:12px 16px;font-size:13px;">' +
                     'Audience: <strong>' + snap.docs.length + '</strong> user(s). ' +
                     '<strong>' + withTokens + '</strong> will receive a real push (have FCM tokens).' +
                     '</div>';
@@ -201,6 +210,27 @@
                 let inAppCreated = 0;
                 let pushSent = 0;
 
+                // Record the broadcast itself BEFORE the fan-out so the
+                // history entry exists even if some per-user writes fail.
+                let broadcastId = null;
+                try {
+                    const ref = await db.collection('broadcasts').add({
+                        audience: audience,
+                        title: title,
+                        message: body,
+                        recipientCount: docs.length,
+                        inAppCreated: 0, // updated after the fan-out
+                        pushSent: 0,
+                        sentBy: (window.auth && window.auth.currentUser
+                            ? window.auth.currentUser.email
+                            : 'admin') || 'admin',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    });
+                    broadcastId = ref.id;
+                } catch (e) {
+                    console.warn('broadcast log create failed', e);
+                }
+
                 await Promise.all(docs.map(async (userDoc) => {
                     const uid = userDoc.id;
                     try {
@@ -209,7 +239,7 @@
                             title: title,
                             message: body,
                             type: 'order_status',
-                            referenceId: '',
+                            referenceId: broadcastId || '',
                             isRead: false,
                             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                         });
@@ -223,9 +253,19 @@
                     }
                 }));
 
+                // Patch the broadcast doc with the actual delivery counts.
+                if (broadcastId) {
+                    try {
+                        await db.collection('broadcasts').doc(broadcastId).update({
+                            inAppCreated: inAppCreated,
+                            pushSent: pushSent,
+                        });
+                    } catch (_) {}
+                }
+
                 try {
                     if (typeof logAuditAction === 'function') {
-                        await logAuditAction('broadcast', 'all', 'notification', {
+                        await logAuditAction('broadcast', broadcastId || 'all', 'notification', {
                             audience: audience, title: title, recipients: docs.length,
                         });
                     }
@@ -264,7 +304,7 @@
             .sort((a, b) => counts[b] - counts[a])
             .slice(0, 8); // top 8 types
 
-        const chips = [{ id: 'all', label: 'All', n: counts.all }]
+        const chips = [{ id: 'all', label: 'All', n: counts.all, color: '#2E86AB' }]
             .concat(sortedTypes.map(t => ({
                 id: t,
                 label: typeMeta(t).label,
@@ -275,10 +315,10 @@
         const wrap = document.getElementById('notifChips');
         wrap.innerHTML = chips.map(c => {
             const sel = c.id === _activeType;
-            const color = c.color || '#262626';
+            const color = c.color || '#2E86AB';
             return `<button class="notif-chip" data-id="${safe(c.id)}"
-                style="padding:7px 14px;border-radius:18px;border:1.5px solid ${sel ? color : '#E6E6E6'};
-                background:${sel ? color + '12' : 'white'};color:${sel ? color : '#555'};
+                style="padding:7px 14px;border-radius:18px;border:1.5px solid ${sel ? color : color + '73'};
+                background:${sel ? color + '1A' : 'white'};color:${color};
                 font-size:12px;font-weight:600;cursor:pointer;">${safe(c.label)} <span style="opacity:0.7;">${c.n}</span></button>`;
         }).join('');
         wrap.querySelectorAll('.notif-chip').forEach(btn => {
@@ -314,7 +354,7 @@
             kpi('Sent today', today, '#10B981'),
             kpi('This month', month, '#84CC16'),
             kpi('Unread', unread, '#F59E0B'),
-            kpi('Top type', topLabel, '#8B5CF6'),
+            kpi('Top type', topLabel, '#B85C38'),
         ].join('');
 
         // Type breakdown sidebar
@@ -330,7 +370,6 @@
                     const pct = total > 0 ? Math.round((c / total) * 100) : 0;
                     return `
                         <div style="display:flex;align-items:center;gap:8px;font-size:12px;">
-                            <span style="width:22px;text-align:center;">${meta.icon}</span>
                             <div style="flex:1;min-width:0;">
                                 <div style="display:flex;justify-content:space-between;color:#262626;font-weight:600;">
                                     <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${safe(meta.label)}</span>
@@ -402,7 +441,7 @@
             return `
                 <div style="background:white;border:1px solid #ECECEC;border-left:4px solid ${meta.color};border-radius:10px;padding:12px 14px;opacity:${isUnread ? 1 : 0.85};">
                     <div style="display:flex;gap:12px;align-items:start;">
-                        <div style="width:36px;height:36px;border-radius:50%;background:${meta.color}22;color:${meta.color};display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">${meta.icon}</div>
+                        <div style="width:10px;height:10px;border-radius:50%;background:${meta.color};margin-top:6px;flex-shrink:0;"></div>
                         <div style="flex:1;min-width:0;">
                             <div style="display:flex;justify-content:space-between;align-items:start;gap:8px;margin-bottom:2px;">
                                 <strong style="font-size:13px;color:#262626;">${safe(n.title || '')}</strong>
@@ -455,6 +494,65 @@
         }).join('');
     }
 
+    // Fetches the most recent broadcasts and renders them as a compact
+    // history strip. Each entry shows audience, title, recipient count,
+    // delivery counts, sender, and relative time.
+    async function renderBroadcastHistory() {
+        const wrap = document.getElementById('broadcastsHistory');
+        const countEl = document.getElementById('broadcastsCount');
+        if (!wrap) return;
+
+        let docs;
+        try {
+            const snap = await db.collection('broadcasts')
+                .orderBy('createdAt', 'desc')
+                .limit(10)
+                .get();
+            docs = snap.docs;
+        } catch (_) {
+            // Fallback without ordering if the index isn't built yet.
+            const snap = await db.collection('broadcasts').limit(10).get()
+                .catch(() => ({ docs: [] }));
+            docs = snap.docs;
+        }
+
+        if (countEl) countEl.textContent = docs.length + ' total';
+
+        if (docs.length === 0) {
+            wrap.innerHTML = '<div style="text-align:center;padding:18px 12px;color:#8E8E8E;font-size:12px;background:white;border-radius:8px;border:1px dashed #ECECEC;">No broadcasts sent yet.</div>';
+            return;
+        }
+
+        const audienceBadge = {
+            all:      { label: 'All',       color: '#6F8FA3' },
+            customer: { label: 'Customers', color: '#2E86AB' },
+            artist:   { label: 'Artists',   color: '#B85C38' },
+        };
+
+        wrap.innerHTML = docs.map(d => {
+            const b = d.data();
+            const a = audienceBadge[b.audience] || audienceBadge.all;
+            const when = fmtAgo(b.createdAt);
+            const inApp = b.inAppCreated || 0;
+            const push = b.pushSent || 0;
+            const total = b.recipientCount || 0;
+            return `
+                <div style="background:white;border:1px solid #ECECEC;border-left:4px solid ${a.color};border-radius:10px;padding:12px 14px;">
+                    <div style="display:flex;justify-content:space-between;align-items:start;gap:8px;margin-bottom:4px;">
+                        <strong style="font-size:13px;color:#262626;">${safe(b.title || '(no title)')}</strong>
+                        <span style="font-size:10px;color:#8E8E8E;white-space:nowrap;flex-shrink:0;">${when}</span>
+                    </div>
+                    <div style="font-size:12px;color:#555;margin-bottom:8px;line-height:1.4;">${safe(b.message || '')}</div>
+                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:11px;">
+                        <span style="background:${a.color}1A;color:${a.color};padding:2px 8px;border-radius:8px;font-weight:600;">${a.label}</span>
+                        <span style="color:#8E8E8E;">${inApp}/${total} in-app · ${push} push</span>
+                        ${b.sentBy ? `<span style="color:#8E8E8E;">by ${safe(b.sentBy)}</span>` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
     async function runNotifications() {
         injectHtml();
         try {
@@ -476,6 +574,7 @@
             renderChips();
             renderFeed();
             renderTopRecipients();
+            renderBroadcastHistory();
         } catch (e) {
             console.error('notifications load error', e);
             showToast('Could not load notifications.', 'error');

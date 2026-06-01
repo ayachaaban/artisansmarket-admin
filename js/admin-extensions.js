@@ -30,7 +30,13 @@ async function loadDeadlines() {
         let overdue = 0, soon = 0, extended = 0, onTrack = 0;
 
         snapshots.forEach(snap => {
-            snap.docs.forEach(doc => {
+            // Apply the shared date-range filter so the Deadlines page
+            // honours the From/To pickers like every other admin list.
+            let docs = snap.docs;
+            if (typeof window.filterByDate === 'function') {
+                docs = window.filterByDate(docs, 'deadlines');
+            }
+            docs.forEach(doc => {
                 const o = doc.data();
                 const deadlineTs = o.estimatedCompletionDate;
                 if (!deadlineTs || !deadlineTs.toDate) {
@@ -80,7 +86,7 @@ async function loadDeadlines() {
         const badge = document.getElementById('deadlinesBadge');
         if (badge) {
             const urgent = overdue + soon;
-            badge.style.display = urgent > 0 ? 'inline-block' : 'none';
+            badge.style.display = urgent > 0 ? 'flex' : 'none';
             badge.textContent = urgent;
         }
 
@@ -109,20 +115,20 @@ async function loadDeadlines() {
             pill.className = 'status-badge';
             if (urgency === 'overdue') {
                 const hours = Math.round((Date.now() - deadlineMs) / 3600000);
-                pill.style.cssText = 'background:rgba(237,73,86,0.15);color:#ED4956;';
+                pill.style.cssText = 'background:rgba(165,58,51,0.10);color:#A53A33;border:1.5px solid rgba(165,58,51,0.45);';
                 pill.textContent = hours > 24
                     ? Math.floor(hours / 24) + 'd overdue'
                     : hours + 'h overdue';
             } else if (urgency === 'soon') {
                 const hours = Math.round((deadlineMs - Date.now()) / 3600000);
-                pill.style.cssText = 'background:rgba(245,158,11,0.15);color:#F59E0B;';
+                pill.style.cssText = 'background:rgba(227,169,60,0.10);color:#E3A93C;border:1.5px solid rgba(227,169,60,0.45);';
                 pill.textContent = hours + 'h left';
             } else if (urgency === 'ok') {
                 const days = Math.floor((deadlineMs - Date.now()) / 86400000);
-                pill.style.cssText = 'background:rgba(16,185,129,0.15);color:#10B981;';
+                pill.style.cssText = 'background:rgba(27,153,139,0.10);color:#1B998B;border:1.5px solid rgba(27,153,139,0.45);';
                 pill.textContent = days + 'd left';
             } else {
-                pill.style.cssText = 'background:rgba(99,102,241,0.15);color:#6366F1;';
+                pill.style.cssText = 'background:rgba(111,143,163,0.10);color:#6F8FA3;border:1.5px solid rgba(111,143,163,0.45);';
                 pill.textContent = 'Awaiting accept';
             }
             tdTime.appendChild(pill);
@@ -134,7 +140,7 @@ async function loadDeadlines() {
             if (exCount > 0) {
                 tdEx.appendChild(createEl('span', {
                     className: 'status-badge',
-                    style: 'background:rgba(139,92,246,0.15);color:#8B5CF6;',
+                    style: 'background:rgba(184,92,56,0.10);color:#B85C38;border:1.5px solid rgba(184,92,56,0.45);',
                 }, exCount + '/3 used'));
             } else {
                 tdEx.textContent = '—';
@@ -314,7 +320,7 @@ document.getElementById('broadcastForm').addEventListener('submit', async (ev) =
 // to a single user. Wired to the "Push" button on every user/artist row.
 
 function sendPushPrompt(userId, userName) {
-    document.querySelector('.detail-modal-overlay')?.remove();
+    document.querySelector('.detail-modal-overlay:not(#user360-overlay)')?.remove();
     const overlay = document.createElement('div');
     overlay.className = 'detail-modal-overlay';
     overlay.innerHTML =
@@ -333,8 +339,8 @@ function sendPushPrompt(userId, userName) {
                     '<textarea class="form-control" id="pushPromptBody" rows="3" maxlength="250" placeholder="Body of the notification"></textarea>' +
                 '</div>' +
                 '<div class="d-flex gap-2 justify-content-end">' +
-                    '<button class="btn btn-secondary" id="pushPromptCancel">Cancel</button>' +
-                    '<button class="btn btn-primary" id="pushPromptSend">Send</button>' +
+                    '<button id="pushPromptCancel" style="padding:8px 18px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;background:transparent;color:#B85C38;border:1.5px solid rgba(184,92,56,0.45);transition:background 0.2s,border-color 0.2s;" onmouseover="this.style.background=\'rgba(184,92,56,0.10)\';this.style.borderColor=\'rgba(184,92,56,0.65)\';" onmouseout="this.style.background=\'transparent\';this.style.borderColor=\'rgba(184,92,56,0.45)\';">Cancel</button>' +
+                    '<button id="pushPromptSend" style="padding:8px 18px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;background:transparent;color:#B85C38;border:1.5px solid rgba(184,92,56,0.45);transition:background 0.2s,border-color 0.2s;" onmouseover="this.style.background=\'rgba(184,92,56,0.10)\';this.style.borderColor=\'rgba(184,92,56,0.65)\';" onmouseout="this.style.background=\'transparent\';this.style.borderColor=\'rgba(184,92,56,0.45)\';">Send</button>' +
                 '</div>' +
             '</div>' +
         '</div>';

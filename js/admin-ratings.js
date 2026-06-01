@@ -32,10 +32,10 @@
     function avatarHtml(name, imgUrl, size) {
         const s = size || 40;
         if (imgUrl) {
-            return `<img src="${safe(imgUrl)}" style="width:${s}px;height:${s}px;border-radius:50%;object-fit:cover;flex-shrink:0;"/>`;
+            return `<img src="${safe(imgUrl)}" style="width:${s}px;height:${s}px;border-radius:50%;object-fit:cover;background:rgba(111,143,163,0.12);flex-shrink:0;"/>`;
         }
         const initial = (name || '?').trim().substring(0, 1).toUpperCase();
-        return `<div style="width:${s}px;height:${s}px;border-radius:50%;background:linear-gradient(135deg,#D4A574,#C8602F);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:${Math.round(s * 0.4)}px;flex-shrink:0;">${safe(initial)}</div>`;
+        return `<div style="width:${s}px;height:${s}px;border-radius:50%;background:rgba(111,143,163,0.12);display:inline-flex;align-items:center;justify-content:center;color:#6F8FA3;font-weight:700;font-size:${Math.round(s * 0.4)}px;line-height:1;flex-shrink:0;">${safe(initial)}</div>`;
     }
     function starsRow(n, size) {
         const sz = size || 14;
@@ -63,6 +63,10 @@
                         <option value="highest">Highest rated</option>
                         <option value="lowest">Lowest rated</option>
                     </select>
+                    <button class="btn-export" onclick="exportRatingsToCSV()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
+                        Export Excel
+                    </button>
                 </div>
             </div>
 
@@ -93,7 +97,7 @@
                 <!-- RIGHT: top rated artists -->
                 <div class="col-lg-4">
                     <div class="chart-card">
-                        <h5 style="margin:0 0 10px;font-size:14px;color:#262626;">🏆 Top Rated Artists</h5>
+                        <h5 style="margin:0 0 10px;font-size:14px;color:#262626;">Top Rated Artists</h5>
                         <div id="topRatedArtists" style="display:flex;flex-direction:column;gap:8px;"></div>
                     </div>
                 </div>
@@ -109,11 +113,11 @@
     let _activeFilter = 'all';
     function renderChips() {
         const chips = [
-            { id: 'all', label: 'All' },
-            { id: '5', label: '5★', color: '#10B981' },
+            { id: 'all', label: 'All', color: '#2E86AB' },
+            { id: '5', label: '5★', color: '#1B998B' },
             { id: '4', label: '4★', color: '#84CC16' },
-            { id: '3', label: '3★', color: '#F59E0B' },
-            { id: 'low', label: '1-2★ (low)', color: '#ED4956' },
+            { id: '3', label: '3★', color: '#E3A93C' },
+            { id: 'low', label: '1-2★ (low)', color: '#A53A33' },
         ];
         const wrap = document.getElementById('ratingsChips');
         wrap.innerHTML = chips.map(c => {
@@ -163,7 +167,7 @@
             kpi('Average', avg.toFixed(2) + ' ★', '#F59E0B'),
             kpi('This month', thisMonth, '#10B981'),
             kpi('5★ reviews', fiveStar, '#84CC16'),
-            kpi('Low (1-2★)', lowStar, '#ED4956'),
+            kpi('Low (1-2★)', lowStar, '#A53A33'),
         ].join('');
 
         // Header average block
@@ -178,7 +182,10 @@
         for (let s = 5; s >= 1; s--) {
             const c = counts[s] || 0;
             const pct = total > 0 ? Math.round((c / total) * 100) : 0;
-            const color = s >= 4 ? '#10B981' : s === 3 ? '#F59E0B' : '#ED4956';
+            const color = s === 5 ? '#1B998B'
+                : s === 4 ? '#84CC16'
+                : s === 3 ? '#E3A93C'
+                : '#A53A33';
             distEl.innerHTML += `
                 <div style="display:flex;align-items:center;gap:10px;margin:5px 0;">
                     <span style="width:30px;font-size:12px;color:#8E8E8E;font-weight:600;">${s}★</span>
@@ -236,11 +243,13 @@
         feed.innerHTML = list.slice(0, 60).map(r => {
             const artist = _artistMap[r.artistId] || {};
             const fb = (r.feedback || '').trim();
-            const isLow = (r.stars || 0) <= 2;
+            const stars = r.stars || 0;
+            const lineColor = stars >= 5 ? '#1B998B'
+                : stars === 4 ? '#84CC16'
+                : stars === 3 ? '#E3A93C'
+                : '#A53A33';
             return `
-                <div style="background:white;border:1px solid #ECECEC;border-left:4px solid ${
-                    isLow ? '#ED4956' : (r.stars >= 4 ? '#10B981' : '#F59E0B')
-                };border-radius:10px;padding:14px 16px;">
+                <div style="background:white;border:1px solid #ECECEC;border-left:4px solid ${lineColor};border-radius:10px;padding:14px 16px;">
                     <div style="display:flex;justify-content:space-between;align-items:start;gap:10px;margin-bottom:8px;">
                         <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">
                             ${avatarHtml(artist.name, artist.profileImageUrl, 36)}
@@ -312,7 +321,12 @@
             const ratingsSnap = await db.collection('ratings').orderBy('createdAt', 'desc').limit(500).get().catch(async () => {
                 return await db.collection('ratings').limit(500).get();
             });
-            _allRatings = ratingsSnap.docs.map(d => d.data());
+            // Honour the shared From/To date pickers when present.
+            let ratingDocs = ratingsSnap.docs;
+            if (typeof window.filterByDate === 'function') {
+                ratingDocs = window.filterByDate(ratingDocs, 'ratings');
+            }
+            _allRatings = ratingDocs.map(d => d.data());
 
             // Lookup the artists involved (batch)
             const artistIds = [...new Set(_allRatings.map(r => r.artistId).filter(Boolean))];
@@ -334,4 +348,40 @@
 
     // Override the entry point
     window.loadRatings = runRatings;
+
+    // Card-based feed has no <table> for exportTableToCSV to grab, so we
+    // build a structured CSV directly from _allRatings and trigger a
+    // download. Honours the same date range that the feed reflects so
+    // what the admin sees on screen is what lands in the file.
+    window.exportRatingsToCSV = function () {
+        if (!_allRatings || _allRatings.length === 0) {
+            if (typeof showToast === 'function') showToast('Nothing to export yet.', 'warning');
+            return;
+        }
+        const header = ['Artist', 'Customer', 'Stars', 'Comment', 'Created At'];
+        const rows = _allRatings.map(r => {
+            const artist = (_artistMap[r.artistId] || {}).name || r.artistName || '';
+            const created = r.createdAt && r.createdAt.toDate
+                ? r.createdAt.toDate().toISOString()
+                : '';
+            const esc = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+            return [
+                esc(artist),
+                esc(r.customerName || ''),
+                esc(r.stars || 0),
+                esc((r.feedback || '').replace(/\r?\n/g, ' ')),
+                esc(created),
+            ].join(',');
+        });
+        const csv = header.join(',') + '\n' + rows.join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'ratings-' + new Date().toISOString().slice(0, 10) + '.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    };
 })();

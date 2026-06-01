@@ -26,12 +26,16 @@
     }
     function money(v) { return '$' + (Number(v) || 0).toFixed(2); }
     function avatarHtml(name, imgUrl, size) {
+        // Mirrors the mobile app's UserAvatar widget: a primary-blue
+        // (#6F8FA3) circle. With imageUrl → cached network image cropped
+        // to fill the circle. Without → the first letter of `name` in
+        // primary-blue, weight 700, on a 12%-alpha slate-blue background.
         const s = size || 32;
         if (imgUrl) {
-            return `<img src="${safe(imgUrl)}" style="width:${s}px;height:${s}px;border-radius:50%;object-fit:cover;flex-shrink:0;"/>`;
+            return `<img src="${safe(imgUrl)}" style="width:${s}px;height:${s}px;border-radius:50%;object-fit:cover;flex-shrink:0;background:rgba(111,143,163,0.12);"/>`;
         }
         const initial = (name || '?').trim().substring(0, 1).toUpperCase();
-        return `<div style="width:${s}px;height:${s}px;border-radius:50%;background:linear-gradient(135deg,#D4A574,#C8602F);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:${Math.round(s * 0.42)}px;flex-shrink:0;">${safe(initial)}</div>`;
+        return `<div style="width:${s}px;height:${s}px;border-radius:50%;background:rgba(111,143,163,0.12);display:flex;align-items:center;justify-content:center;color:#6F8FA3;font-weight:700;font-size:${Math.round(s * 0.42)}px;flex-shrink:0;">${safe(initial)}</div>`;
     }
 
     let _userMap = {};
@@ -48,7 +52,7 @@
                 </div>
                 <div class="filters" style="margin:0;">
                     <span id="overviewClock" class="text-muted" style="font-size:12px;line-height:34px;"></span>
-                    <button id="overviewRefresh" class="btn btn-primary" style="padding:6px 16px;font-size:0.85rem;">Refresh</button>
+                    <button id="overviewRefresh" class="btn-export">Refresh</button>
                 </div>
             </div>
 
@@ -63,7 +67,7 @@
                         <div class="col-md-6">
                             <div class="chart-card" id="overdueOrdersCard">
                                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-                                    <h5 style="margin:0;font-size:14px;color:#262626;">🚨 Overdue orders</h5>
+                                    <h5 style="margin:0;font-size:14px;color:#262626;">Overdue orders</h5>
                                     <span style="font-size:11px;color:#8E8E8E;cursor:pointer;text-decoration:underline;" onclick="document.querySelector('[data-page=&quot;deadlines&quot;]').click()">View all</span>
                                 </div>
                                 <div id="overdueList"></div>
@@ -72,7 +76,7 @@
                         <div class="col-md-6">
                             <div class="chart-card" id="pendingReportsCard">
                                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-                                    <h5 style="margin:0;font-size:14px;color:#262626;">⚠ Pending reports</h5>
+                                    <h5 style="margin:0;font-size:14px;color:#262626;">Pending reports</h5>
                                     <span style="font-size:11px;color:#8E8E8E;cursor:pointer;text-decoration:underline;" onclick="document.querySelector('[data-page=&quot;reports&quot;]').click()">View all</span>
                                 </div>
                                 <div id="pendingReportsList"></div>
@@ -81,7 +85,7 @@
                         <div class="col-md-6">
                             <div class="chart-card">
                                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-                                    <h5 style="margin:0;font-size:14px;color:#262626;">💳 Artists missing payout card</h5>
+                                    <h5 style="margin:0;font-size:14px;color:#262626;">Artists missing payout card</h5>
                                     <span style="font-size:11px;color:#8E8E8E;">Blocks accepting orders</span>
                                 </div>
                                 <div id="noPayoutList"></div>
@@ -90,7 +94,7 @@
                         <div class="col-md-6">
                             <div class="chart-card">
                                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-                                    <h5 style="margin:0;font-size:14px;color:#262626;">👋 New artists (last 7 days)</h5>
+                                    <h5 style="margin:0;font-size:14px;color:#262626;">New artists (last 7 days)</h5>
                                     <span style="font-size:11px;color:#8E8E8E;">Awaiting first sale</span>
                                 </div>
                                 <div id="newArtistsList"></div>
@@ -101,7 +105,7 @@
                     <!-- Activity feed -->
                     <div class="chart-card">
                         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-                            <h5 style="margin:0;font-size:14px;color:#262626;">📡 Live activity</h5>
+                            <h5 style="margin:0;font-size:14px;color:#262626;">Live activity</h5>
                             <span style="font-size:11px;color:#8E8E8E;">Last 24h across the platform</span>
                         </div>
                         <div id="activityStream"></div>
@@ -111,7 +115,7 @@
                 <!-- RIGHT: Compact stats snapshot -->
                 <div class="col-lg-4">
                     <div class="chart-card mb-3">
-                        <h5 style="margin:0 0 10px;font-size:14px;color:#262626;">📊 At a glance</h5>
+                        <h5 style="margin:0 0 10px;font-size:14px;color:#262626;">At a glance</h5>
                         <div id="snapshotList"></div>
                         <div style="border-top:1px solid #F0F0F0;margin-top:10px;padding-top:10px;font-size:11px;color:#8E8E8E;text-align:center;">
                             For trends and date-range analysis, open
@@ -119,40 +123,37 @@
                         </div>
                     </div>
                     <div class="chart-card" style="padding:14px;">
-                        <h5 style="margin:0 0 12px;font-size:14px;color:#262626;display:flex;align-items:center;gap:6px;">
-                            <span style="font-size:16px;">🎯</span> Quick actions
+                        <h5 style="margin:0 0 12px;font-size:14px;color:#262626;">
+                            Quick actions
                         </h5>
                         <div class="quick-actions-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                            <!-- Single solid brand colour per tile — no gradients. -->
                             ${quickAction({
                                 page: 'broadcast',
-                                icon: '📢',
                                 title: 'Send notification',
                                 desc: 'Broadcast to users',
-                                grad: 'linear-gradient(135deg,#0EA5E9,#0284C7)',
+                                grad: '#2E86AB',
                                 badge: null,
                             })}
                             ${quickAction({
                                 page: 'deadlines',
-                                icon: '⏰',
                                 title: 'Deadlines',
                                 desc: 'Monitor orders',
-                                grad: 'linear-gradient(135deg,#F59E0B,#D97706)',
+                                grad: '#1B998B',
                                 badge: 'deadlinesBadge',
                             })}
                             ${quickAction({
                                 page: 'reports',
-                                icon: '⚠',
                                 title: 'Triage reports',
                                 desc: 'Review flagged',
-                                grad: 'linear-gradient(135deg,#ED4956,#BE123C)',
+                                grad: '#A53A33',
                                 badge: 'reportsBadge',
                             })}
                             ${quickAction({
                                 page: 'ratings',
-                                icon: '★',
                                 title: 'Reviews',
                                 desc: 'Customer feedback',
-                                grad: 'linear-gradient(135deg,#F59E0B,#EAB308)',
+                                grad: '#E3A93C',
                                 badge: null,
                             })}
                         </div>
@@ -174,31 +175,49 @@
         tick(); setInterval(tick, 30000);
     }
 
-    // Renders a single colourful Quick Action tile. Each tile has its own
-    // gradient, big icon, title, description, and optionally a live badge
-    // count pulled from one of the existing sidebar badge spans.
-    function quickAction({ page, icon, title, desc, grad, badge }) {
-        // Read the matching sidebar badge text so the tile mirrors it without
-        // its own subscription. Stays 0 / hidden if the badge isn't there yet.
+    // Renders a single Quick Action tile. Soft-outlined pill: 10%-alpha
+    // brand-colour fill + 1.5px solid brand-colour border. Title in the
+    // brand colour itself; description in slate-grey. Same family as the
+    // soft price pills used app-wide in the mobile app.
+    function quickAction({ page, title, desc, grad, badge }) {
+        // `grad` is now just a solid brand-colour hex (e.g. "#2E86AB").
+        // Convert to a translucent fill so the tile sits transparent over
+        // the parent card background.
+        const fill = hexAlpha(grad, 0.10);
+        const border = hexAlpha(grad, 0.45);
+        const titleColor = grad;
+
+        // Read the matching sidebar badge text so the tile mirrors it
+        // without its own subscription. Stays 0 / hidden if missing.
         let badgeHtml = '';
         if (badge) {
             const node = document.getElementById(badge);
             const txt = node && node.textContent && node.textContent.trim();
             const visible = node && node.style.display !== 'none' && Number(txt) > 0;
             if (visible) {
-                badgeHtml = `<span class="qa-badge">${safe(txt)}</span>`;
+                badgeHtml = `<span class="qa-badge" style="background:${grad};color:#fff;">${safe(txt)}</span>`;
             }
         }
         return `
             <button class="quick-action-tile"
-                style="background:${grad};"
+                style="background:${fill};border:1.5px solid ${border};color:${titleColor};"
                 onclick="document.querySelector('[data-page=&quot;${page}&quot;]').click()">
-                <span class="qa-icon">${icon}</span>
-                <span class="qa-title">${safe(title)}</span>
+                <span class="qa-title" style="color:${titleColor};">${safe(title)}</span>
                 <span class="qa-desc">${safe(desc)}</span>
                 ${badgeHtml}
             </button>
         `;
+    }
+
+    // "#RRGGBB" + alpha 0..1 → "rgba(r,g,b,a)" — keeps tile colours in sync
+    // with the brand hexes while letting us tint them transparently.
+    function hexAlpha(hex, a) {
+        const h = String(hex || '').replace('#', '');
+        if (h.length !== 6) return hex;
+        const r = parseInt(h.slice(0, 2), 16);
+        const g = parseInt(h.slice(2, 4), 16);
+        const b = parseInt(h.slice(4, 6), 16);
+        return `rgba(${r},${g},${b},${a})`;
     }
 
     // Inject the tile styles once. Pure CSS so hover/focus is GPU-cheap.
@@ -214,46 +233,34 @@
                 justify-content: center;
                 gap: 4px;
                 padding: 14px 12px;
-                border: none;
                 border-radius: 12px;
-                color: white;
                 text-align: left;
                 cursor: pointer;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.10);
-                transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+                box-shadow: none;
+                transition: transform 0.18s ease, box-shadow 0.18s ease;
                 overflow: hidden;
                 min-height: 100px;
             }
-            .quick-action-tile::before {
-                content: "";
-                position: absolute;
-                inset: 0;
-                background: radial-gradient(circle at top right, rgba(255,255,255,0.25), transparent 60%);
-                pointer-events: none;
-            }
             .quick-action-tile:hover {
                 transform: translateY(-2px);
-                box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
-                filter: brightness(1.05);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
             }
             .quick-action-tile:active {
                 transform: translateY(0);
-                filter: brightness(0.95);
             }
             .quick-action-tile .qa-icon {
                 font-size: 24px;
                 line-height: 1;
                 margin-bottom: 2px;
-                filter: drop-shadow(0 1px 2px rgba(0,0,0,0.25));
             }
             .quick-action-tile .qa-title {
                 font-size: 14px;
-                font-weight: 700;
-                letter-spacing: 0.1px;
+                font-weight: 800;
+                letter-spacing: -0.1px;
             }
             .quick-action-tile .qa-desc {
                 font-size: 11px;
-                opacity: 0.85;
+                color: #94A3B8;
                 font-weight: 500;
             }
             .quick-action-tile .qa-badge {
@@ -275,9 +282,12 @@
     }
 
     function pulseCard(label, val, accent, sublabel) {
+        // --card-accent flows into .kpi-card::before so the hover stripe
+        // matches the existing border-left colour instead of defaulting
+        // to the global slate-blue primary.
         return `
             <div class="col-lg-2 col-md-4 col-sm-6">
-                <div class="kpi-card" style="border-left:3px solid ${accent};">
+                <div class="kpi-card" style="border-left:3px solid ${accent};--card-accent:${accent};">
                     <div class="kpi-details">
                         <h4 style="margin:0;">${safe(val)}</h4>
                         <p style="margin:0;font-size:11px;">${safe(label)}</p>
@@ -348,7 +358,7 @@
                 pulseCard('Revenue', money(todayRev), '#10B981', 'today'),
                 pulseCard('New users', todayUsersSnap.docs.length, '#84CC16', 'today'),
                 pulseCard('New posts', todayPostsSnap.docs.length, '#1B998B', 'today'),
-                pulseCard('Pending reports', pendingReportsSnap.docs.length, '#ED4956', 'awaiting review'),
+                pulseCard('Pending reports', pendingReportsSnap.docs.length, '#A53A33', 'awaiting review'),
                 pulseCard('Overdue orders', overdue.length, '#F59E0B', soonDue.length + ' due in <48h'),
             ].join('');
 
@@ -365,7 +375,7 @@
             // Overdue list (top 5)
             const overdueEl = document.getElementById('overdueList');
             if (overdue.length === 0) {
-                overdueEl.innerHTML = emptyState('✓ No overdue orders. Nice.');
+                overdueEl.innerHTML = emptyState('No overdue orders. Nice.');
             } else {
                 overdueEl.innerHTML = overdue.slice(0, 5).map(item => {
                     const days = Math.floor((now - item.ms) / 86400000);
@@ -378,7 +388,7 @@
                             <div style="font-weight:600;font-size:12px;color:#262626;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${safe(item.order.artistName || u.name || 'Artist')}</div>
                             <div style="font-size:11px;color:#8E8E8E;">→ ${safe(item.order.customerName || 'customer')}</div>
                         </div>
-                        <span style="background:rgba(237,73,86,0.15);color:#ED4956;padding:3px 8px;border-radius:8px;font-size:11px;font-weight:700;white-space:nowrap;flex-shrink:0;">${days > 0 ? days + 'd' : hrs + 'h'} late</span>
+                        <span style="background:rgba(165,58,51,0.15);color:#A53A33;padding:3px 8px;border-radius:8px;font-size:11px;font-weight:700;white-space:nowrap;flex-shrink:0;">${days > 0 ? days + 'd' : hrs + 'h'} late</span>
                     </div>`;
                 }).join('');
             }
@@ -387,14 +397,13 @@
             const reportsEl = document.getElementById('pendingReportsList');
             const pendingDocs = pendingReportsSnap.docs;
             if (pendingDocs.length === 0) {
-                reportsEl.innerHTML = emptyState('✓ No pending reports.');
+                reportsEl.innerHTML = emptyState('No pending reports.');
             } else {
                 reportsEl.innerHTML = pendingDocs.slice(0, 5).map(d => {
                     const r = d.data();
                     const u = _userMap[r.reporterId] || {};
                     return `<div style="display:flex;align-items:center;gap:10px;padding:8px 6px;border-bottom:1px solid #F5F5F7;cursor:pointer;"
                         onclick="window.showReportDetail360 && showReportDetail360('${d.id}')">
-                        <div style="width:32px;height:32px;border-radius:50%;background:rgba(245,158,11,0.15);color:#F59E0B;display:flex;align-items:center;justify-content:center;flex-shrink:0;">⚠</div>
                         <div style="flex:1;min-width:0;">
                             <div style="font-weight:600;font-size:12px;color:#262626;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${safe(r.reason || 'Report')}</div>
                             <div style="font-size:11px;color:#8E8E8E;">By ${safe(u.name || r.reporterName || 'someone')} · ${fmtAgo(r.createdAt)}</div>
@@ -411,7 +420,7 @@
                 return !pc || typeof pc !== 'object' || !pc.last4;
             });
             if (missing.length === 0) {
-                noPayoutEl.innerHTML = emptyState('✓ Every artist has a payout card.');
+                noPayoutEl.innerHTML = emptyState('Every artist has a payout card.');
             } else {
                 noPayoutEl.innerHTML = missing.slice(0, 5).map(d => {
                     const u = d.data();
@@ -422,7 +431,7 @@
                             <div style="font-weight:600;font-size:12px;color:#262626;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${safe(u.name || 'Artist')}</div>
                             <div style="font-size:11px;color:#8E8E8E;">${safe(u.category || '—')}</div>
                         </div>
-                        <span style="background:rgba(237,73,86,0.15);color:#ED4956;padding:3px 8px;border-radius:8px;font-size:11px;font-weight:700;white-space:nowrap;flex-shrink:0;">blocked</span>
+                        <span style="background:rgba(165,58,51,0.15);color:#A53A33;padding:3px 8px;border-radius:8px;font-size:11px;font-weight:700;white-space:nowrap;flex-shrink:0;">blocked</span>
                     </div>`;
                 }).join('');
                 if (missing.length > 5) {
@@ -478,7 +487,7 @@
                 const o = d.data();
                 events.push({
                     ts: o.createdAt && o.createdAt.toMillis ? o.createdAt.toMillis() : 0,
-                    icon: '🛍', color: '#2E86AB',
+                    color: '#2E86AB',
                     text: `<strong>${safe(o.customerName || 'A customer')}</strong> ordered from <strong>${safe(o.artistName || 'an artist')}</strong>`,
                     sub: money(o.total || o.totalAmount || 0),
                     click: `viewOrderDetails('${d.id}')`,
@@ -488,7 +497,7 @@
                 const u = d.data();
                 events.push({
                     ts: u.createdAt && u.createdAt.toMillis ? u.createdAt.toMillis() : 0,
-                    icon: u.role === 'artist' ? '🎨' : '👋', color: '#84CC16',
+                    color: '#84CC16',
                     text: `New ${safe(u.role || 'user')}: <strong>${safe(u.name || 'someone')}</strong>`,
                     sub: u.category || u.email || '',
                     click: `showUserDetail('${d.id}')`,
@@ -498,7 +507,7 @@
                 const r = d.data();
                 events.push({
                     ts: r.createdAt && r.createdAt.toMillis ? r.createdAt.toMillis() : 0,
-                    icon: '⚠', color: '#ED4956',
+                    color: '#A53A33',
                     text: `Report filed: <strong>${safe(r.reason || 'Report')}</strong>`,
                     sub: 'by ' + safe(r.reporterName || 'someone'),
                     click: `showReportDetail360('${d.id}')`,
@@ -510,8 +519,8 @@
                 const isLow = stars <= 2;
                 events.push({
                     ts: r.createdAt && r.createdAt.toMillis ? r.createdAt.toMillis() : 0,
-                    icon: '★', color: isLow ? '#ED4956' : '#F59E0B',
-                    text: `${stars}★ ${isLow ? '<strong style="color:#ED4956;">low</strong> ' : ''}rating for <strong>${safe(r.artistName || 'an artist')}</strong>`,
+                    color: isLow ? '#A53A33' : '#F59E0B',
+                    text: `${stars}-star ${isLow ? '<strong style="color:#A53A33;">low</strong> ' : ''}rating for <strong>${safe(r.artistName || 'an artist')}</strong>`,
                     sub: (r.feedback || '').substring(0, 60) + ((r.feedback || '').length > 60 ? '…' : ''),
                     click: `showUserDetail('${r.artistId}')`,
                 });
@@ -527,7 +536,7 @@
             wrap.innerHTML = top.map(e => `
                 <div style="display:flex;gap:12px;align-items:start;padding:8px 4px;border-bottom:1px solid #F5F5F7;cursor:pointer;"
                     onclick="${e.click}">
-                    <div style="width:32px;height:32px;border-radius:50%;background:${e.color}22;color:${e.color};display:flex;align-items:center;justify-content:center;flex-shrink:0;">${e.icon}</div>
+                    <div style="width:8px;height:8px;border-radius:50%;background:${e.color};flex-shrink:0;margin-top:6px;"></div>
                     <div style="flex:1;min-width:0;">
                         <div style="font-size:13px;color:#262626;line-height:1.4;">${e.text}</div>
                         ${e.sub ? `<div style="font-size:11px;color:#8E8E8E;margin-top:2px;">${safe(e.sub)}</div>` : ''}
@@ -564,15 +573,14 @@
             }
 
             const items = [
-                ['👥', 'Total users', usersC],
-                ['🎨', 'Artists', artistsC],
-                ['🖼', 'Posts', postsC],
-                ['✓', 'Active posts', activePostsC],
-                ['★', 'Avg rating', avg ? avg.toFixed(2) : '—'],
+                ['Total users', usersC],
+                ['Artists', artistsC],
+                ['Posts', postsC],
+                ['Active posts', activePostsC],
+                ['Avg rating', avg ? avg.toFixed(2) : '—'],
             ];
-            wrap.innerHTML = items.map(([icon, label, val]) => `
+            wrap.innerHTML = items.map(([label, val]) => `
                 <div style="display:flex;align-items:center;gap:10px;padding:6px 4px;border-bottom:1px solid #F5F5F7;">
-                    <span style="width:22px;text-align:center;font-size:14px;">${icon}</span>
                     <span style="flex:1;font-size:12px;color:#8E8E8E;">${safe(label)}</span>
                     <strong style="font-size:13px;color:#262626;">${safe(val)}</strong>
                 </div>
