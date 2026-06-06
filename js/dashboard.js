@@ -1872,8 +1872,53 @@ document.getElementById('reportStatusFilter')?.addEventListener('change', functi
 function deletePost(postId) {
     showConfirm('Delete Post', 'Delete this post? This cannot be undone.', async () => {
         try {
+            // Grab the post before deleting so we know who to notify and can
+            // reference the post's description in the message.
+            let owner = null;
+            let postDesc = '';
+            try {
+                const postSnap = await db.collection('posts').doc(postId).get();
+                if (postSnap.exists) {
+                    const p = postSnap.data() || {};
+                    owner = p.artistId || null;
+                    postDesc = (p.description || '').trim();
+                }
+            } catch (e) {
+                console.warn('Could not read post before delete:', e);
+            }
+
             await db.collection('posts').doc(postId).delete();
             await logAuditAction('delete_post', postId, 'post', {});
+
+            // Notify the artist: write the in-app (bell) doc AND fire a live
+            // push. The mobile app already renders the 'post_removed' type.
+            if (owner) {
+                const preview = postDesc.length > 40
+                    ? postDesc.substring(0, 40) + '…'
+                    : postDesc;
+                const title = 'Post removed';
+                const message = preview
+                    ? `Your post "${preview}" was removed by a moderator for violating our community guidelines.`
+                    : 'One of your posts was removed by a moderator for violating our community guidelines.';
+                try {
+                    await db.collection('notifications').add({
+                        userId: owner,
+                        title: title,
+                        message: message,
+                        type: 'post_removed',
+                        referenceId: '',
+                        isRead: false,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    });
+                    if (typeof sendPushToUser === 'function') {
+                        await sendPushToUser(owner, title, message);
+                    }
+                } catch (e) {
+                    // Non-fatal: the post is already gone; notifying is a nudge.
+                    console.warn('Post-removal notification failed:', e);
+                }
+            }
+
             showToast('Post deleted successfully!', 'success');
             resetPagination('posts');
             loadPosts('first');

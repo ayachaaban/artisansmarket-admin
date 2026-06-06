@@ -159,23 +159,23 @@ service cloud.firestore {
     // Hardened: previously `allow list` returned every conversation in the
     // database to any signed-in user (privacy leak). Now reads require the
     // caller to be in the participant list, and creates require the caller
-    // to be present in the new doc's participantIds.
+    // to be present in the new doc's participants.
     match /conversations/{conversationId} {
       allow get: if isAdmin() ||
-        (isAuthenticated() && request.auth.uid in resource.data.participantIds);
+        (isAuthenticated() && request.auth.uid in resource.data.participants);
       allow list: if isAdmin() ||
-        (isAuthenticated() && request.auth.uid in resource.data.participantIds);
+        (isAuthenticated() && request.auth.uid in resource.data.participants);
       allow create: if isAuthenticated() &&
-        request.auth.uid in request.resource.data.participantIds;
+        request.auth.uid in request.resource.data.participants;
       allow update: if isAdmin() ||
-        (isAuthenticated() && request.auth.uid in resource.data.participantIds);
+        (isAuthenticated() && request.auth.uid in resource.data.participants);
       allow delete: if isAdmin();
 
       // Messages subcollection — participants of the parent conversation only.
       match /messages/{messageId} {
         allow read, create: if isAdmin() ||
           (isAuthenticated() &&
-           request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participantIds);
+           request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants);
         allow update, delete: if isAdmin();
       }
     }
