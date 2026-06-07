@@ -26,6 +26,39 @@ function buildUserAvatar(user, size) {
     return div;
 }
 
+/// Builds a table-row email cell that includes a small verification badge
+/// after the address. Verified users get a green ✓ chip; unverified users
+/// get an amber ✉ chip so admins can spot them at a glance from the list.
+function emailCell(user) {
+    const td = document.createElement('td');
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'display:inline-flex;align-items:center;gap:6px;';
+    const emailSpan = document.createElement('span');
+    emailSpan.textContent = user.email || 'N/A';
+    wrapper.appendChild(emailSpan);
+
+    const badge = document.createElement('span');
+    if (user.emailVerified) {
+        badge.title = 'Email verified';
+        badge.textContent = '✓';
+        badge.style.cssText =
+            'display:inline-flex;align-items:center;justify-content:center;' +
+            'width:18px;height:18px;border-radius:50%;background:#E6F7EC;' +
+            'color:#1B8743;font-size:11px;font-weight:700;line-height:1;';
+    } else {
+        badge.title = 'Email not verified';
+        badge.textContent = '!';
+        badge.style.cssText =
+            'display:inline-flex;align-items:center;justify-content:center;' +
+            'width:18px;height:18px;border-radius:50%;background:#FFF4E5;' +
+            'color:#E08A1F;font-size:11px;font-weight:700;line-height:1;';
+    }
+    wrapper.appendChild(badge);
+
+    td.appendChild(wrapper);
+    return td;
+}
+
 // =============================================
 // TOAST NOTIFICATION SYSTEM
 // =============================================
@@ -1294,7 +1327,7 @@ async function loadCustomers(direction) {
             tr.appendChild(tdAvatar);
 
             tr.appendChild(createEl('td', {}, user.name || 'N/A'));
-            tr.appendChild(createEl('td', {}, user.email || 'N/A'));
+            tr.appendChild(emailCell(user));
 
             const tdRole = document.createElement('td');
             tdRole.appendChild(createEl('span', { className: 'role-badge role-customer' }, 'Customer'));
@@ -1427,7 +1460,7 @@ async function loadAllUsers(direction) {
             tr.appendChild(tdAvatar);
 
             tr.appendChild(createEl('td', {}, user.name || 'N/A'));
-            tr.appendChild(createEl('td', {}, user.email || 'N/A'));
+            tr.appendChild(emailCell(user));
 
             const tdRole = document.createElement('td');
             tdRole.appendChild(createEl('span', { className: 'role-badge role-' + (user.role || 'customer') }, user.role || 'customer'));
@@ -1568,7 +1601,7 @@ async function loadArtists(direction) {
             tr.appendChild(tdAvatar);
 
             tr.appendChild(createEl('td', {}, artist.name || 'N/A'));
-            tr.appendChild(createEl('td', {}, artist.email || 'N/A'));
+            tr.appendChild(emailCell(artist));
             tr.appendChild(createEl('td', {}, artist.category || 'N/A'));
             tr.appendChild(createEl('td', {}, artist.averageRating ? artist.averageRating.toFixed(1) : 'N/A'));
 

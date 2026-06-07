@@ -89,6 +89,9 @@
                                     <span class="status-badge" style="background:rgba(46,134,171,0.12);color:#2E86AB;">${isArtist ? 'Artist' : 'Customer'}</span>
                                     ${user.category ? `<span class="status-badge" style="background:rgba(245,158,11,0.12);color:#F59E0B;">${safe(user.category)}</span>` : ''}
                                     ${typeof user.averageRating === 'number' ? `<span class="status-badge" style="background:rgba(227,169,60,0.10);color:#E3A93C;border:1.5px solid rgba(227,169,60,0.45);">★ ${user.averageRating.toFixed(1)}</span>` : ''}
+                                    ${user.emailVerified
+                                        ? '<span class="status-badge" style="background:#E6F7EC;color:#1B8743;border:1.5px solid #B8E1C6;">✓ Email verified</span>'
+                                        : '<span class="status-badge" style="background:#FFF4E5;color:#E08A1F;border:1.5px solid #F5D9B0;" title="This user has not yet clicked the verification link in their welcome email.">✉ Email not verified</span>'}
                                 </div>
                             </div>
                             <div style="display:flex;flex-direction:column;gap:6px;">
@@ -286,8 +289,15 @@
     async function renderOverview(userId, user, isArtist) {
         const subDoc = await db.collection('subscriptions').doc(userId).get().catch(() => null);
         const sub = subDoc && subDoc.exists ? subDoc.data() : null;
+        // Email verification status with colour-coded text — green ✓ when
+        // confirmed, amber ✉ when still pending.
+        const emailVerifiedHtml = user.emailVerified
+            ? '<span style="color:#1B8743;font-weight:600;">✓ Verified</span>'
+            : '<span style="color:#E08A1F;font-weight:600;">✉ Not verified</span>';
+
         const rows = [
             ['User ID', safe(userId)],
+            ['Email Verified', emailVerifiedHtml],
             ['Phone', safe(user.phone || '—')],
             ['Bio', safe(user.bio || '—')],
             ['Category', safe(user.category || '—')],
